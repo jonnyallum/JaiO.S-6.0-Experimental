@@ -87,13 +87,15 @@ def github_intelligence_node(state: GitHubIntelState) -> dict:
         issues = gh.list_issues(state["repo_owner"], state["repo_name"], state="open")
 
         # ── Format for prompt ────────────────────────────────────────────────────────
+        # Note: list_commits does NOT include additions/deletions (avoids commit.stats HTTP calls)
         commits_md = "\n".join(
-            f"  [{c['sha']}] {c['date']} — {c['author']}: {c['message']} (+{c['additions']} -{c['deletions']})"
+            f"  [{c['sha']}] {c['date']} — {c['author']}: {c['message']}"
             for c in commits
         )
+        # Note: list_pull_requests does NOT include files_changed/additions/deletions
         prs_md = (
             "\n".join(
-                f"  #{p['number']} [{p['author']}] {p['title']} ({p['files_changed']} files, +{p['additions']} -{p['deletions']})"
+                f"  #{p['number']} [{p['author']}] {p['title']} (opened {p['created_at']})"
                 for p in prs
             )
             or "  No open pull requests."
