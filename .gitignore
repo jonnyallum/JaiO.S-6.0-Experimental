@@ -1,39 +1,32 @@
-# Environment
+# ── Secrets ────────────────────────────────────────────────────────────────────────
 .env
 .env.local
+.env.*.local
+*.pem
+*.key
 
-# Config with secrets
-config/supabase.json
-config/*.json
-
-# Python
+# ── Python ─────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-env/
-ENV/
 *.egg-info/
 dist/
 build/
-.eggs/
+venv/
+.venv/
 
-# Testing
+# ── Testing ───────────────────────────────────────────────────────────────────
 .pytest_cache/
 .coverage
 htmlcov/
-.mypy_cache/
-.ruff_cache/
 
-# IDE
+# ── IDE ────────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
-*.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# ── Logs ───────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Config files with real values ─────────────────────────────────────────
+config/supabase.json
