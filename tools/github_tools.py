@@ -7,6 +7,7 @@ Performance notes:
 - PaginatedList does not support slice syntax — always use itertools.islice.
 - repo.get_contents() for tree walk is one call per directory level.
 - get_repo() is cached per GitHubTools instance — one /repos call per workflow run.
+- repo.topics is populated from the initial get_repo() response — no extra call needed.
 """
 import itertools
 from typing import Optional
@@ -151,7 +152,8 @@ class GitHubTools:
         return self.get_repo(owner, repo_name).get_languages()
 
     def get_topics(self, owner: str, repo_name: str) -> list[str]:
-        return self.get_repo(owner, repo_name).get_topics()
+        # Use the attribute from the cached repo object — no extra API call
+        return self.get_repo(owner, repo_name).topics or []
 
     def get_repo_meta(self, owner: str, repo_name: str) -> dict:
         repo = self.get_repo(owner, repo_name)
@@ -165,6 +167,7 @@ class GitHubTools:
             "language": repo.language or "unknown",
             "created_at": repo.created_at.strftime("%Y-%m-%d"),
             "updated_at": repo.updated_at.strftime("%Y-%m-%d"),
-            "topics": repo.get_topics(),
+            # Use .topics attribute (populated from initial get_repo() call, no extra HTTP)
+            "topics": repo.topics or [],
             "size_kb": repo.size,
         }
