@@ -1,15 +1,22 @@
-"""Jai.OS 6.0 Agent Nodes"""
-
-from .hugo import hugo_node
-from .parser import parser_node
-from .qualityguard import qualityguard_node
-from .sam import sam_node
-from .sebastian import sebastian_node
+"""
+Agentic skill modules — role-based, persona-independent.
+Persona injection (name, nickname, personality) is handled by personas/config.py.
+"""
+from agents.github_intelligence import github_intelligence_node, GitHubIntelState
+from agents.security_audit import security_audit_node, SecurityAuditState
+from agents.architecture_review import architecture_review_node, ArchitectureReviewState
+from agents.data_extraction import data_extraction_node, DataExtractionState
+from agents.quality_validation import quality_validation_node, QualityValidationState
 
 __all__ = [
-    "hugo_node",
-    "parser_node",
-    "qualityguard_node",
-    "sam_node",
-    "sebastian_node",
+    "github_intelligence_node",
+    "GitHubIntelState",
+    "security_audit_node",
+    "SecurityAuditState",
+    "architecture_review_node",
+    "ArchitectureReviewState",
+    "data_extraction_node",
+    "DataExtractionState",
+    "quality_validation_node",
+    "QualityValidationState",
 ]

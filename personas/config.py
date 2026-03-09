@@ -1,0 +1,116 @@
+"""
+Persona Config — injectable agent identity layer.
+
+Skills live in agents/. Names, nicknames, and personalities live here.
+To rebrand for any client: update .env or Supabase personas table.
+Zero code changes required.
+
+Usage:
+    from personas.config import get_persona
+    persona = get_persona("github_intelligence")
+    # persona = {"name": "Hugo Reeves", "nickname": "The Crawler", "handle": "@hugo", "personality": "..."}
+"""
+from typing import Optional
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class PersonaSettings(BaseSettings):
+    """
+    Optional env vars for persona names/nicknames.
+    If not set, agents use their role slug as identity.
+    Fully overridable per-deployment.
+    """
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # GitHub Intelligence
+    persona_github_intelligence_name: str = Field("")
+    persona_github_intelligence_nickname: str = Field("")
+    persona_github_intelligence_handle: str = Field("")
+    persona_github_intelligence_personality: str = Field("")
+
+    # Security Audit
+    persona_security_audit_name: str = Field("")
+    persona_security_audit_nickname: str = Field("")
+    persona_security_audit_handle: str = Field("")
+    persona_security_audit_personality: str = Field("")
+
+    # Architecture Review
+    persona_architecture_review_name: str = Field("")
+    persona_architecture_review_nickname: str = Field("")
+    persona_architecture_review_handle: str = Field("")
+    persona_architecture_review_personality: str = Field("")
+
+    # Data Extraction
+    persona_data_extraction_name: str = Field("")
+    persona_data_extraction_nickname: str = Field("")
+    persona_data_extraction_handle: str = Field("")
+    persona_data_extraction_personality: str = Field("")
+
+    # Quality Validation
+    persona_quality_validation_name: str = Field("")
+    persona_quality_validation_nickname: str = Field("")
+    persona_quality_validation_handle: str = Field("")
+    persona_quality_validation_personality: str = Field("")
+
+    # Orchestrator
+    persona_orchestrator_name: str = Field("")
+    persona_orchestrator_nickname: str = Field("")
+    persona_orchestrator_handle: str = Field("")
+    persona_orchestrator_personality: str = Field("")
+
+
+_persona_settings = PersonaSettings()
+
+# Role -> env field prefix mapping
+_ROLE_MAP: dict[str, str] = {
+    "github_intelligence": "persona_github_intelligence",
+    "security_audit": "persona_security_audit",
+    "architecture_review": "persona_architecture_review",
+    "data_extraction": "persona_data_extraction",
+    "quality_validation": "persona_quality_validation",
+    "orchestrator": "persona_orchestrator",
+}
+
+
+def get_persona(role: str) -> dict:
+    """
+    Resolve the persona for a given role slug.
+    Falls back to role-based defaults if env vars are not configured.
+
+    Returns:
+        {
+          "role":        str  # stable identifier, never changes
+          "name":        str  # display name (e.g. "Hugo Reeves")
+          "nickname":    str  # short label (e.g. "The Crawler")
+          "handle":      str  # @ handle (e.g. "@hugo")
+          "personality": str  # personality description for prompts
+        }
+    """
+    prefix = _ROLE_MAP.get(role)
+    if prefix:
+        name = getattr(_persona_settings, f"{prefix}_name", "")
+        nickname = getattr(_persona_settings, f"{prefix}_nickname", "")
+        handle = getattr(_persona_settings, f"{prefix}_handle", "")
+        personality = getattr(_persona_settings, f"{prefix}_personality", "")
+    else:
+        name = nickname = handle = personality = ""
+
+    # Defaults: role slug formatted nicely
+    role_display = role.replace("_", " ").title()
+    return {
+        "role": role,
+        "name": name or role_display,
+        "nickname": nickname or "",
+        "handle": handle or f"@{role.replace('_', '-')}",
+        "personality": personality or f"You are the {role_display} specialist. Be precise, specific, and actionable.",
+    }
+
+
+def get_all_personas() -> dict[str, dict]:
+    """Return all configured personas. Useful for dashboards and sync."""
+    return {role: get_persona(role) for role in _ROLE_MAP}
