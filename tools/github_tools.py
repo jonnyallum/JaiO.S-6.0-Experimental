@@ -1,7 +1,8 @@
 """
 GitHub Tools — real GitHub REST API via PyGithub.
-Used by @hugo, @sam, @sebastian for repo intelligence.
+Used by github_intelligence, security_audit, architecture_review skills.
 """
+import itertools
 from typing import Optional
 
 import structlog
@@ -27,9 +28,12 @@ def _is_transient_github_error(exc: Exception) -> bool:
 
 class GitHubTools:
     """
-    Wrapper around PyGithub for Antigravity agent use.
+    Wrapper around PyGithub for Antigravity skill use.
     ValueError raised for missing resources (404).
-    GithubException raised for API errors (retried automatically).
+    GithubException raised for API errors (auto-retried on transient codes).
+
+    Note: PyGithub PaginatedList does not support Python slice syntax reliably.
+    All pagination is handled with itertools.islice.
     """
 
     def __init__(self):
@@ -81,15 +85,21 @@ class GitHubTools:
         """Fetch recent commits with metadata."""
         repo = self.get_repo(owner, repo_name)
         result = []
-        for commit in repo.get_commits()[:per_page]:
+        for commit in itertools.islice(repo.get_commits(), per_page):
+            try:
+                stats = commit.stats
+                additions = stats.additions
+                deletions = stats.deletions
+            except Exception:
+                additions = deletions = 0
             result.append(
                 {
                     "sha": commit.sha[:8],
                     "message": commit.commit.message.split("\n")[0][:120],
                     "author": commit.commit.author.name,
                     "date": commit.commit.author.date.strftime("%Y-%m-%d %H:%M"),
-                    "additions": commit.stats.additions if commit.stats else 0,
-                    "deletions": commit.stats.deletions if commit.stats else 0,
+                    "additions": additions,
+                    "deletions": deletions,
                 }
             )
         return result
@@ -99,11 +109,12 @@ class GitHubTools:
         owner: str,
         repo_name: str,
         state: str = "open",
+        limit: int = 10,
     ) -> list[dict]:
         """Fetch pull requests with metadata."""
         repo = self.get_repo(owner, repo_name)
         result = []
-        for pr in repo.get_pulls(state=state)[:10]:
+        for pr in itertools.islice(repo.get_pulls(state=state), limit):
             result.append(
                 {
                     "number": pr.number,
@@ -111,7 +122,7 @@ class GitHubTools:
                     "state": pr.state,
                     "author": pr.user.login,
                     "created_at": pr.created_at.strftime("%Y-%m-%d"),
-                    "labels": [l.name for l in pr.labels],
+                    "labels": [label.name for label in pr.labels],
                     "body_preview": (pr.body or "")[:200],
                     "files_changed": pr.changed_files,
                     "additions": pr.additions,
@@ -125,11 +136,15 @@ class GitHubTools:
         owner: str,
         repo_name: str,
         state: str = "open",
+        limit: int = 10,
     ) -> list[dict]:
         """Fetch issues, excluding PRs."""
         repo = self.get_repo(owner, repo_name)
         result = []
-        for issue in repo.get_issues(state=state)[:10]:
+        count = 0
+        for issue in repo.get_issues(state=state):
+            if count >= limit:
+                break
             if issue.pull_request:
                 continue
             result.append(
@@ -138,12 +153,13 @@ class GitHubTools:
                     "title": issue.title[:100],
                     "state": issue.state,
                     "author": issue.user.login,
-                    "labels": [l.name for l in issue.labels],
+                    "labels": [label.name for label in issue.labels],
                     "created_at": issue.created_at.strftime("%Y-%m-%d"),
                     "body_preview": (issue.body or "")[:200],
                     "comments": issue.comments,
                 }
             )
+            count += 1
         return result
 
     def get_repo_structure(self, owner: str, repo_name: str, max_depth: int = 2) -> str:
@@ -167,20 +183,20 @@ class GitHubTools:
                     lines.append(f"{indent}📄 {item.name}")
             return lines
 
-        tree = _walk()
-        return "\n".join(tree[:150])
+        return "\n".join(_walk()[:150])
 
     def search_code(
         self,
         query: str,
         repo_fullname: Optional[str] = None,
+        limit: int = 10,
     ) -> list[dict]:
         """Search code across GitHub or within a specific repo."""
         search_query = query
         if repo_fullname:
             search_query += f" repo:{repo_fullname}"
         result = []
-        for item in self._client.search_code(search_query)[:10]:
+        for item in itertools.islice(self._client.search_code(search_query), limit):
             result.append(
                 {
                     "name": item.name,
