@@ -1,68 +1,219 @@
-"""GitHub REST API wrapper for @hugo and other agents."""
-
-import os
-import base64 as _b64
-import requests
+"""
+GitHub Tools — real GitHub REST API via PyGithub.
+Used by @hugo, @sam, @sebastian for repo intelligence.
+"""
 from typing import Optional
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-GITHUB_BASE = "https://api.github.com"
+import structlog
+from github import Github, GithubException, UnknownObjectException
+from tenacity import (
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+from config.settings import settings
+
+log = structlog.get_logger()
+
+
+def _is_transient_github_error(exc: Exception) -> bool:
+    """Retry on rate limits and server errors. Never retry 404/401."""
+    if isinstance(exc, GithubException):
+        return exc.status in (403, 429, 500, 502, 503, 504)
+    return False
 
 
 class GitHubTools:
-    """Lightweight GitHub REST API client.
-
-    Works with public repos without a token (60 req/hr).
-    Set GITHUB_TOKEN for 5,000 req/hr (recommended).
+    """
+    Wrapper around PyGithub for Antigravity agent use.
+    ValueError raised for missing resources (404).
+    GithubException raised for API errors (retried automatically).
     """
 
     def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({
-            "Accept": "application/vnd.github.v3+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-        })
-        if GITHUB_TOKEN:
-            self.session.headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+        self._client = Github(settings.github_token)
 
-    def _get(self, path: str, params: Optional[dict] = None):
-        url = f"{GITHUB_BASE}{path}"
-        r = self.session.get(url, params=params, timeout=15)
-        r.raise_for_status()
-        return r.json()
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=2, min=4, max=60),
+        retry=retry_if_exception(_is_transient_github_error),
+        reraise=True,
+    )
+    def get_repo(self, owner: str, name: str):
+        """Fetch repo object. Raises ValueError if not found."""
+        try:
+            return self._client.get_repo(f"{owner}/{name}")
+        except UnknownObjectException:
+            raise ValueError(f"Repository {owner}/{name} not found or not accessible.")
 
-    def get_repo_info(self, owner: str, repo: str) -> dict:
-        """Top-level repo metadata (stars, language, description, etc.)."""
-        return self._get(f"/repos/{owner}/{repo}")
+    def get_file_contents(
+        self,
+        owner: str,
+        repo_name: str,
+        path: str,
+        ref: str = "main",
+    ) -> str:
+        """
+        Fetch decoded file content.
+        Returns directory listing if path is a dir.
+        Returns a placeholder string if the file doesn't exist.
+        """
+        repo = self.get_repo(owner, repo_name)
+        try:
+            content = repo.get_contents(path, ref=ref)
+            if isinstance(content, list):
+                return "\n".join(
+                    f"{'📁' if c.type == 'dir' else '📄'} {c.name}"
+                    for c in content
+                )
+            return content.decoded_content.decode("utf-8", errors="replace")
+        except UnknownObjectException:
+            return f"[{path} not found in {repo_name}@{ref}]"
 
-    def get_file_contents(self, owner: str, repo: str, path: str, ref: str = "main") -> dict:
-        """Fetch and decode a file. Returns {content, sha, path}."""
-        data = self._get(f"/repos/{owner}/{repo}/contents/{path}", {"ref": ref})
-        content = _b64.b64decode(data["content"]).decode("utf-8")
-        return {"content": content, "sha": data["sha"], "path": path}
+    def list_commits(
+        self,
+        owner: str,
+        repo_name: str,
+        per_page: int = 15,
+    ) -> list[dict]:
+        """Fetch recent commits with metadata."""
+        repo = self.get_repo(owner, repo_name)
+        result = []
+        for commit in repo.get_commits()[:per_page]:
+            result.append(
+                {
+                    "sha": commit.sha[:8],
+                    "message": commit.commit.message.split("\n")[0][:120],
+                    "author": commit.commit.author.name,
+                    "date": commit.commit.author.date.strftime("%Y-%m-%d %H:%M"),
+                    "additions": commit.stats.additions if commit.stats else 0,
+                    "deletions": commit.stats.deletions if commit.stats else 0,
+                }
+            )
+        return result
 
-    def list_commits(self, owner: str, repo: str, per_page: int = 10, sha: str = "") -> list:
-        """Recent commits, newest first."""
-        params: dict = {"per_page": per_page}
-        if sha:
-            params["sha"] = sha
-        return self._get(f"/repos/{owner}/{repo}/commits", params)
+    def list_pull_requests(
+        self,
+        owner: str,
+        repo_name: str,
+        state: str = "open",
+    ) -> list[dict]:
+        """Fetch pull requests with metadata."""
+        repo = self.get_repo(owner, repo_name)
+        result = []
+        for pr in repo.get_pulls(state=state)[:10]:
+            result.append(
+                {
+                    "number": pr.number,
+                    "title": pr.title[:100],
+                    "state": pr.state,
+                    "author": pr.user.login,
+                    "created_at": pr.created_at.strftime("%Y-%m-%d"),
+                    "labels": [l.name for l in pr.labels],
+                    "body_preview": (pr.body or "")[:200],
+                    "files_changed": pr.changed_files,
+                    "additions": pr.additions,
+                    "deletions": pr.deletions,
+                }
+            )
+        return result
 
-    def list_open_issues(self, owner: str, repo: str, per_page: int = 10) -> list:
-        """Open issues (GitHub excludes PRs from this endpoint)."""
-        return self._get(
-            f"/repos/{owner}/{repo}/issues",
-            {"state": "open", "per_page": per_page},
-        )
+    def list_issues(
+        self,
+        owner: str,
+        repo_name: str,
+        state: str = "open",
+    ) -> list[dict]:
+        """Fetch issues, excluding PRs."""
+        repo = self.get_repo(owner, repo_name)
+        result = []
+        for issue in repo.get_issues(state=state)[:10]:
+            if issue.pull_request:
+                continue
+            result.append(
+                {
+                    "number": issue.number,
+                    "title": issue.title[:100],
+                    "state": issue.state,
+                    "author": issue.user.login,
+                    "labels": [l.name for l in issue.labels],
+                    "created_at": issue.created_at.strftime("%Y-%m-%d"),
+                    "body_preview": (issue.body or "")[:200],
+                    "comments": issue.comments,
+                }
+            )
+        return result
 
-    def list_pull_requests(self, owner: str, repo: str, state: str = "open", per_page: int = 10) -> list:
-        """List PRs by state: open | closed | all."""
-        return self._get(
-            f"/repos/{owner}/{repo}/pulls",
-            {"state": state, "per_page": per_page},
-        )
+    def get_repo_structure(self, owner: str, repo_name: str, max_depth: int = 2) -> str:
+        """Return a tree-style listing of the repo's directory structure."""
+        repo = self.get_repo(owner, repo_name)
 
-    def search_code(self, query: str, repo: Optional[str] = None) -> dict:
-        """Search code. Use repo='owner/name' to scope to one repo."""
-        q = f"{query} repo:{repo}" if repo else query
-        return self._get("/search/code", {"q": q})
+        def _walk(path: str = "", depth: int = 0) -> list[str]:
+            if depth >= max_depth:
+                return []
+            try:
+                items = repo.get_contents(path)
+            except Exception:
+                return []
+            lines = []
+            for item in sorted(items, key=lambda x: (x.type != "dir", x.name)):
+                indent = "  " * depth
+                if item.type == "dir":
+                    lines.append(f"{indent}📁 {item.name}/")
+                    lines.extend(_walk(item.path, depth + 1))
+                else:
+                    lines.append(f"{indent}📄 {item.name}")
+            return lines
+
+        tree = _walk()
+        return "\n".join(tree[:150])
+
+    def search_code(
+        self,
+        query: str,
+        repo_fullname: Optional[str] = None,
+    ) -> list[dict]:
+        """Search code across GitHub or within a specific repo."""
+        search_query = query
+        if repo_fullname:
+            search_query += f" repo:{repo_fullname}"
+        result = []
+        for item in self._client.search_code(search_query)[:10]:
+            result.append(
+                {
+                    "name": item.name,
+                    "path": item.path,
+                    "repository": item.repository.full_name,
+                    "url": item.html_url,
+                }
+            )
+        return result
+
+    def get_languages(self, owner: str, repo_name: str) -> dict[str, int]:
+        """Return language breakdown (bytes per language)."""
+        repo = self.get_repo(owner, repo_name)
+        return repo.get_languages()
+
+    def get_topics(self, owner: str, repo_name: str) -> list[str]:
+        """Return repo topics/tags."""
+        repo = self.get_repo(owner, repo_name)
+        return repo.get_topics()
+
+    def get_repo_meta(self, owner: str, repo_name: str) -> dict:
+        """Compact repo metadata for agent prompts."""
+        repo = self.get_repo(owner, repo_name)
+        return {
+            "full_name": repo.full_name,
+            "description": repo.description or "",
+            "stars": repo.stargazers_count,
+            "forks": repo.forks_count,
+            "open_issues": repo.open_issues_count,
+            "default_branch": repo.default_branch,
+            "language": repo.language or "unknown",
+            "created_at": repo.created_at.strftime("%Y-%m-%d"),
+            "updated_at": repo.updated_at.strftime("%Y-%m-%d"),
+            "topics": repo.get_topics(),
+            "size_kb": repo.size,
+        }
