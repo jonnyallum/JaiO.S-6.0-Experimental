@@ -6,6 +6,7 @@ Performance notes:
 - commit.stats requires one HTTP call per commit — never use it in bulk fetches.
 - PaginatedList does not support slice syntax — always use itertools.islice.
 - repo.get_contents() for tree walk is one call per directory level.
+- get_repo() is cached per GitHubTools instance — one /repos call per workflow run.
 """
 import itertools
 from typing import Optional
@@ -33,6 +34,7 @@ def _is_transient_github_error(exc: Exception) -> bool:
 class GitHubTools:
     def __init__(self):
         self._client = Github(settings.github_token)
+        self._repo_cache: dict = {}
 
     @retry(
         stop=stop_after_attempt(3),
@@ -41,10 +43,14 @@ class GitHubTools:
         reraise=True,
     )
     def get_repo(self, owner: str, name: str):
-        try:
-            return self._client.get_repo(f"{owner}/{name}")
-        except UnknownObjectException:
-            raise ValueError(f"Repository {owner}/{name} not found or not accessible.")
+        """Fetch and cache the repo object — one API call per unique repo per instance."""
+        key = f"{owner}/{name}"
+        if key not in self._repo_cache:
+            try:
+                self._repo_cache[key] = self._client.get_repo(key)
+            except UnknownObjectException:
+                raise ValueError(f"Repository {key} not found or not accessible.")
+        return self._repo_cache[key]
 
     def get_file_contents(self, owner: str, repo_name: str, path: str, ref: str = "main") -> str:
         repo = self.get_repo(owner, repo_name)
