@@ -1,12 +1,17 @@
 # Jai.OS 6.0 Dependencies
 
-# Core
+# Core orchestration
 langgraph>=0.2.0
 langchain>=0.3.0
 langchain-anthropic>=0.2.0
-langchain-openai>=0.2.0
 
-# Database
+# Claude API (direct usage in agent nodes)
+anthropic>=0.40.0
+
+# GitHub REST API
+requests>=2.31.0
+
+# Database / state
 supabase>=2.0.0
 psycopg2-binary>=2.9.0
 
