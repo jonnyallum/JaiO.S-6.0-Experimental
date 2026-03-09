@@ -49,7 +49,7 @@ class GitHubIntelState(BaseState):
     ),
     reraise=True,
 )
-def _ask_claude(client: anthropic.Anthropic, prompt: str, max_tokens: int = 3000) -> str:
+def _ask_claude(client: anthropic.Anthropic, prompt: str, max_tokens: int = 1500) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=max_tokens,
@@ -115,7 +115,7 @@ def github_intelligence_node(state: GitHubIntelState) -> dict:
         prompt = f"""{persona['personality']}
 
 Analyse this GitHub repository and answer the query precisely.
-Reference specific commits, files, and issues where relevant. No fluff.
+Reference specific commits, files, and issues where relevant. No fluff. Be concise.
 
 ━━━ REPOSITORY: {meta['full_name']} ━━━
 Description  : {meta['description']}
@@ -124,8 +124,8 @@ Stars        : {meta['stars']} | Forks: {meta['forks']} | Open Issues: {meta['op
 Branch       : {meta['default_branch']} | Topics: {', '.join(meta['topics']) or 'none'}
 Created      : {meta['created_at']} | Last updated: {meta['updated_at']}
 
-━━━ README (first 3,000 chars) ━━━
-{readme[:3000]}
+━━━ README (first 2,000 chars) ━━━
+{readme[:2000]}
 
 ━━━ DIRECTORY STRUCTURE ━━━
 {structure}
@@ -142,7 +142,7 @@ Created      : {meta['created_at']} | Last updated: {meta['updated_at']}
 ━━━ QUERY ━━━
 {state['query']}
 
-Provide your intelligence report:"""
+Provide your intelligence report (concise, under 800 words):"""
 
         intelligence = _ask_claude(claude, prompt)
 
@@ -181,7 +181,7 @@ Provide your intelligence report:"""
 
     except anthropic.APIError as exc:
         msg = f"Claude API error: {exc}"
-        log.error(f"{ROLE}.claude_error", error=msg)
+        log.error(f"{ROLE}.claude_error\", error=msg")
         notifier.agent_error(ROLE, repo_slug, msg)
         return {"intelligence": "", "error": msg, "workflow_id": workflow_id}
 
