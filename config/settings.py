@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     # ── GitHub ────────────────────────────────────────────────────────────────
     github_token: str = Field(...)
 
-    # ── Antigravity Brain (Supabase lkwydqtfbdjhxaarelaz) ───────────────────
-    antigravity_brain_url: str = Field(...)
-    antigravity_brain_service_role_key: str = Field(...)
-    antigravity_brain_connection_string: str = Field("")
-    antigravity_brain_direct_url: str = Field("")
+    # ── Shared Brain (Supabase lkwydqtfbdjhxaarelaz) ─────────────────────────
+    brain_url: str = Field(...)
+    brain_service_role_key: str = Field(...)
+    brain_connection_string: str = Field("")
+    brain_direct_url: str = Field("")
 
     # ── Telegram ──────────────────────────────────────────────────────────────
     telegram_bot_token: str = Field(...)
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
 
     # ── GCP VM ────────────────────────────────────────────────────────────────
     gcp_vm_external_ip: str = Field("35.230.148.83")
-    gcp_vm_user: str = Field("antigravity-ai")
+    gcp_vm_user: str = Field("antigravity-ai")   # actual server OS username — infrastructure value
 
 
 settings = Settings()
