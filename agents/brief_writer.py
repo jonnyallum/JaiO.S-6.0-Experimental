@@ -49,6 +49,7 @@ from personas.config import get_persona
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -233,13 +234,15 @@ Name          : {state['client_name']}{budget_line}{timeline_line}
     ),
     reraise=True,
 )
-def _write(client: anthropic.Anthropic, prompt: str) -> str:
+def _write(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text.strip()
 
 
@@ -285,7 +288,8 @@ def brief_writer_node(state: BriefWriterState) -> dict:
                 f"Must be one of: {', '.join(sorted(VALID_BRIEF_TYPES))}"
             )
 
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Build prompt (pure — no I/O)
         prompt = _build_brief_prompt(state, persona)
@@ -297,7 +301,10 @@ def brief_writer_node(state: BriefWriterState) -> dict:
         )
 
         # Phase 2 — write (TRANSIENT failures retried by tenacity)
-        brief = _write(claude, prompt)
+        brief = _write(claude, prompt, metrics)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion and output size
         _checkpoint(
