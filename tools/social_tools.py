@@ -20,7 +20,7 @@ GRAPH_BASE = "https://graph.facebook.com/v21.0"
 
 class MetaSocialTools:
     """
-    Publish content to Antigravity's Facebook page and Instagram.
+    Publish content to JonnyAI's Facebook page and Instagram.
     Raises ValueError if credentials are not configured.
     """
 
@@ -78,7 +78,7 @@ class MetaSocialTools:
             log.info("instagram_post_published", media_id=result.get("id"))
             return result
 
-    def broadcast_milestone(self, message: str, hashtags: str = "#AntigravityOrchestra #JaiOS6") -> dict:
+    def broadcast_milestone(self, message: str, hashtags: str = "#JaiOS6 #JonnyAI") -> dict:
         """Post a milestone update to the Facebook page."""
         return self.post_to_facebook(f"🚀 {message}\n\n{hashtags}")
 
