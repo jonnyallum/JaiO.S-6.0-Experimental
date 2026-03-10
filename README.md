@@ -1,14 +1,14 @@
 # Jai.OS 6.0 — LangGraph Rebuild
 
-> **Experimental Branch** | Ground-up rebuild of the Antigravity Orchestra on LangGraph | Production-grade agent orchestration
+> **Experimental Branch** | Ground-up rebuild of the JonnyAI agent system on LangGraph | Production-grade agent orchestration
 
 ---
 
 ## What This Is
 
-**Jai.OS 6.0** is a complete architectural rebuild of the 70-agent Antigravity Orchestra using [LangGraph](https://github.com/langchain-ai/langgraph) for stateful, self-correcting multi-agent workflows.
+**Jai.OS 6.0** is a complete architectural rebuild of the JonnyAI 70-agent system using [LangGraph](https://github.com/langchain-ai/langgraph) for stateful, self-correcting multi-agent workflows.
 
-**Parent repo:** [Antigravity_Orchestra](https://github.com/jonnyallum/Antigravity_Orchestra)
+**Parent repo:** [JaiOS 5.0](https://github.com/jonnyallum/Antigravity_Orchestra)
 
 **Status:** Foundation phase — framework setup + first 5 agents
 
@@ -69,41 +69,34 @@ JaiO.S-6.0-Experimental/
 ├── ARCHITECTURE.md              # System design deep dive
 ├── MIGRATION.md                 # 5.0 → 6.0 migration plan
 ├── agents/                      # LangGraph agent nodes
-│   ├── hugo.py                  # GitHub intelligence
-│   ├── parser.py                # Data extraction
-│   ├── qualityguard.py          # Quality gates
-│   ├── sam.py                   # Security audits
-│   ├── sebastian.py             # Full-stack architect
+│   ├── github_intelligence.py   # GitHub intelligence
+│   ├── data_extraction.py       # Data extraction
+│   ├── quality_validation.py    # Quality gates
+│   ├── security_audit.py        # Security audits
+│   ├── architecture_review.py   # Full-stack architect
+│   ├── dependency_audit.py      # Dependency analysis
+│   ├── code_reviewer.py         # File-level code review
+│   ├── social_post_generator.py # FB/IG content
+│   ├── brief_writer.py          # Client proposals & briefs
+│   ├── supabase_intelligence.py # Shared Brain queries
 │   └── README.md                # Agent authoring guide
 ├── graphs/                      # Workflow graphs
 │   ├── supervisor.py            # @marcus orchestration
-│   ├── bl_motorcycles.py        # BL order processing
 │   └── README.md                # Graph design patterns
 ├── state/                       # State schemas
 │   ├── base.py                  # Base state TypedDict
-│   ├── order_state.py           # BL Motorcycles order
 │   └── README.md                # State design guide
 ├── tools/                       # Custom tools (MCP wrappers)
 │   ├── supabase_tools.py        # Shared Brain queries
 │   ├── github_tools.py          # Repo operations
+│   ├── social_tools.py          # Meta FB/IG publishing
+│   ├── notification_tools.py    # Telegram alerts
 │   └── README.md                # Tool development guide
 ├── config/                      # Configuration
-│   ├── langgraph.json           # LangGraph config
-│   ├── supabase.json            # DB connection
-│   └── mcp_servers.json         # MCP server registry
-├── tests/                       # Test suite
-│   ├── test_agents.py           # Agent node tests
-│   ├── test_graphs.py           # Graph execution tests
-│   └── test_state.py            # State persistence tests
-├── scripts/                     # Utility scripts
-│   ├── deploy.sh                # Deploy to GCP VM
-│   ├── migrate_agent.py         # 5.0 → 6.0 agent converter
-│   └── validate.py              # Schema validation
-├── docs/                        # Documentation
-│   ├── GETTING_STARTED.md       # Quick start guide
-│   ├── AGENT_AUTHORING.md       # How to build agents
-│   ├── GRAPH_PATTERNS.md        # Common workflow patterns
-│   └── COST_ANALYSIS.md         # Infrastructure costs
+│   ├── settings.py              # Pydantic settings
+│   └── .env.example             # Environment variable template
+├── personas/                    # Runtime persona injection
+│   └── config.py                # get_persona() — identity injected at runtime
 └── requirements.txt             # Python dependencies
 ```
 
@@ -115,17 +108,22 @@ JaiO.S-6.0-Experimental/
 
 **Deliverables:**
 1. ✅ Repo structure
-2. ⏳ LangGraph installed on GCP VM
-3. ⏳ Supabase state schema
-4. ⏳ First 5 agents as LangGraph nodes
+2. ✅ LangGraph installed on GCP VM
+3. ✅ Supabase state schema
+4. ✅ First 10 agents as LangGraph nodes
 5. ⏳ One working graph: BL Motorcycles order processing
 
-**First 5 agents:**
-- **@hugo** — GitHub intelligence (high usage)
-- **@parser** — data extraction (BL blocker)
-- **@qualityguard** — quality gates (production safety)
-- **@sam** — security audits (production safety)
-- **@sebastian** — full-stack architect (builds everything)
+**First 10 agents:**
+- **github_intelligence** — GitHub repo analysis
+- **security_audit** — repo security review
+- **architecture_review** — repo architecture assessment
+- **data_extraction** — structured data parsing
+- **quality_validation** — output quality gate
+- **dependency_audit** — package vulnerability/staleness scan
+- **code_reviewer** — file-level code review
+- **social_post_generator** — FB/IG copy + publish
+- **brief_writer** — client proposals & SOWs
+- **supabase_intelligence** — Shared Brain status reports
 
 ---
 
@@ -135,7 +133,7 @@ JaiO.S-6.0-Experimental/
 |-------|-----------|
 | **Orchestration** | LangGraph (Python) |
 | **State** | Supabase (PostgreSQL) |
-| **AI Models** | Claude Sonnet 4, GPT-4, DeepSeek R1 |
+| **AI Models** | Claude Sonnet 4.6 |
 | **Tools** | MCP servers (GitHub, Supabase, Brave, etc.) |
 | **Deployment** | GCP VM (e2-medium, upgradeable to e2-standard-2) |
 | **Monitoring** | LangSmith (optional), custom dashboards |
@@ -152,12 +150,11 @@ cd JaiO.S-6.0-Experimental
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure Supabase connection
-cp config/supabase.example.json config/supabase.json
-# Edit config/supabase.json with your credentials
+# Copy env template and fill in credentials
+cp .env.example .env
 
-# Run first test workflow
-python graphs/bl_motorcycles.py
+# Run Phase 1 test
+PYTHONPATH=. python graphs/test_graph.py
 
 # Run tests
 pytest tests/
@@ -167,42 +164,32 @@ pytest tests/
 
 ## Contributing Agents
 
-See [docs/AGENT_AUTHORING.md](docs/AGENT_AUTHORING.md) for the full guide.
-
-**Quick example:**
+Every agent follows the **@langraph doctrine**:
 
 ```python
-from typing_extensions import TypedDict
-from langgraph.graph import StateGraph
+# Contract docstring → named constants → TypedDict state →
+# pure collection phase → @retry Claude phase →
+# PRE checkpoint → POST checkpoint → discriminated error blocks
 
-class AgentState(TypedDict):
-    input: str
-    output: str
-
-def agent_node(state: AgentState) -> dict:
-    # Your agent logic here
-    result = process(state["input"])
-    return {"output": result}
-
-# Add to graph
-graph = StateGraph(AgentState)
-graph.add_node("agent", agent_node)
+def my_skill_node(state: MySkillState) -> dict:
+    ...
 ```
+
+See [agents/README.md](agents/README.md) for the full guide.
 
 ---
 
 ## Status
 
-**Current phase:** Foundation setup  
-**Completion:** 10% (repo structure done, code in progress)  
-**Next milestone:** First graph running on GCP VM (Week 2)
+**Current phase:** Foundation — 10 agents live, @langraph doctrine applied  
+**Next milestone:** Supervisor graph + BL Motorcycles order processing workflow
 
 ---
 
 ## Key Differences vs Jai.OS 5.0
 
 | Feature | 5.0 (Current) | 6.0 (This Repo) |
-|---------|---------------|-----------------|
+|---------|---------------|--------------------|
 | **Orchestration** | Python while-loops | LangGraph state machines |
 | **State** | Manual JSON writes | Automatic checkpointing |
 | **Routing** | Hardcoded if/else | Conditional edges |
@@ -215,17 +202,14 @@ graph.add_node("agent", agent_node)
 
 ## Links
 
-- **Parent repo:** [Antigravity_Orchestra](https://github.com/jonnyallum/Antigravity_Orchestra)
+- **Parent repo:** [JaiOS 5.0](https://github.com/jonnyallum/Antigravity_Orchestra)
 - **LangGraph docs:** [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph)
 - **Architecture deep dive:** [ARCHITECTURE.md](ARCHITECTURE.md)
-- **Migration plan:** [MIGRATION.md](MIGRATION.md)
-- **Cost analysis:** [docs/COST_ANALYSIS.md](docs/COST_ANALYSIS.md)
 
 ---
 
-**Built by:** Jonny Allum + The Antigravity Orchestra  
-**Orchestrated by:** @Marcus Cole (The Maestro)  
-**Research:** Perplexity AI  
+**Built by:** Jonny Allum + JonnyAI  
+**Orchestrated by:** @Marcus (The Maestro)  
 **Execution:** Claude Code + 70 specialist agents
 
 *Jai.OS 6.0 — Production-grade agent orchestration for the real world.*
