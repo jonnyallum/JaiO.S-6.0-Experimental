@@ -1,16 +1,44 @@
 """
-Skill: Data Extraction
-Role: data_extraction
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AGENT : data_extraction
+SKILL : Data Extraction — parse structured data from raw input, validate against schema
 
-Extracts structured data from raw inputs and validates against schemas.
-Supports JSON, YAML, and free-text extraction via Claude.
+Node Contract (@langraph doctrine):
+  Inputs   : raw_input (str), schema (dict), extraction_mode (str) — immutable after entry
+  Outputs  : parsed_data (dict), validation_passed (bool), error (str|None), agent (str)
+  Tools    : Anthropic [read-only]
+  Effects  : Supabase state log [non-fatal], Telegram alert on error [non-fatal]
 
-Persona injected at runtime via personas/config.py.
+Thread Memory (checkpoint-scoped):
+  All DataExtractionState fields are thread-scoped only.
+  No cross-thread writes. No long-term store updates.
+
+Loop Policy:
+  PARSE-RETRY LOOP — explicitly bounded at PARSE_ATTEMPTS=2 total attempts.
+  Attempt 1: full prompt with context.
+  Attempt 2: stripped prompt with only schema keys and truncated input.
+  On exhaustion (both attempts fail to produce valid JSON): raises ValueError → PERMANENT failure.
+  @langraph: loop has explicit ceiling (PARSE_ATTEMPTS), quality threshold (valid JSON), and
+             escalation path (ValueError → graph continues with error field set).
+
+Failure Discrimination:
+  PERMANENT  → ValueError (JSON parse failed after PARSE_ATTEMPTS, schema missing required field)
+               No retry. Returns error field. Graph continues.
+  TRANSIENT  → APIConnectionError, RateLimitError, APITimeoutError
+               Tenacity retries up to MAX_RETRIES with exponential backoff.
+  UNEXPECTED → Exception — logged, returned as error, graph does not crash.
+
+Checkpoint Semantics:
+  PRE  — Supabase log before first Claude call (marks expensive operation started)
+  POST — Supabase log after completion (records fields extracted, validation status)
+
+Persona injected at runtime via personas/config.py — skill file contains no identity.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 import anthropic
 import structlog
@@ -20,44 +48,41 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
-from typing_extensions import TypedDict
 
 from config.settings import settings
 from personas.config import get_persona
 from state.base import BaseState
+from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 
 log = structlog.get_logger()
-ROLE = "data_extraction"
+
+# ── Budget constants (@langraph: all limits named, never magic numbers) ──────────
+ROLE               = "data_extraction"
+MAX_RETRIES        = 3
+RETRY_MIN_S        = 3
+RETRY_MAX_S        = 45
+MAX_TOKENS         = 1500   # Extraction output can be large depending on schema size
+INPUT_CHARS        = 5000   # Raw input truncation for first attempt
+RETRY_INPUT_CHARS  = 2000   # Stricter truncation on second attempt
+PARSE_ATTEMPTS     = 2      # Loop ceiling — both attempts exhaust → ValueError
 
 
+# ── State schema ─────────────────────────────────────────────────────────────────
 class DataExtractionState(BaseState):
-    raw_input: str           # Raw text or data to parse
-    schema: dict             # Expected output fields: {field_name: description}
-    extraction_mode: str     # json | structured | freetext
-    parsed_data: dict        # Extracted structured output
-    validation_passed: bool
+    # Inputs — written by caller, immutable inside this node
+    raw_input: str        # Raw text or data to parse
+    schema: dict          # Expected output fields: {field_name: description}
+    extraction_mode: str  # json | structured | freetext
+    # Outputs — written by this node, read by downstream nodes
+    parsed_data: dict         # Extracted structured output; empty dict on failure
+    validation_passed: bool   # True if all schema fields present and non-null
+    # BaseState provides: workflow_id (thread ID), timestamp, agent, error
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=3, max=45),
-    retry=retry_if_exception_type(
-        (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.APITimeoutError)
-    ),
-    reraise=True,
-)
-def _ask_claude(client: anthropic.Anthropic, prompt: str) -> str:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4000,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.content[0].text
-
-
+# ── Pure helpers ─────────────────────────────────────────────────────────────────
 def _try_parse_json(text: str) -> Optional[dict]:
-    """Extract JSON from a string, stripping markdown fences if present."""
+    """Extract JSON from a string, stripping markdown fences if present. Pure function."""
     cleaned = text.strip()
     if cleaned.startswith("```"):
         lines = cleaned.split("\n")
@@ -69,7 +94,7 @@ def _try_parse_json(text: str) -> Optional[dict]:
 
 
 def _validate_schema(data: dict, schema: dict) -> tuple[bool, list[str]]:
-    """Check all schema keys are present and non-null."""
+    """Check all schema keys are present and non-null. Pure function."""
     issues = []
     for field, description in schema.items():
         if field not in data:
@@ -79,28 +104,12 @@ def _validate_schema(data: dict, schema: dict) -> tuple[bool, list[str]]:
     return len(issues) == 0, issues
 
 
-def data_extraction_node(state: DataExtractionState) -> dict:
-    """
-    Data Extraction skill node.
-    Extracts structured data from raw input per the provided schema.
-    Validates output and reports any issues.
-    """
-    workflow_id = state.get("workflow_id") or str(uuid.uuid4())
-    mode = state.get("extraction_mode", "structured")
-    persona = get_persona(ROLE)
-
-    log.info(f"{ROLE}.started", workflow_id=workflow_id, mode=mode)
-
-    state_logger = SupabaseStateLogger()
-
-    try:
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-
-        schema_description = "\n".join(
-            f"  - {field}: {desc}" for field, desc in state["schema"].items()
-        )
-
-        prompt = f"""{persona['personality']}
+def _build_extraction_prompt(raw_input: str, schema: dict, persona: dict, truncate: int) -> str:
+    """Format extraction prompt. Pure function — no I/O."""
+    schema_description = "\n".join(
+        f"  - {field}: {desc}" for field, desc in schema.items()
+    )
+    return f"""{persona['personality']}
 
 Extract structured data from the input below.
 Return ONLY valid JSON matching the schema. No explanation, no markdown fences, no preamble.
@@ -109,7 +118,7 @@ Return ONLY valid JSON matching the schema. No explanation, no markdown fences, 
 {schema_description}
 
 ━━━ RAW INPUT ━━━
-{state['raw_input'][:5000]}
+{raw_input[:truncate]}
 
 ━━━ RULES ━━━
 - Return ONLY a JSON object with exactly the schema fields.
@@ -119,56 +128,151 @@ Return ONLY valid JSON matching the schema. No explanation, no markdown fences, 
 
 JSON output:"""
 
-        response_text = _ask_claude(claude, prompt)
-        parsed = _try_parse_json(response_text)
 
-        if parsed is None:
-            # One retry with stricter prompt
-            retry_prompt = (
-                f"Return ONLY a raw JSON object (no markdown, no explanation) "
-                f"with these exact keys: {list(state['schema'].keys())}. "
-                f"Source: {state['raw_input'][:2000]}"
-            )
-            response_text = _ask_claude(claude, retry_prompt)
-            parsed = _try_parse_json(response_text)
+def _build_strict_retry_prompt(raw_input: str, schema: dict, truncate: int) -> str:
+    """Stripped prompt for second parse attempt — minimal context. Pure function."""
+    return (
+        f"Return ONLY a raw JSON object (no markdown, no explanation) "
+        f"with these exact keys: {list(schema.keys())}. "
+        f"Source: {raw_input[:truncate]}"
+    )
 
+
+# ── Phase 2: Extraction (Claude call, retried on transient errors only) ──────────
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
+    retry=retry_if_exception_type(
+        (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.APITimeoutError)
+    ),
+    reraise=True,
+)
+def _extract(client: anthropic.Anthropic, prompt: str) -> str:
+    """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=MAX_TOKENS,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.content[0].text
+
+
+# ── Main node ─────────────────────────────────────────────────────────────────────
+def data_extraction_node(state: DataExtractionState) -> dict:
+    """
+    Data Extraction node — bounded parse-retry loop, never more than PARSE_ATTEMPTS Claude calls.
+
+    Execution order:
+      1. Validate inputs
+      2. PRE checkpoint (before first Claude call)
+      3. PARSE-RETRY LOOP (max PARSE_ATTEMPTS=2 iterations):
+         a. Build prompt (full on attempt 1, stripped on attempt 2)
+         b. Call Claude (_extract)
+         c. Try to parse JSON
+         d. If parsed: break
+      4. If no valid JSON after PARSE_ATTEMPTS: raise ValueError (PERMANENT)
+      5. Validate against schema (non-fatal warnings only)
+      6. POST checkpoint
+      7. Return state patch
+
+    @langraph: loop has explicit ceiling, quality threshold (valid JSON), and escalation path.
+    """
+    thread_id    = state.get("workflow_id") or str(uuid.uuid4())
+    mode         = state.get("extraction_mode", "structured")
+    persona      = get_persona(ROLE)
+    notifier     = TelegramNotifier()
+    state_logger = SupabaseStateLogger()
+
+    def _checkpoint(checkpoint_id: str, payload: dict) -> None:
+        state_logger.log_state(thread_id, checkpoint_id, ROLE, payload)
+
+    log.info(f"{ROLE}.started", thread_id=thread_id, mode=mode,
+             schema_fields=list(state["schema"].keys()))
+
+    try:
+        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+
+        # PRE checkpoint — mark expensive operation started for replay diagnosis
+        _checkpoint(
+            f"{ROLE}_pre_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+            {"mode": mode, "schema_fields": list(state["schema"].keys()),
+             "input_chars": len(state["raw_input"]), "status": "extracting"},
+        )
+
+        # PARSE-RETRY LOOP — explicitly bounded at PARSE_ATTEMPTS (@langraph loop policy above)
+        parsed: Optional[dict] = None
+        last_response: str = ""
+        for attempt in range(1, PARSE_ATTEMPTS + 1):
+            if attempt == 1:
+                prompt = _build_extraction_prompt(
+                    state["raw_input"], state["schema"], persona, INPUT_CHARS
+                )
+            else:
+                log.warning(f"{ROLE}.parse_retry", attempt=attempt)
+                prompt = _build_strict_retry_prompt(
+                    state["raw_input"], state["schema"], RETRY_INPUT_CHARS
+                )
+
+            last_response = _extract(claude, prompt)
+            parsed = _try_parse_json(last_response)
+            if parsed is not None:
+                break   # quality threshold met — exit loop
+
+        # Loop exhausted without valid JSON — PERMANENT failure
         if parsed is None:
             raise ValueError(
-                f"Could not extract valid JSON after 2 attempts. Last response: {response_text[:200]}"
+                f"Could not extract valid JSON after {PARSE_ATTEMPTS} attempts. "
+                f"Last response: {last_response[:200]}"
             )
 
         validation_passed, issues = _validate_schema(parsed, state["schema"])
-
         if not validation_passed:
             log.warning(f"{ROLE}.validation_issues", issues=issues)
 
-        state_logger.log_state(
-            workflow_id=workflow_id,
-            checkpoint_id=f"{ROLE}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
-            agent=ROLE,
-            state={
-                "mode": mode,
-                "fields_extracted": len(parsed),
-                "validation_passed": validation_passed,
-                "validation_issues": issues,
-                "status": "completed",
-            },
+        # POST checkpoint — record completion
+        _checkpoint(
+            f"{ROLE}_post_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+            {"mode": mode, "fields_extracted": len(parsed),
+             "validation_passed": validation_passed,
+             "validation_issues": issues, "status": "completed"},
         )
 
-        log.info(f"{ROLE}.completed", fields=len(parsed), validation_passed=validation_passed)
+        log.info(f"{ROLE}.completed", thread_id=thread_id,
+                 fields=len(parsed), validation_passed=validation_passed)
         return {
             "parsed_data": parsed,
             "validation_passed": validation_passed,
             "error": None if validation_passed else f"Validation: {'; '.join(issues)}",
-            "workflow_id": workflow_id,
+            "workflow_id": thread_id,
+            "agent": ROLE,
         }
 
+    # ── PERMANENT failures — no retry, return cleanly ─────────────────────────────
+    except ValueError as exc:
+        msg = str(exc)
+        log.error(f"{ROLE}.permanent_failure", failure_mode="parse_exhausted", error=msg)
+        notifier.agent_error(ROLE, mode, msg)
+        _checkpoint(f"{ROLE}_err_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+                    {"mode": mode, "status": "parse_exhausted", "error": msg})
+        return {"parsed_data": {}, "validation_passed": False,
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+    except anthropic.APIError as exc:
+        msg = f"Claude API error: {exc}"
+        log.error(f"{ROLE}.claude_error", failure_mode="claude_api", error=msg)
+        notifier.agent_error(ROLE, mode, msg)
+        return {"parsed_data": {}, "validation_passed": False,
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+    # ── UNEXPECTED failures — log everything, never crash the graph ───────────────
     except Exception as exc:
-        msg = f"{ROLE} error: {exc}"
-        log.exception(f"{ROLE}.error", error=msg)
-        return {"parsed_data": {}, "validation_passed": False, "error": msg}
+        msg = f"Unexpected error in {ROLE}: {exc}"
+        log.exception(f"{ROLE}.unexpected", failure_mode="unexpected", error=msg)
+        notifier.agent_error(ROLE, mode, msg)
+        return {"parsed_data": {}, "validation_passed": False,
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
 
 
-# Backwards-compatibility aliases
+# ── Backwards-compatibility aliases ──────────────────────────────────────────────
 parser_node = data_extraction_node
 ParserState = DataExtractionState
