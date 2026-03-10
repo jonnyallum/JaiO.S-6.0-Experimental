@@ -51,6 +51,7 @@ from state.base import BaseState
 from tools.github_tools import GitHubTools
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -109,13 +110,15 @@ def _collect_data(gh: GitHubTools, owner: str, repo: str) -> dict:
     ),
     reraise=True,
 )
-def _synthesise(client: anthropic.Anthropic, prompt: str) -> str:
+def _synthesise(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -205,7 +208,8 @@ def github_intelligence_node(state: GitHubIntelState) -> dict:
 
     try:
         gh     = GitHubTools()
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Phase 1 — collect (PERMANENT failure: bad repo → ValueError)
         raw = _collect_data(gh, state["repo_owner"], state["repo_name"])
@@ -219,7 +223,10 @@ def github_intelligence_node(state: GitHubIntelState) -> dict:
 
         # Phase 2 — synthesise (TRANSIENT failures retried by tenacity)
         prompt       = _build_prompt(raw, state["query"], persona)
-        intelligence = _synthesise(claude, prompt)
+        intelligence = _synthesise(claude, prompt, metrics)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion and output size
         _checkpoint(
