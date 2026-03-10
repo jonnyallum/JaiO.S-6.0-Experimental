@@ -28,6 +28,15 @@ from agents.email_architect import email_architect_node, EmailSequenceState
 from agents.video_brief_writer import video_brief_writer_node, VideoBriefState
 from agents.funnel_architect import funnel_architect_node, FunnelState
 
+
+# Batch 2 — Analytics, Marketing & Builder agents
+from agents.analytics_reporter import analytics_reporter_node, AnalyticsState
+from agents.ad_copy_writer import ad_copy_writer_node, AdCopyState
+from agents.launch_orchestrator import launch_orchestrator_node, LaunchState
+from agents.case_study_writer import case_study_writer_node, CaseStudyState
+from agents.knowledge_base_writer import knowledge_base_writer_node, KnowledgeBaseState
+from agents.agent_builder import agent_builder_node, AgentBuilderState
+
 __all__ = [
     # Core technical
     "github_intelligence_node", "GitHubIntelState",
@@ -51,4 +60,11 @@ __all__ = [
     "email_architect_node",     "EmailSequenceState",
     "video_brief_writer_node",  "VideoBriefState",
     "funnel_architect_node",    "FunnelState",
+    "analytics_reporter_node", "AnalyticsState",
+    "ad_copy_writer_node", "AdCopyState",
+    "launch_orchestrator_node", "LaunchState",
+    "case_study_writer_node", "CaseStudyState",
+    "knowledge_base_writer_node", "KnowledgeBaseState",
+    "agent_builder_node", "AgentBuilderState",
+
 ]
