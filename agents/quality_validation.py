@@ -51,6 +51,7 @@ from personas.config import get_persona
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -153,13 +154,15 @@ Score each 1-10:
     ),
     reraise=True,
 )
-def _validate(client: anthropic.Anthropic, prompt: str) -> str:
+def _validate(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -196,7 +199,8 @@ def quality_validation_node(state: QualityValidationState) -> dict:
     quality_feedback = ""
 
     try:
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Build prompt (pure — no I/O)
         prompt = _build_validation_prompt(
@@ -212,11 +216,14 @@ def quality_validation_node(state: QualityValidationState) -> dict:
         )
 
         # Phase 2 — validate (TRANSIENT failures retried by tenacity)
-        quality_feedback = _validate(claude, prompt)
+        quality_feedback = _validate(claude, prompt, metrics)
 
         # Parse score (pure function — no Claude re-call on parse failure)
         quality_score  = _parse_score(quality_feedback)
         quality_passed = quality_score >= PASS_THRESHOLD
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion
         _checkpoint(
