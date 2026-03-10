@@ -54,6 +54,7 @@ from personas.config import get_persona
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -147,13 +148,15 @@ def _build_strict_retry_prompt(raw_input: str, schema: dict, truncate: int) -> s
     ),
     reraise=True,
 )
-def _extract(client: anthropic.Anthropic, prompt: str) -> str:
+def _extract(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -190,7 +193,8 @@ def data_extraction_node(state: DataExtractionState) -> dict:
              schema_fields=list(state["schema"].keys()))
 
     try:
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # PRE checkpoint — mark expensive operation started for replay diagnosis
         _checkpoint(
@@ -213,7 +217,7 @@ def data_extraction_node(state: DataExtractionState) -> dict:
                     state["raw_input"], state["schema"], RETRY_INPUT_CHARS
                 )
 
-            last_response = _extract(claude, prompt)
+            last_response = _extract(claude, prompt, metrics)
             parsed = _try_parse_json(last_response)
             if parsed is not None:
                 break   # quality threshold met — exit loop
@@ -228,6 +232,9 @@ def data_extraction_node(state: DataExtractionState) -> dict:
         validation_passed, issues = _validate_schema(parsed, state["schema"])
         if not validation_passed:
             log.warning(f"{ROLE}.validation_issues", issues=issues)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion
         _checkpoint(
