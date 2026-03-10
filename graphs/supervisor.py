@@ -30,6 +30,11 @@ from agents.sales_conversion import SalesConversionState, sales_conversion_node
 from agents.content_scaler import ContentScalerState, content_scaler_node
 from agents.automation_architect import AutomationState, automation_architect_node
 from agents.business_intelligence import BIReportState, business_intelligence_node
+from agents.seo_specialist import SEOState, seo_specialist_node
+from agents.competitor_monitor import CompetitorIntelState, competitor_monitor_node
+from agents.email_architect import EmailSequenceState, email_architect_node
+from agents.video_brief_writer import VideoBriefState, video_brief_writer_node
+from agents.funnel_architect import FunnelState, funnel_architect_node
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 
@@ -95,6 +100,27 @@ ROUTING_RULES: dict[str, list[str]] = {
     "business_intelligence": [
         "kpi", "metric", "dashboard", "report", "analytics", "forecast",
         "trend", "performance", "revenue report", "bi ", "data analysis",
+    ],
+    "seo_specialist": [
+        "seo", "search engine", "on-page", "meta tag", "schema markup",
+        "keyword gap", "keyword rank", "serp", "google ranking", "canonical",
+    ],
+    "competitor_monitor": [
+        "competitor", "rival", "intel", "competitive", "market analysis",
+        "spy", "monitor", "what are competitors", "compare to", "scrape site",
+    ],
+    "email_architect": [
+        "email sequence", "email campaign", "nurture sequence", "drip", "follow-up email",
+        "onboarding email", "re-engagement", "cold email", "email series", "write emails",
+    ],
+    "video_brief_writer": [
+        "video brief", "tiktok", "reels", "youtube short", "short-form video",
+        "hook script", "video script", "film brief", "b-roll", "video content",
+    ],
+    "funnel_architect": [
+        "conversion funnel", "sales funnel", "landing page strategy", "cro",
+        "objection handling", "offer structure", "upsell map", "funnel design",
+        "top of funnel", "bottom of funnel", "awareness funnel",
     ],
 }
 
@@ -290,6 +316,52 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("bi_report", ""), "error": r.get("error")}
 
+
+    elif role == "seo_specialist":
+        r = seo_specialist_node({
+            **base, "agent": role,
+            "url": task, "page_content": task,
+            "target_keywords": "", "business_context": "", "focus": "general",
+            "seo_report": "",
+        })
+        return {"result": r.get("seo_report", ""), "error": r.get("error")}
+
+    elif role == "competitor_monitor":
+        r = competitor_monitor_node({
+            **base, "agent": role,
+            "competitor_url": task.split()[0] if task.startswith("http") else "https://example.com",
+            "our_context": task, "focus": "general", "intel_report": "",
+        })
+        return {"result": r.get("intel_report", ""), "error": r.get("error")}
+
+    elif role == "email_architect":
+        r = email_architect_node({
+            **base, "agent": role,
+            "sequence_goal": "nurture", "audience": task,
+            "product": "Our product/service", "num_emails": 3,
+            "tone": "professional", "from_name": "The Team",
+            "email_sequence": "", "email_count": 0,
+        })
+        return {"result": r.get("email_sequence", ""), "error": r.get("error")}
+
+    elif role == "video_brief_writer":
+        r = video_brief_writer_node({
+            **base, "agent": role,
+            "topic": task, "platform": "general", "duration_seconds": 60,
+            "hook_style": "direct", "cta": "Follow for more",
+            "brand_context": "", "video_brief": "",
+        })
+        return {"result": r.get("video_brief", ""), "error": r.get("error")}
+
+    elif role == "funnel_architect":
+        r = funnel_architect_node({
+            **base, "agent": role,
+            "product": task, "audience": "Our target customer",
+            "funnel_stage": "consideration", "traffic_source": "organic_search",
+            "avg_order_value": "unknown", "current_conversion": "unknown",
+            "funnel_spec": "",
+        })
+        return {"result": r.get("funnel_spec", ""), "error": r.get("error")}
     else:
         return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}
 
