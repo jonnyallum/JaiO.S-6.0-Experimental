@@ -27,8 +27,8 @@ class SupabaseStateLogger:
     def client(self) -> Client:
         if self._client is None:
             self._client = create_client(
-                settings.antigravity_brain_url,
-                settings.antigravity_brain_service_role_key,
+                settings.brain_url,
+                settings.brain_service_role_key,
             )
         return self._client
 
