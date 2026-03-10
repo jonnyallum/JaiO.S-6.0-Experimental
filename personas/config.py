@@ -116,6 +116,36 @@ class PersonaSettings(BaseSettings):
     persona_business_intelligence_handle: str = Field("")
     persona_business_intelligence_personality: str = Field("")
 
+
+    # SEO Specialist
+    persona_seo_specialist_name: str = Field("")
+    persona_seo_specialist_nickname: str = Field("")
+    persona_seo_specialist_handle: str = Field("")
+    persona_seo_specialist_personality: str = Field("")
+
+    # Competitor Monitor
+    persona_competitor_monitor_name: str = Field("")
+    persona_competitor_monitor_nickname: str = Field("")
+    persona_competitor_monitor_handle: str = Field("")
+    persona_competitor_monitor_personality: str = Field("")
+
+    # Email Architect
+    persona_email_architect_name: str = Field("")
+    persona_email_architect_nickname: str = Field("")
+    persona_email_architect_handle: str = Field("")
+    persona_email_architect_personality: str = Field("")
+
+    # Video Brief Writer
+    persona_video_brief_writer_name: str = Field("")
+    persona_video_brief_writer_nickname: str = Field("")
+    persona_video_brief_writer_handle: str = Field("")
+    persona_video_brief_writer_personality: str = Field("")
+
+    # Funnel Architect
+    persona_funnel_architect_name: str = Field("")
+    persona_funnel_architect_nickname: str = Field("")
+    persona_funnel_architect_handle: str = Field("")
+    persona_funnel_architect_personality: str = Field("")
     # Orchestrator
     persona_orchestrator_name: str = Field("")
     persona_orchestrator_nickname: str = Field("")
@@ -144,6 +174,12 @@ _ROLE_MAP: dict[str, str] = {
     "content_scaler":          "persona_content_scaler",
     "automation_architect":    "persona_automation_architect",
     "business_intelligence":   "persona_business_intelligence",
+    # Growth & intelligence
+    "seo_specialist":       "persona_seo_specialist",
+    "competitor_monitor":   "persona_competitor_monitor",
+    "email_architect":      "persona_email_architect",
+    "video_brief_writer":   "persona_video_brief_writer",
+    "funnel_architect":     "persona_funnel_architect",
     # Orchestration
     "orchestrator":            "persona_orchestrator",
 }
