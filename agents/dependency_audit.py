@@ -50,6 +50,7 @@ from state.base import BaseState
 from tools.github_tools import GitHubTools
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -132,13 +133,15 @@ def _collect_manifests(gh: GitHubTools, owner: str, repo: str) -> dict:
     ),
     reraise=True,
 )
-def _audit(client: anthropic.Anthropic, prompt: str) -> str:
+def _audit(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -229,7 +232,8 @@ def dependency_audit_node(state: DependencyAuditState) -> dict:
 
     try:
         gh     = GitHubTools()
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Phase 1 — collect manifests (PERMANENT failure: bad repo → ValueError)
         raw = _collect_manifests(gh, state["repo_owner"], state["repo_name"])
@@ -251,7 +255,10 @@ def dependency_audit_node(state: DependencyAuditState) -> dict:
 
         # Phase 2 — audit (TRANSIENT failures retried by tenacity)
         prompt = _build_audit_prompt(raw, focus, persona)
-        report = _audit(claude, prompt)
+        report = _audit(claude, prompt, metrics)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion and output size
         _checkpoint(
