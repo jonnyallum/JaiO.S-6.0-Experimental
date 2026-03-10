@@ -48,6 +48,7 @@ from state.base import BaseState
 from tools.github_tools import GitHubTools
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -115,13 +116,15 @@ def _collect_security_files(gh: GitHubTools, owner: str, repo: str) -> dict:
     ),
     reraise=True,
 )
-def _score_risk(client: anthropic.Anthropic, prompt: str) -> str:
+def _score_risk(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call for risk scoring. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -207,7 +210,8 @@ def security_audit_node(state: SecurityAuditState) -> dict:
 
     try:
         gh     = GitHubTools()
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Phase 1 — collect (PERMANENT failure: bad repo → ValueError)
         raw = _collect_security_files(gh, state["repo_owner"], state["repo_name"])
@@ -221,7 +225,7 @@ def security_audit_node(state: SecurityAuditState) -> dict:
 
         # Phase 2 — score risk (TRANSIENT failures retried by tenacity)
         prompt     = _build_prompt(repo_slug, raw, persona)
-        report     = _score_risk(claude, prompt)
+        report     = _score_risk(claude, prompt, metrics)
         risk_level = _parse_risk_level(report)
 
         # Alert on high severity — non-fatal, never blocks return
@@ -229,6 +233,9 @@ def security_audit_node(state: SecurityAuditState) -> dict:
             notifier.alert(
                 f"🔴 Security audit: <b>{risk_level}</b>\nRepo: <code>{repo_slug}</code>"
             )
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record outcome for observability
         _checkpoint(
