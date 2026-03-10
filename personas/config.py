@@ -182,6 +182,12 @@ _ROLE_MAP: dict[str, str] = {
     "funnel_architect":     "persona_funnel_architect",
     # Orchestration
     "orchestrator":            "persona_orchestrator",
+    "analytics_reporter":   ("analytics_reporter_name", "analytics_reporter_nickname", "analytics_reporter_handle", "analytics_reporter_personality"),
+    "ad_copy_writer":       ("ad_copy_writer_name", "ad_copy_writer_nickname", "ad_copy_writer_handle", "ad_copy_writer_personality"),
+    "launch_orchestrator":  ("launch_orchestrator_name", "launch_orchestrator_nickname", "launch_orchestrator_handle", "launch_orchestrator_personality"),
+    "case_study_writer":    ("case_study_writer_name", "case_study_writer_nickname", "case_study_writer_handle", "case_study_writer_personality"),
+    "knowledge_base_writer":("knowledge_base_writer_name", "knowledge_base_writer_nickname", "knowledge_base_writer_handle", "knowledge_base_writer_personality"),
+    "agent_builder":        ("agent_builder_name", "agent_builder_nickname", "agent_builder_handle", "agent_builder_personality"),
 }
 
 
