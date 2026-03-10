@@ -10,7 +10,6 @@ Usage:
     persona = get_persona("github_intelligence")
     # persona = {"name": "Hugo Reeves", "nickname": "The Crawler", "handle": "@hugo", "personality": "..."}
 """
-from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -87,6 +86,36 @@ class PersonaSettings(BaseSettings):
     persona_supabase_intelligence_handle: str = Field("")
     persona_supabase_intelligence_personality: str = Field("")
 
+    # Monetisation Strategist
+    persona_monetisation_strategist_name: str = Field("")
+    persona_monetisation_strategist_nickname: str = Field("")
+    persona_monetisation_strategist_handle: str = Field("")
+    persona_monetisation_strategist_personality: str = Field("")
+
+    # Sales Conversion
+    persona_sales_conversion_name: str = Field("")
+    persona_sales_conversion_nickname: str = Field("")
+    persona_sales_conversion_handle: str = Field("")
+    persona_sales_conversion_personality: str = Field("")
+
+    # Content Scaler
+    persona_content_scaler_name: str = Field("")
+    persona_content_scaler_nickname: str = Field("")
+    persona_content_scaler_handle: str = Field("")
+    persona_content_scaler_personality: str = Field("")
+
+    # Automation Architect
+    persona_automation_architect_name: str = Field("")
+    persona_automation_architect_nickname: str = Field("")
+    persona_automation_architect_handle: str = Field("")
+    persona_automation_architect_personality: str = Field("")
+
+    # Business Intelligence
+    persona_business_intelligence_name: str = Field("")
+    persona_business_intelligence_nickname: str = Field("")
+    persona_business_intelligence_handle: str = Field("")
+    persona_business_intelligence_personality: str = Field("")
+
     # Orchestrator
     persona_orchestrator_name: str = Field("")
     persona_orchestrator_nickname: str = Field("")
@@ -98,6 +127,7 @@ _persona_settings = PersonaSettings()
 
 # Role -> env field prefix mapping
 _ROLE_MAP: dict[str, str] = {
+    # Core technical
     "github_intelligence":    "persona_github_intelligence",
     "security_audit":         "persona_security_audit",
     "architecture_review":    "persona_architecture_review",
@@ -108,7 +138,14 @@ _ROLE_MAP: dict[str, str] = {
     "dependency_audit":       "persona_dependency_audit",
     "social_post_generator":  "persona_social_post_generator",
     "supabase_intelligence":  "persona_supabase_intelligence",
-    "orchestrator":           "persona_orchestrator",
+    # Business intelligence
+    "monetisation_strategist": "persona_monetisation_strategist",
+    "sales_conversion":        "persona_sales_conversion",
+    "content_scaler":          "persona_content_scaler",
+    "automation_architect":    "persona_automation_architect",
+    "business_intelligence":   "persona_business_intelligence",
+    # Orchestration
+    "orchestrator":            "persona_orchestrator",
 }
 
 
@@ -128,20 +165,19 @@ def get_persona(role: str) -> dict:
     """
     prefix = _ROLE_MAP.get(role)
     if prefix:
-        name = getattr(_persona_settings, f"{prefix}_name", "")
-        nickname = getattr(_persona_settings, f"{prefix}_nickname", "")
-        handle = getattr(_persona_settings, f"{prefix}_handle", "")
+        name        = getattr(_persona_settings, f"{prefix}_name", "")
+        nickname    = getattr(_persona_settings, f"{prefix}_nickname", "")
+        handle      = getattr(_persona_settings, f"{prefix}_handle", "")
         personality = getattr(_persona_settings, f"{prefix}_personality", "")
     else:
         name = nickname = handle = personality = ""
 
-    # Defaults: role slug formatted nicely
     role_display = role.replace("_", " ").title()
     return {
-        "role": role,
-        "name": name or role_display,
-        "nickname": nickname or "",
-        "handle": handle or f"@{role.replace('_', '-')}",
+        "role":        role,
+        "name":        name        or role_display,
+        "nickname":    nickname    or "",
+        "handle":      handle      or f"@{role.replace('_', '-')}",
         "personality": personality or f"You are the {role_display} specialist. Be precise, specific, and actionable.",
     }
 
