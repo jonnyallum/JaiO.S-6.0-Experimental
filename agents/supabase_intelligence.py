@@ -50,6 +50,7 @@ from personas.config import get_persona
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -164,13 +165,15 @@ def _collect_brain_data(focus: str) -> dict:
     ),
     reraise=True,
 )
-def _synthesise(client: anthropic.Anthropic, prompt: str) -> str:
+def _synthesise(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text
 
 
@@ -268,7 +271,8 @@ def supabase_intelligence_node(state: BrainIntelState) -> dict:
                 f"Invalid focus '{focus}'. Must be one of: {', '.join(sorted(VALID_FOCUS))}"
             )
 
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Phase 1 — collect brain data
         raw = _collect_brain_data(focus)
@@ -287,7 +291,10 @@ def supabase_intelligence_node(state: BrainIntelState) -> dict:
 
         # Phase 2 — synthesise (TRANSIENT failures retried by tenacity)
         prompt       = _build_brain_prompt(raw, query, focus, persona)
-        intelligence = _synthesise(claude, prompt)
+        intelligence = _synthesise(claude, prompt, metrics)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — record completion
         _checkpoint(
