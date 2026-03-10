@@ -121,7 +121,7 @@ Query: {state['query']}"""
         messages=[{
             "role": "user",
             "content": (
-                "You are @hugo, a GitHub Intelligence Specialist in the Antigravity Orchestra. "
+                "You are @hugo, a GitHub Intelligence Specialist in JaiOS 6. "
                 "Analyze the repository data below and answer the query with specific, actionable intelligence. "
                 "Use only facts from the data provided. Be concise and structured.\n\n"
                 f"{context}"
