@@ -25,12 +25,17 @@ from agents.code_reviewer import CodeReviewState, code_reviewer_node
 from agents.dependency_audit import DependencyAuditState, dependency_audit_node
 from agents.social_post_generator import SocialPostState, social_post_generator_node
 from agents.supabase_intelligence import BrainIntelState, supabase_intelligence_node
+from agents.monetisation_strategist import MonetisationState, monetisation_strategist_node
+from agents.sales_conversion import SalesConversionState, sales_conversion_node
+from agents.content_scaler import ContentScalerState, content_scaler_node
+from agents.automation_architect import AutomationState, automation_architect_node
+from agents.business_intelligence import BIReportState, business_intelligence_node
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 
 log = structlog.get_logger()
 
-# Keyword routing table — one entry per skill node
+# ── Keyword routing table ─────────────────────────────────────────────────────────
 ROUTING_RULES: dict[str, list[str]] = {
     "github_intelligence": [
         "github", "repo", "repository", "commit", "pull request", "pr",
@@ -42,15 +47,14 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
     "architecture_review": [
         "architecture", "design", "refactor", "pattern", "stack", "api",
-        "component", "structure", "tech debt", "review",
+        "component", "structure", "tech debt",
     ],
     "data_extraction": [
         "parse", "extract", "schema", "json", "csv", "format",
         "convert", "transform", "scrape",
     ],
     "quality_validation": [
-        "quality", "test", "validate", "check", "qa", "verify",
-        "pass", "fail", "score",
+        "quality", "validate", "check", "qa", "verify", "pass", "fail", "score",
     ],
     "brief_writer": [
         "brief", "proposal", "scope of work", "sow", "document",
@@ -58,7 +62,7 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
     "code_reviewer": [
         "review code", "code review", "code quality", "feedback on code",
-        "lint", "smell", "file review", "read file",
+        "lint", "smell", "file review",
     ],
     "dependency_audit": [
         "dependency", "dependencies", "package", "requirements", "npm",
@@ -71,6 +75,26 @@ ROUTING_RULES: dict[str, list[str]] = {
     "supabase_intelligence": [
         "supabase", "brain", "shared brain", "agent data", "learnings",
         "chatroom", "who is", "which agent",
+    ],
+    "monetisation_strategist": [
+        "monetis", "monetiz", "revenue", "pricing", "funnel", "mrr",
+        "arr", "subscription", "upsell", "profit", "income", "earn",
+    ],
+    "sales_conversion": [
+        "prospect", "close", "objection", "deal", "pipeline", "crm",
+        "follow up", "pitch", "negotiate", "sales call", "cold",
+    ],
+    "content_scaler": [
+        "content", "copy", "variant", "a/b", "caption", "headline",
+        "ad copy", "email subject", "blog intro", "brand voice",
+    ],
+    "automation_architect": [
+        "automat", "n8n", "workflow", "trigger", "webhook", "cron",
+        "zapier", "make", "integration", "pipeline", "email sequence",
+    ],
+    "business_intelligence": [
+        "kpi", "metric", "dashboard", "report", "analytics", "forecast",
+        "trend", "performance", "revenue report", "bi ", "data analysis",
     ],
 }
 
@@ -104,167 +128,203 @@ def route_node(state: SupervisorState) -> dict:
 
 def execute_node(state: SupervisorState) -> dict:
     """Dispatch to the selected skill node."""
-    role = state["selected_role"]
+    role        = state["selected_role"]
     workflow_id = state.get("workflow_id") or str(uuid.uuid4())
-    repo_owner = state.get("repo_owner") or "jonnyallum"
-    repo_name = state.get("repo_name") or "JaiO.S-6.0-Experimental"
-    base = {
+    repo_owner  = state.get("repo_owner") or "jonnyallum"
+    repo_name   = state.get("repo_name")  or "JaiO.S-6.0-Experimental"
+    task        = state["task"]
+    base        = {
         "workflow_id": workflow_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "error": None,
+        "timestamp":   datetime.now(timezone.utc).isoformat(),
+        "error":       None,
     }
 
     log.info("supervisor.executing", role=role, workflow_id=workflow_id)
 
+    # ── Technical agents ──────────────────────────────────────────────────────────
+
     if role == "github_intelligence":
-        result = github_intelligence_node({
+        r = github_intelligence_node({
             **base, "agent": role,
             "repo_owner": repo_owner, "repo_name": repo_name,
-            "query": state["task"], "intelligence": "",
+            "query": task, "intelligence": "",
         })
-        return {"result": result.get("intelligence", ""), "error": result.get("error")}
+        return {"result": r.get("intelligence", ""), "error": r.get("error")}
 
     elif role == "security_audit":
-        result = security_audit_node({
+        r = security_audit_node({
             **base, "agent": role,
             "repo_owner": repo_owner, "repo_name": repo_name,
             "security_report": "", "risk_level": "UNKNOWN",
         })
-        return {"result": result.get("security_report", ""), "error": result.get("error")}
+        return {"result": r.get("security_report", ""), "error": r.get("error")}
 
     elif role == "architecture_review":
-        result = architecture_review_node({
+        r = architecture_review_node({
             **base, "agent": role,
             "repo_owner": repo_owner, "repo_name": repo_name,
             "focus": "general", "architecture_report": "",
         })
-        return {"result": result.get("architecture_report", ""), "error": result.get("error")}
+        return {"result": r.get("architecture_report", ""), "error": r.get("error")}
 
     elif role == "data_extraction":
-        result = data_extraction_node({
+        r = data_extraction_node({
             **base, "agent": role,
-            "source_text": state["task"],
-            "target_schema": "{}",
-            "extracted_data": "",
+            "source_text": task, "target_schema": "{}", "extracted_data": "",
         })
-        return {"result": result.get("extracted_data", ""), "error": result.get("error")}
+        return {"result": r.get("extracted_data", ""), "error": r.get("error")}
 
     elif role == "quality_validation":
-        result = quality_validation_node({
+        r = quality_validation_node({
             **base, "agent": role,
-            "artifact": state["task"],
-            "criteria": "",
-            "validation_report": "",
-            "score": 0,
-            "passed": False,
+            "artifact": task, "criteria": "",
+            "validation_report": "", "score": 0, "passed": False,
         })
-        return {"result": result.get("validation_report", ""), "error": result.get("error")}
+        return {"result": r.get("validation_report", ""), "error": r.get("error")}
 
     elif role == "brief_writer":
-        result = brief_writer_node({
+        r = brief_writer_node({
             **base, "agent": role,
-            "client_name": repo_owner,
-            "brief_type": "proposal",
-            "context": state["task"],
+            "client_name": repo_owner, "brief_type": "proposal",
+            "context": task,
             "goal": "Create a professional brief based on the provided context.",
-            "budget_hint": "",
-            "timeline_hint": "",
-            "brief": "",
+            "budget_hint": "", "timeline_hint": "", "brief": "",
         })
-        return {"result": result.get("brief", ""), "error": result.get("error")}
+        return {"result": r.get("brief", ""), "error": r.get("error")}
 
     elif role == "code_reviewer":
-        # Extract file paths from task — tokens containing "/" or "." longer than 3 chars
-        tokens = state["task"].split()
-        file_paths = [
-            t.strip(",;")
-            for t in tokens
-            if ("/" in t or "." in t) and len(t) > 3
-        ]
-        result = code_reviewer_node({
+        tokens     = task.split()
+        file_paths = [t.strip(",;") for t in tokens if ("/" in t or "." in t) and len(t) > 3]
+        r = code_reviewer_node({
             **base, "agent": role,
             "repo_owner": repo_owner, "repo_name": repo_name,
-            "file_paths": file_paths,
-            "focus": "general",
-            "code_review": "",
+            "file_paths": file_paths, "focus": "general", "code_review": "",
         })
-        return {"result": result.get("code_review", ""), "error": result.get("error")}
+        return {"result": r.get("code_review", ""), "error": r.get("error")}
 
     elif role == "dependency_audit":
-        result = dependency_audit_node({
+        r = dependency_audit_node({
             **base, "agent": role,
             "repo_owner": repo_owner, "repo_name": repo_name,
-            "focus": "general",
-            "dependency_report": "",
+            "focus": "general", "dependency_report": "",
         })
-        return {"result": result.get("dependency_report", ""), "error": result.get("error")}
+        return {"result": r.get("dependency_report", ""), "error": r.get("error")}
 
     elif role == "social_post_generator":
-        result = social_post_generator_node({
+        r = social_post_generator_node({
             **base, "agent": role,
-            "brief": state["task"],
-            "platform": "facebook",
-            "tone": "professional",
-            "hashtags": "#JaiOS6 #JonnyAI",
-            "publish": False,
-            "image_url": None,
-            "post_copy": {},
-            "published": False,
-            "post_ids": {},
+            "brief": task, "platform": "facebook", "tone": "professional",
+            "hashtags": "#JaiOS6 #JonnyAI", "publish": False,
+            "image_url": None, "post_copy": {}, "published": False, "post_ids": {},
         })
-        copy = result.get("post_copy", {})
-        return {
-            "result": copy.get("facebook") or copy.get("instagram") or "",
-            "error": result.get("error"),
-        }
+        copy = r.get("post_copy", {})
+        return {"result": copy.get("facebook") or copy.get("instagram") or "",
+                "error": r.get("error")}
 
     elif role == "supabase_intelligence":
-        result = supabase_intelligence_node({
+        r = supabase_intelligence_node({
             **base, "agent": role,
-            "query": state["task"],
-            "focus": "general",
-            "intelligence": "",
+            "query": task, "focus": "general", "intelligence": "",
         })
-        return {"result": result.get("intelligence", ""), "error": result.get("error")}
+        return {"result": r.get("intelligence", ""), "error": r.get("error")}
+
+    # ── Business intelligence agents ──────────────────────────────────────────────
+
+    elif role == "monetisation_strategist":
+        r = monetisation_strategist_node({
+            **base, "agent": role,
+            "client_name": repo_owner,
+            "business_context": task,
+            "current_revenue": "",
+            "goals": "Maximise revenue and build sustainable growth.",
+            "constraints": "",
+            "strategy": "",
+        })
+        return {"result": r.get("strategy", ""), "error": r.get("error")}
+
+    elif role == "sales_conversion":
+        r = sales_conversion_node({
+            **base, "agent": role,
+            "prospect_name": repo_owner,
+            "company": repo_name,
+            "deal_stage": "engaged",
+            "context": task,
+            "objections": "",
+            "close_strategy": "",
+        })
+        return {"result": r.get("close_strategy", ""), "error": r.get("error")}
+
+    elif role == "content_scaler":
+        r = content_scaler_node({
+            **base, "agent": role,
+            "topic": task,
+            "brand_voice": "professional, clear, results-first",
+            "platform": "linkedin",
+            "variant_count": 3,
+            "cta": "",
+            "variants": [],
+        })
+        variants = r.get("variants", [])
+        return {"result": "\n\n---\n\n".join(variants), "error": r.get("error")}
+
+    elif role == "automation_architect":
+        r = automation_architect_node({
+            **base, "agent": role,
+            "workflow_description": task,
+            "tools_available": "n8n, Resend, Supabase, OpenAI",
+            "trigger_type": "webhook",
+            "complexity": "medium",
+            "automation_spec": "",
+        })
+        return {"result": r.get("automation_spec", ""), "error": r.get("error")}
+
+    elif role == "business_intelligence":
+        r = business_intelligence_node({
+            **base, "agent": role,
+            "client_name": repo_owner,
+            "kpi_data": task,
+            "period": "Current period",
+            "goals": "",
+            "context": "",
+            "bi_report": "",
+        })
+        return {"result": r.get("bi_report", ""), "error": r.get("error")}
 
     else:
-        return {
-            "result": f"Role '{role}' is not wired into the supervisor.",
-            "error": None,
-        }
+        return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}
 
 
 def build_supervisor():
     """Build and compile the supervisor graph."""
     graph = StateGraph(SupervisorState)
-    graph.add_node("route", route_node)
+    graph.add_node("route",   route_node)
     graph.add_node("execute", execute_node)
-    graph.add_edge(START, "route")
-    graph.add_edge("route", "execute")
-    graph.add_edge("execute", END)
+    graph.add_edge(START,     "route")
+    graph.add_edge("route",   "execute")
+    graph.add_edge("execute",  END)
     return graph.compile(checkpointer=MemorySaver())
 
 
 if __name__ == "__main__":
     import sys
 
-    task = sys.argv[1] if len(sys.argv) > 1 else "Review the architecture of JaiO.S-6.0-Experimental"
+    task  = sys.argv[1] if len(sys.argv) > 1 else "Review the architecture of JaiO.S-6.0-Experimental"
     owner = sys.argv[2] if len(sys.argv) > 2 else "jonnyallum"
-    repo = sys.argv[3] if len(sys.argv) > 3 else "JaiO.S-6.0-Experimental"
+    repo  = sys.argv[3] if len(sys.argv) > 3 else "JaiO.S-6.0-Experimental"
 
-    app = build_supervisor()
-    wf_id = str(uuid.uuid4())
+    app    = build_supervisor()
+    wf_id  = str(uuid.uuid4())
     result = app.invoke(
         {
             "workflow_id": wf_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "agent": "orchestrator",
-            "error": None,
-            "task": task,
-            "repo_owner": owner,
-            "repo_name": repo,
+            "timestamp":   datetime.now(timezone.utc).isoformat(),
+            "agent":       "orchestrator",
+            "error":       None,
+            "task":        task,
+            "repo_owner":  owner,
+            "repo_name":   repo,
             "selected_role": "",
-            "result": "",
+            "result":      "",
         },
         config={"configurable": {"thread_id": wf_id}},
     )
