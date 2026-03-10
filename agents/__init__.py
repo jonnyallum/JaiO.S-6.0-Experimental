@@ -21,6 +21,13 @@ from agents.content_scaler import content_scaler_node, ContentScalerState
 from agents.automation_architect import automation_architect_node, AutomationState
 from agents.business_intelligence import business_intelligence_node, BIReportState
 
+# ── Growth & intelligence agents ──────────────────────────────────────────────────
+from agents.seo_specialist import seo_specialist_node, SEOState
+from agents.competitor_monitor import competitor_monitor_node, CompetitorIntelState
+from agents.email_architect import email_architect_node, EmailSequenceState
+from agents.video_brief_writer import video_brief_writer_node, VideoBriefState
+from agents.funnel_architect import funnel_architect_node, FunnelState
+
 __all__ = [
     # Core technical
     "github_intelligence_node", "GitHubIntelState",
@@ -38,5 +45,10 @@ __all__ = [
     "sales_conversion_node",        "SalesConversionState",
     "content_scaler_node",          "ContentScalerState",
     "automation_architect_node",    "AutomationState",
-    "business_intelligence_node",   "BIReportState",
+    "business_intelligence_node",   "BIReportState",    # Growth & intelligence
+    "seo_specialist_node",      "SEOState",
+    "competitor_monitor_node",  "CompetitorIntelState",
+    "email_architect_node",     "EmailSequenceState",
+    "video_brief_writer_node",  "VideoBriefState",
+    "funnel_architect_node",    "FunnelState",
 ]
