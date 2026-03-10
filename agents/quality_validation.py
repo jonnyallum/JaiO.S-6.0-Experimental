@@ -1,15 +1,38 @@
 """
-Skill: Quality Validation
-Role: quality_validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AGENT : quality_validation
+SKILL : Quality Validation — score an artifact against its original request, PASS/FAIL gate
 
-Reviews outputs from other skill nodes and validates:
-- Completeness (all expected content present?)
-- Accuracy (does it match the request?)
-- Quality (production-ready?)
+Node Contract (@langraph doctrine):
+  Inputs   : artifact (str), artifact_type (str), original_query (str) — immutable after entry
+  Outputs  : quality_score (int), quality_passed (bool), quality_feedback (str), error (str|None)
+  Tools    : Anthropic [read-only]
+  Effects  : Supabase state log [non-fatal], Telegram alert on FAIL [non-fatal]
 
-Returns a score /10 and PASS/FAIL verdict with specific improvement actions.
+Thread Memory (checkpoint-scoped):
+  All QualityValidationState fields are thread-scoped only.
+  No cross-thread writes. No long-term store updates.
 
-Persona injected at runtime via personas/config.py.
+Loop Policy:
+  NONE — single-pass node. Retry is HTTP-level only (tenacity, transient errors).
+  @langraph: do not add iterative refinement without an explicit budget + stop rule.
+
+Failure Discrimination:
+  PERMANENT  → ValueError (score parsing fails after fallback)
+               No retry. Returns quality_score=0. Graph continues.
+  TRANSIENT  → APIConnectionError, RateLimitError, APITimeoutError
+               Tenacity retries up to MAX_RETRIES with exponential backoff.
+  UNEXPECTED → Exception — logged, returned as error, graph does not crash.
+
+Checkpoint Semantics:
+  PRE  — Supabase log before Claude call (marks expensive operation started)
+  POST — Supabase log after completion (records score, pass/fail status)
+
+Gate Alert:
+  TelegramNotifier fires if quality_passed=False. Non-fatal — placed outside try block.
+
+Persona injected at runtime via personas/config.py — skill file contains no identity.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 import uuid
 from datetime import datetime, timezone
@@ -22,7 +45,6 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
-from typing_extensions import TypedDict
 
 from config.settings import settings
 from personas.config import get_persona
@@ -31,65 +53,66 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 
 log = structlog.get_logger()
-ROLE = "quality_validation"
 
-PASS_THRESHOLD = 7
+# ── Budget constants (@langraph: all limits named, never magic numbers) ──────────
+ROLE           = "quality_validation"
+MAX_RETRIES    = 3
+RETRY_MIN_S    = 3
+RETRY_MAX_S    = 45
+MAX_TOKENS     = 1000   # Validation feedback — structured, concise output
+ARTIFACT_CHARS = 5000   # Artifact truncation limit
+PASS_THRESHOLD = 7      # Scores >= 7 pass the quality gate
 
 
+# ── State schema ─────────────────────────────────────────────────────────────────
 class QualityValidationState(BaseState):
-    artifact: str            # The output to review
-    artifact_type: str       # intelligence_report | security_audit | code | plan | copy
-    original_query: str      # The original request that produced the artifact
-    quality_score: int       # 1-10
-    quality_passed: bool     # True if score >= PASS_THRESHOLD
-    quality_feedback: str    # Specific feedback and improvement actions
+    # Inputs — written by caller, immutable inside this node
+    artifact: str          # The output to review
+    artifact_type: str     # intelligence_report | security_audit | code | plan | copy
+    original_query: str    # The original request that produced the artifact
+    # Outputs — written by this node, read by downstream nodes
+    quality_score: int        # 1-10; 0 on failure
+    quality_passed: bool      # True if quality_score >= PASS_THRESHOLD
+    quality_feedback: str     # Structured feedback with improvement actions; empty on failure
+    # BaseState provides: workflow_id (thread ID), timestamp, agent, error
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=3, max=45),
-    retry=retry_if_exception_type(
-        (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.APITimeoutError)
-    ),
-    reraise=True,
-)
-def _ask_claude(client: anthropic.Anthropic, prompt: str) -> str:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.content[0].text
-
-
-def quality_validation_node(state: QualityValidationState) -> dict:
+# ── Pure helpers ─────────────────────────────────────────────────────────────────
+def _parse_score(feedback: str) -> int:
     """
-    Quality Validation skill node.
-    Evaluates an artifact against the original query.
-    Scores 1-10, passes at >= 7.
-    Returns improvement actions when failing.
+    Extract the overall score from Claude's structured response. Pure function.
+    Scans for '**Overall Score:** X/10' pattern.
+    Returns default 5 if not found (conservative — neither pass nor hard fail).
     """
-    workflow_id = state.get("workflow_id") or str(uuid.uuid4())
-    artifact_type = state.get("artifact_type", "output")
-    persona = get_persona(ROLE)
+    for line in feedback.split("\n"):
+        if "Overall Score:" in line:
+            try:
+                score_part = line.split("Overall Score:")[1].strip()
+                score = int(score_part.split("/")[0].strip())
+                return max(1, min(10, score))
+            except (ValueError, IndexError):
+                pass
+    return 5  # default: mid-score, conservative
 
-    log.info(f"{ROLE}.started", workflow_id=workflow_id, artifact_type=artifact_type)
 
-    notifier = TelegramNotifier()
-    state_logger = SupabaseStateLogger()
+def _build_validation_prompt(
+    artifact: str,
+    artifact_type: str,
+    original_query: str,
+    persona: dict,
+    truncate: int,
+    pass_threshold: int,
+) -> str:
+    """Format the quality assessment prompt. Pure function — no I/O."""
+    return f"""{persona['personality']}
 
-    try:
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-
-        prompt = f"""{persona['personality']}
-
-Evaluate this {artifact_type} against the original request. Be strict — we ship nothing below {PASS_THRESHOLD}/10.
+Evaluate this {artifact_type} against the original request. Be strict — we ship nothing below {pass_threshold}/10.
 
 ━━━ ORIGINAL REQUEST ━━━
-{state['original_query']}
+{original_query}
 
 ━━━ ARTIFACT ({artifact_type}) ━━━
-{state['artifact'][:5000]}
+{artifact[:truncate]}
 
 ━━━ EVALUATION CRITERIA ━━━
 Score each 1-10:
@@ -120,61 +143,134 @@ Score each 1-10:
 ### Verdict
 [One sentence]"""
 
-        feedback = _ask_claude(claude, prompt)
 
-        # Parse overall score
-        quality_score = 5  # default
-        for line in feedback.split("\n"):
-            if "Overall Score:" in line:
-                try:
-                    score_part = line.split("Overall Score:")[1].strip()
-                    quality_score = int(score_part.split("/")[0].strip())
-                    quality_score = max(1, min(10, quality_score))
-                except (ValueError, IndexError):
-                    pass
-                break
+# ── Phase 2: Validation (Claude call, retried on transient errors only) ──────────
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
+    retry=retry_if_exception_type(
+        (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.APITimeoutError)
+    ),
+    reraise=True,
+)
+def _validate(client: anthropic.Anthropic, prompt: str) -> str:
+    """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=MAX_TOKENS,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.content[0].text
 
-        quality_passed = quality_score >= PASS_THRESHOLD
 
-        if not quality_passed:
-            notifier.alert(
-                f"⚠️ Quality gate FAILED\n"
-                f"Score: {quality_score}/10 | Type: {artifact_type}\n"
-                f"Workflow: <code>{workflow_id[:8]}</code>"
-            )
+# ── Main node ─────────────────────────────────────────────────────────────────────
+def quality_validation_node(state: QualityValidationState) -> dict:
+    """
+    Quality Validation node — single pass, no loop.
 
-        state_logger.log_state(
-            workflow_id=workflow_id,
-            checkpoint_id=f"{ROLE}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
-            agent=ROLE,
-            state={
-                "artifact_type": artifact_type,
-                "quality_score": quality_score,
-                "quality_passed": quality_passed,
-                "status": "completed",
-            },
+    Execution order:
+      1. Build prompt (Phase 1 — pure function)
+      2. PRE checkpoint (before Claude call)
+      3. Validate (Phase 2 — Claude call)
+      4. Parse score (_parse_score — pure function)
+      5. POST checkpoint
+      6. Gate alert if FAIL (non-fatal, outside try block)
+      7. Return state patch
+
+    @langraph: show me the checkpoint before you call production-ready.
+    """
+    thread_id     = state.get("workflow_id") or str(uuid.uuid4())
+    artifact_type = state.get("artifact_type", "output")
+    persona       = get_persona(ROLE)
+    notifier      = TelegramNotifier()
+    state_logger  = SupabaseStateLogger()
+
+    def _checkpoint(checkpoint_id: str, payload: dict) -> None:
+        state_logger.log_state(thread_id, checkpoint_id, ROLE, payload)
+
+    log.info(f"{ROLE}.started", thread_id=thread_id, artifact_type=artifact_type,
+             artifact_chars=len(state["artifact"]))
+
+    quality_score    = 0
+    quality_passed   = False
+    quality_feedback = ""
+
+    try:
+        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+
+        # Build prompt (pure — no I/O)
+        prompt = _build_validation_prompt(
+            state["artifact"], artifact_type, state["original_query"],
+            persona, ARTIFACT_CHARS, PASS_THRESHOLD,
         )
 
-        log.info(f"{ROLE}.completed", score=quality_score, passed=quality_passed)
-        return {
-            "quality_score": quality_score,
-            "quality_passed": quality_passed,
-            "quality_feedback": feedback,
-            "error": None,
-            "workflow_id": workflow_id,
-        }
+        # PRE checkpoint — mark expensive operation started for replay diagnosis
+        _checkpoint(
+            f"{ROLE}_pre_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+            {"artifact_type": artifact_type, "artifact_chars": len(state["artifact"]),
+             "status": "validating"},
+        )
 
+        # Phase 2 — validate (TRANSIENT failures retried by tenacity)
+        quality_feedback = _validate(claude, prompt)
+
+        # Parse score (pure function — no Claude re-call on parse failure)
+        quality_score  = _parse_score(quality_feedback)
+        quality_passed = quality_score >= PASS_THRESHOLD
+
+        # POST checkpoint — record completion
+        _checkpoint(
+            f"{ROLE}_post_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+            {"artifact_type": artifact_type, "quality_score": quality_score,
+             "quality_passed": quality_passed, "status": "completed"},
+        )
+
+        log.info(f"{ROLE}.completed", thread_id=thread_id,
+                 score=quality_score, passed=quality_passed)
+
+    # ── PERMANENT failures — no retry, return cleanly ─────────────────────────────
+    except ValueError as exc:
+        msg = str(exc)
+        log.error(f"{ROLE}.permanent_failure", failure_mode="parse_error", error=msg)
+        notifier.agent_error(ROLE, artifact_type, msg)
+        _checkpoint(f"{ROLE}_err_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}",
+                    {"artifact_type": artifact_type, "status": "parse_error", "error": msg})
+        return {"quality_score": 0, "quality_passed": False, "quality_feedback": "",
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+    except anthropic.APIError as exc:
+        msg = f"Claude API error: {exc}"
+        log.error(f"{ROLE}.claude_error", failure_mode="claude_api", error=msg)
+        notifier.agent_error(ROLE, artifact_type, msg)
+        return {"quality_score": 0, "quality_passed": False, "quality_feedback": "",
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+    # ── UNEXPECTED failures — log everything, never crash the graph ───────────────
     except Exception as exc:
-        msg = f"{ROLE} error: {exc}"
-        log.exception(f"{ROLE}.error", error=msg)
-        return {
-            "quality_score": 0,
-            "quality_passed": False,
-            "quality_feedback": "",
-            "error": msg,
-        }
+        msg = f"Unexpected error in {ROLE}: {exc}"
+        log.exception(f"{ROLE}.unexpected", failure_mode="unexpected", error=msg)
+        notifier.agent_error(ROLE, artifact_type, msg)
+        return {"quality_score": 0, "quality_passed": False, "quality_feedback": "",
+                "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+    # ── Gate alert — non-fatal, fires after successful validation only ────────────
+    if not quality_passed:
+        notifier.alert(
+            f"⚠️ Quality gate FAILED\n"
+            f"Score: {quality_score}/10 | Type: {artifact_type}\n"
+            f"Workflow: <code>{thread_id[:8]}</code>"
+        )
+
+    return {
+        "quality_score": quality_score,
+        "quality_passed": quality_passed,
+        "quality_feedback": quality_feedback,
+        "error": None,
+        "workflow_id": thread_id,
+        "agent": ROLE,
+    }
 
 
-# Backwards-compatibility aliases
+# ── Backwards-compatibility aliases ──────────────────────────────────────────────
 qualityguard_node = quality_validation_node
 QualityGuardState = QualityValidationState
