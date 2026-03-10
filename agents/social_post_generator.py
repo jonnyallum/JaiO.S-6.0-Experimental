@@ -57,6 +57,7 @@ from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.social_tools import MetaSocialTools
 from tools.supabase_tools import SupabaseStateLogger
+from tools.telemetry import CallMetrics
 
 log = structlog.get_logger()
 
@@ -133,13 +134,15 @@ Output ONLY the post copy — no commentary, no labels like "Here is your post:"
     ),
     reraise=True,
 )
-def _generate_copy(client: anthropic.Anthropic, prompt: str) -> str:
+def _generate_copy(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") -> str:
     """Single Claude call with explicit token budget. Retried on transient API errors only."""
+    metrics.start()
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
+    metrics.record(response)
     return response.content[0].text.strip()
 
 
@@ -235,7 +238,8 @@ def social_post_generator_node(state: SocialPostState) -> dict:
                 f"Invalid platform '{platform}'. Must be one of: {', '.join(VALID_PLATFORMS)}"
             )
 
-        claude = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        claude   = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        metrics  = CallMetrics(thread_id, ROLE)
 
         # Build prompt (pure — no I/O)
         prompt = _build_copy_prompt(state["brief"], platform, tone, hashtags, persona)
@@ -247,8 +251,11 @@ def social_post_generator_node(state: SocialPostState) -> dict:
         )
 
         # Phase 1 — generate copy (TRANSIENT failures retried by tenacity)
-        raw_copy    = _generate_copy(claude, prompt)
+        raw_copy    = _generate_copy(claude, prompt, metrics)
         post_copy   = _split_copy(raw_copy, platform)
+
+        metrics.log()
+        metrics.persist()
 
         # POST checkpoint — generation complete
         _checkpoint(
