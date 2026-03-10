@@ -57,6 +57,36 @@ class PersonaSettings(BaseSettings):
     persona_quality_validation_handle: str = Field("")
     persona_quality_validation_personality: str = Field("")
 
+    # Brief Writer
+    persona_brief_writer_name: str = Field("")
+    persona_brief_writer_nickname: str = Field("")
+    persona_brief_writer_handle: str = Field("")
+    persona_brief_writer_personality: str = Field("")
+
+    # Code Reviewer
+    persona_code_reviewer_name: str = Field("")
+    persona_code_reviewer_nickname: str = Field("")
+    persona_code_reviewer_handle: str = Field("")
+    persona_code_reviewer_personality: str = Field("")
+
+    # Dependency Audit
+    persona_dependency_audit_name: str = Field("")
+    persona_dependency_audit_nickname: str = Field("")
+    persona_dependency_audit_handle: str = Field("")
+    persona_dependency_audit_personality: str = Field("")
+
+    # Social Post Generator
+    persona_social_post_generator_name: str = Field("")
+    persona_social_post_generator_nickname: str = Field("")
+    persona_social_post_generator_handle: str = Field("")
+    persona_social_post_generator_personality: str = Field("")
+
+    # Supabase Intelligence
+    persona_supabase_intelligence_name: str = Field("")
+    persona_supabase_intelligence_nickname: str = Field("")
+    persona_supabase_intelligence_handle: str = Field("")
+    persona_supabase_intelligence_personality: str = Field("")
+
     # Orchestrator
     persona_orchestrator_name: str = Field("")
     persona_orchestrator_nickname: str = Field("")
@@ -68,12 +98,17 @@ _persona_settings = PersonaSettings()
 
 # Role -> env field prefix mapping
 _ROLE_MAP: dict[str, str] = {
-    "github_intelligence": "persona_github_intelligence",
-    "security_audit": "persona_security_audit",
-    "architecture_review": "persona_architecture_review",
-    "data_extraction": "persona_data_extraction",
-    "quality_validation": "persona_quality_validation",
-    "orchestrator": "persona_orchestrator",
+    "github_intelligence":    "persona_github_intelligence",
+    "security_audit":         "persona_security_audit",
+    "architecture_review":    "persona_architecture_review",
+    "data_extraction":        "persona_data_extraction",
+    "quality_validation":     "persona_quality_validation",
+    "brief_writer":           "persona_brief_writer",
+    "code_reviewer":          "persona_code_reviewer",
+    "dependency_audit":       "persona_dependency_audit",
+    "social_post_generator":  "persona_social_post_generator",
+    "supabase_intelligence":  "persona_supabase_intelligence",
+    "orchestrator":           "persona_orchestrator",
 }
 
 
