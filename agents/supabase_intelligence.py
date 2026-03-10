@@ -81,8 +81,8 @@ class BrainIntelState(BaseState):
 # ── Supabase client factory (lazy, one per node invocation) ──────────────────────
 def _get_brain_client() -> Client:
     return create_client(
-        settings.antigravity_brain_url,
-        settings.antigravity_brain_service_role_key,
+        settings.brain_url,
+        settings.brain_service_role_key,
     )
 
 
