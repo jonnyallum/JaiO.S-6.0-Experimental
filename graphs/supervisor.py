@@ -71,6 +71,11 @@ from agents.mcp_builder import mcp_builder_node, McpBuilderState
 from agents.gcp_ai_specialist import gcp_ai_specialist_node, GcpAiSpecialistState
 from agents.ui_designer import ui_designer_node, UiDesignerState
 from agents.creative_director import creative_director_node, CreativeDirectorState
+from agents.copywriter import copywriter_node, CopywriterState
+from agents.project_manager import project_manager_node, ProjectManagerState
+from agents.financial_analyst import financial_analyst_node, FinancialAnalystState
+from agents.legal_advisor import legal_advisor_node, LegalAdvisorState
+from agents.fact_checker import fact_checker_node, FactCheckerState
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 
