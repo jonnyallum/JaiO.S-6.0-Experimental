@@ -61,6 +61,8 @@ MAX_RETRIES  = 3
 RETRY_MIN_S  = 3
 RETRY_MAX_S  = 45
 MAX_TOKENS   = 1400   # File-level reviews need enough depth for line references
+VALID_FOCUS   = {"security", "performance", "readability", "testing", "general"}
+
 FILE_CHARS   = 3500   # Per-file truncation — keeps prompt under context limits
 FILE_LIMIT   = 5      # Max files reviewed in one pass
 
@@ -101,6 +103,8 @@ def _collect_files(gh: GitHubTools, owner: str, repo: str, paths: list) -> dict:
         "meta":    gh.get_repo_meta(owner, repo),
     }
 
+
+_build_prompt = _build_review_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Review (Claude call, retried on transient errors only) ──────────────
 @retry(
