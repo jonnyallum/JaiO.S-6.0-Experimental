@@ -370,4 +370,30 @@ def get_all_personas() -> dict[str, dict]:
     voice_synthesiser_nickname: str = Field("")
     voice_synthesiser_handle: str = Field("")
     voice_synthesiser_personality: str = Field("")
+    # fullstack_architect
+    fullstack_architect_name: str = Field("")
+    fullstack_architect_nickname: str = Field("")
+    fullstack_architect_handle: str = Field("")
+    fullstack_architect_personality: str = Field("")
+    # database_architect
+    database_architect_name: str = Field("")
+    database_architect_nickname: str = Field("")
+    database_architect_handle: str = Field("")
+    database_architect_personality: str = Field("")
+    # supabase_specialist
+    supabase_specialist_name: str = Field("")
+    supabase_specialist_nickname: str = Field("")
+    supabase_specialist_handle: str = Field("")
+    supabase_specialist_personality: str = Field("")
+    # devops_engineer
+    devops_engineer_name: str = Field("")
+    devops_engineer_nickname: str = Field("")
+    devops_engineer_handle: str = Field("")
+    devops_engineer_personality: str = Field("")
+    # deployment_specialist
+    deployment_specialist_name: str = Field("")
+    deployment_specialist_nickname: str = Field("")
+    deployment_specialist_handle: str = Field("")
+    deployment_specialist_personality: str = Field("")
+
 
