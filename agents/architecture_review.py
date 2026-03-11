@@ -60,6 +60,8 @@ MAX_RETRIES  = 3
 RETRY_MIN_S  = 3
 RETRY_MAX_S  = 45
 MAX_TOKENS   = 1200   # Architecture reports need depth but not 4k tokens
+VALID_REVIEW_FOCUS = {"scalability", "security", "performance", "maintainability", "cost", "general"}
+
 FILE_CHARS   = 2500   # Per-file truncation limit
 FILE_LIMIT   = 6      # Max config files included in prompt
 
