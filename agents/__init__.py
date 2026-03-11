@@ -115,3 +115,10 @@ from agents.database_architect import database_architect_node, DatabaseArchitect
 from agents.supabase_specialist import supabase_specialist_node, SupabaseSpecialistState
 from agents.devops_engineer import devops_engineer_node, DevOpsEngineerState
 from agents.deployment_specialist import deployment_specialist_node, DeploymentSpecialistState
+
+# Batch 8 — Performance, MCP, GCP, UI Design, Creative Direction
+from agents.performance_auditor import performance_auditor_node, PerformanceAuditorState
+from agents.mcp_builder import mcp_builder_node, McpBuilderState
+from agents.gcp_ai_specialist import gcp_ai_specialist_node, GcpAiSpecialistState
+from agents.ui_designer import ui_designer_node, UiDesignerState
+from agents.creative_director import creative_director_node, CreativeDirectorState
