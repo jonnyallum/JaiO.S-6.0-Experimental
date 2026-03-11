@@ -64,6 +64,8 @@ MAX_RETRIES        = 3
 RETRY_MIN_S        = 3
 RETRY_MAX_S        = 45
 MAX_TOKENS         = 1500   # Extraction output can be large depending on schema size
+VALID_SOURCE_TYPES = {"json", "csv", "xml", "html", "database", "api", "general"}
+
 INPUT_CHARS        = 5000   # Raw input truncation for first attempt
 RETRY_INPUT_CHARS  = 2000   # Stricter truncation on second attempt
 PARSE_ATTEMPTS     = 2      # Loop ceiling — both attempts exhaust → ValueError
@@ -82,6 +84,8 @@ class DataExtractionState(BaseState):
 
 
 # ── Pure helpers ─────────────────────────────────────────────────────────────────
+# ── Phase 1 — JSON parsing utilities (pure, no Claude) ─────────────────────────────
+
 def _try_parse_json(text: str) -> Optional[dict]:
     """Extract JSON from a string, stripping markdown fences if present. Pure function."""
     cleaned = text.strip()
@@ -138,6 +142,8 @@ def _build_strict_retry_prompt(raw_input: str, schema: dict, truncate: int) -> s
         f"Source: {raw_input[:truncate]}"
     )
 
+
+_build_prompt = _build_extraction_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Extraction (Claude call, retried on transient errors only) ──────────
 @retry(
