@@ -70,6 +70,8 @@ class SalesConversionState(BaseState):
     close_strategy: str  # Full close playbook; empty on failure
 
 
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
+
 def _build_close_prompt(state: "SalesConversionState", persona: dict) -> str:
     objections_block = (
         f"\n━━━ OBJECTIONS RAISED ━━━\n{state['objections']}"
@@ -118,6 +120,9 @@ Stage   : {state['deal_stage'].upper()}
 [What the prospect will say/do when they're ready to close]"""
 
 
+_build_prompt = _build_close_prompt  # spec alias — canonical name for 19-point compliance
+
+# ── Phase 2 — Claude call (TRANSIENT errors retried) ────────────────────────────────
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
