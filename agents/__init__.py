@@ -73,6 +73,12 @@ __all__ = [
     "course_designer_node", "CourseState",
     "chatbot_designer_node", "ChatbotState",
 
+    "persona_builder_node", "PersonaState",
+    "pr_writer_node", "PRState",
+    "ab_test_designer_node", "ABTestState",
+    "investor_pitch_writer_node", "InvestorPitchState",
+    "brand_voice_guide_node", "BrandVoiceState",
+
 ]
 
 # Batch 3 — Strategy, Design & Education agents
@@ -81,3 +87,10 @@ from agents.product_strategist import product_strategist_node, ProductStrategySt
 from agents.pricing_strategist import pricing_strategist_node, PricingState
 from agents.course_designer import course_designer_node, CourseState
 from agents.chatbot_designer import chatbot_designer_node, ChatbotState
+
+# Batch 4 — Research, PR, CRO, Investment & Brand agents
+from agents.persona_builder import persona_builder_node, PersonaState
+from agents.pr_writer import pr_writer_node, PRState
+from agents.ab_test_designer import ab_test_designer_node, ABTestState
+from agents.investor_pitch_writer import investor_pitch_writer_node, InvestorPitchState
+from agents.brand_voice_guide import brand_voice_guide_node, BrandVoiceState
