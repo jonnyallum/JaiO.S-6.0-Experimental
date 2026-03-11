@@ -41,6 +41,11 @@ from agents.launch_orchestrator import launch_orchestrator_node, LaunchState
 from agents.case_study_writer import case_study_writer_node, CaseStudyState
 from agents.knowledge_base_writer import knowledge_base_writer_node, KnowledgeBaseState
 from agents.agent_builder import agent_builder_node, AgentBuilderState
+from agents.proposal_writer import proposal_writer_node, ProposalState
+from agents.product_strategist import product_strategist_node, ProductStrategyState
+from agents.pricing_strategist import pricing_strategist_node, PricingState
+from agents.course_designer import course_designer_node, CourseState
+from agents.chatbot_designer import chatbot_designer_node, ChatbotState
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 
