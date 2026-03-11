@@ -49,6 +49,8 @@ MAX_RETRIES = 3
 RETRY_MIN_S = 3
 RETRY_MAX_S = 45
 MAX_TOKENS  = 1800
+VALID_REPORT_TYPES = {"executive", "operational", "financial", "marketing", "product", "general"}
+
 KPI_CHARS   = 4000   # KPI data can be long — allow full tables
 CONTEXT_CHARS = 1500
 
@@ -63,6 +65,8 @@ class BIReportState(BaseState):
     # Output
     bi_report: str      # Structured BI report; empty on failure
 
+
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
 
 def _build_bi_prompt(state: "BIReportState", persona: dict) -> str:
     context_block = (
@@ -118,6 +122,9 @@ Highlight what changed, why it matters, and what to do about it. Max 700 words.
 [Projected performance next period based on current trends — conservative + optimistic]"""
 
 
+_build_prompt = _build_bi_prompt  # spec alias — canonical name for 19-point compliance
+
+# ── Phase 2 — Claude call (TRANSIENT errors retried) ────────────────────────────────
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
