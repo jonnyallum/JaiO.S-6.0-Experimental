@@ -58,6 +58,8 @@ MAX_RETRIES = 3
 RETRY_MIN_S = 3
 RETRY_MAX_S = 45
 MAX_TOKENS  = 1500          # Security reports need more depth than intel summaries
+VALID_RISK_FOCUS = {"code", "dependencies", "config", "infrastructure", "general"}
+
 FILE_CHARS  = 2000          # Max chars per file fetched
 
 # Files that reveal security posture — ordered by signal value
