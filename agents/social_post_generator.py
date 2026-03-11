@@ -167,6 +167,8 @@ def _split_copy(raw_copy: str, platform: str) -> dict:
     return {"facebook": fb_copy, "instagram": ig_copy}
 
 
+_build_prompt = _build_copy_prompt  # spec alias — canonical name for 19-point compliance
+
 # ── Phase 2: Publish (MetaSocialTools side-effect, non-fatal) ────────────────────
 def _publish(social: MetaSocialTools, copy: dict, image_url: Optional[str]) -> dict:
     """
