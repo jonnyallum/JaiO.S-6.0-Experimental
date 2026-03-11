@@ -83,6 +83,7 @@ log = structlog.get_logger()
 
 # ── Keyword routing table ─────────────────────────────────────────────────────────
 ROUTING_RULES: dict[str, list[str]] = {
+    # ── Technical ─────────────────────────────────────────────────────────────
     "github_intelligence": [
         "github", "repo", "repository", "commit", "pull request", "pr",
         "issue", "branch", "contributor", "merge", "diff",
@@ -102,10 +103,6 @@ ROUTING_RULES: dict[str, list[str]] = {
     "quality_validation": [
         "quality", "validate", "check", "qa", "verify", "pass", "fail", "score",
     ],
-    "brief_writer": [
-        "brief", "proposal", "scope of work", "sow", "document",
-        "discovery", "onboarding doc", "client report", "write brief",
-    ],
     "code_reviewer": [
         "review code", "code review", "code quality", "feedback on code",
         "lint", "smell", "file review",
@@ -114,54 +111,276 @@ ROUTING_RULES: dict[str, list[str]] = {
         "dependency", "dependencies", "package", "requirements", "npm",
         "pip", "outdated", "licence", "license", "lockfile",
     ],
+    "fullstack_architect": [
+        "fullstack", "full stack", "full-stack", "next.js", "nextjs", "react",
+        "frontend", "backend", "api design", "rest api", "graphql", "typescript",
+        "web app", "web application", "spa",
+    ],
+    "database_architect": [
+        "database", "db schema", "postgres", "postgresql", "mysql", "sqlite",
+        "table design", "migration", "index", "query optimisation", "query optimization",
+        "normalisation", "normalization", "orm", "prisma", "drizzle",
+    ],
+    "supabase_specialist": [
+        "supabase schema", "supabase rls", "row level security", "supabase function",
+        "supabase edge", "supabase storage", "supabase auth", "supabase realtime",
+        "supabase table", "supabase policy",
+    ],
+    "devops_engineer": [
+        "devops", "ci/cd", "github actions", "docker", "container", "kubernetes",
+        "k8s", "pipeline", "deploy pipeline", "build pipeline", "infra", "infrastructure",
+        "terraform", "ansible", "bash script",
+    ],
+    "deployment_specialist": [
+        "deploy", "deployment", "gcp deploy", "cloud run", "app engine",
+        "vercel", "netlify", "fly.io", "railway", "server setup",
+        "production deploy", "release", "rollout",
+    ],
+    "performance_auditor": [
+        "performance", "slow", "latency", "lighthouse", "core web vitals",
+        "page speed", "load time", "bottleneck", "profil", "optimise speed",
+        "optimize speed", "caching", "cdn",
+    ],
+    "mcp_builder": [
+        "mcp server", "mcp tool", "build mcp", "model context protocol",
+        "fastmcp", "mcp endpoint", "mcp integration", "tool server",
+        "create mcp", "mcp scaffold",
+    ],
+    "gcp_ai_specialist": [
+        "gcp", "google cloud", "vertex ai", "cloud ai", "bigquery",
+        "gcp vm", "compute engine", "cloud storage", "gcs",
+        "cloud function", "pub/sub", "gcp setup",
+    ],
+    "data_parser": [
+        "data parsing", "raw data", "parse data", "structure data",
+        "unstructured data", "clean data", "normalise data", "normalize data",
+        "tabular data", "data pipeline", "etl",
+    ],
+    "agent_builder": [
+        "build agent", "create agent", "new agent", "agent spec",
+        "agent design", "agent skill", "skill node", "langgraph agent",
+        "agent file", "write agent",
+    ],
+    "pipeline_monitor": [
+        "monitor pipeline", "pipeline status", "workflow status", "agent health",
+        "system health", "orchestration status", "task queue", "job status",
+        "pipeline alert", "pipeline report",
+    ],
+    "process_auditor": [
+        "process audit", "workflow audit", "sop audit", "process review",
+        "operational review", "efficiency audit", "process improvement",
+        "workflow optimisation", "workflow optimization", "bottleneck audit",
+    ],
+    "truth_verifier": [
+        "fact check", "verify claim", "is this true", "truth check",
+        "misinformation", "disinformation", "source check", "claim verification",
+        "cross-reference", "truth verif",
+    ],
+
+    # ── Content & Creative ────────────────────────────────────────────────────
     "social_post_generator": [
         "social", "post", "facebook", "instagram", "caption",
         "broadcast", "hashtag", "fb post", "ig post",
     ],
-    "supabase_intelligence": [
-        "supabase", "brain", "shared brain", "agent data", "learnings",
-        "chatroom", "who is", "which agent",
-    ],
-    "monetisation_strategist": [
-        "monetis", "monetiz", "revenue", "pricing", "funnel", "mrr",
-        "arr", "subscription", "upsell", "profit", "income", "earn",
-    ],
-    "sales_conversion": [
-        "prospect", "close", "objection", "deal", "pipeline", "crm",
-        "follow up", "pitch", "negotiate", "sales call", "cold",
-    ],
     "content_scaler": [
-        "content", "copy", "variant", "a/b", "caption", "headline",
-        "ad copy", "email subject", "blog intro", "brand voice",
+        "content variant", "scale content", "content a/b", "headline variant",
+        "email subject variant", "blog intro", "content repurpose",
+        "content batch", "content scale",
     ],
-    "automation_architect": [
-        "automat", "n8n", "workflow", "trigger", "webhook", "cron",
-        "zapier", "make", "integration", "pipeline", "email sequence",
+    "ad_copy_writer": [
+        "ad copy", "advertisement", "google ad", "facebook ad", "meta ad",
+        "paid ad", "ppc copy", "ad headline", "ad creative copy",
+        "display ad", "sponsored post copy",
     ],
-    "business_intelligence": [
-        "kpi", "metric", "dashboard", "report", "analytics", "forecast",
-        "trend", "performance", "revenue report", "bi ", "data analysis",
+    "copywriter": [
+        "copy", "write copy", "website copy", "landing page copy", "homepage copy",
+        "about page", "tagline", "slogan", "brand copy", "product description",
+        "marketing copy",
     ],
-    "seo_specialist": [
-        "seo", "search engine", "on-page", "meta tag", "schema markup",
-        "keyword gap", "keyword rank", "serp", "google ranking", "canonical",
+    "brand_voice_guide": [
+        "brand voice", "tone of voice", "brand guidelines", "brand style",
+        "writing guidelines", "communication style", "brand language",
+        "brand personality", "content guidelines",
     ],
-    "competitor_monitor": [
-        "competitor", "rival", "intel", "competitive", "market analysis",
-        "spy", "monitor", "what are competitors", "compare to", "scrape site",
-    ],
-    "email_architect": [
-        "email sequence", "email campaign", "nurture sequence", "drip", "follow-up email",
-        "onboarding email", "re-engagement", "cold email", "email series", "write emails",
+    "creative_director": [
+        "creative direction", "creative brief", "creative strategy",
+        "campaign concept", "creative campaign", "art direction",
+        "creative vision", "visual concept", "creative review",
     ],
     "video_brief_writer": [
         "video brief", "tiktok", "reels", "youtube short", "short-form video",
         "hook script", "video script", "film brief", "b-roll", "video content",
     ],
+    "voice_synthesiser": [
+        "voice script", "tts script", "text to speech", "elevenlabs",
+        "voice over", "voiceover", "audio script", "podcast script",
+        "spoken content", "narration script",
+    ],
+    "ui_designer": [
+        "ui design", "user interface", "wireframe", "mockup", "figma",
+        "design system", "component design", "ux design", "user experience",
+        "colour scheme", "color scheme", "layout design", "visual design",
+    ],
+    "content_auditor": [
+        "content audit", "audit content", "review content", "content quality",
+        "content gap", "content performance", "content review",
+        "existing content", "content inventory",
+    ],
+    "pr_writer": [
+        "press release", "pr write", "media release", "news release",
+        "announcement", "public relations", "journalist pitch",
+        "media pitch", "press coverage",
+    ],
+
+    # ── Business & Strategy ───────────────────────────────────────────────────
+    "brief_writer": [
+        "brief", "scope of work", "sow", "discovery",
+        "onboarding doc", "client report", "write brief",
+    ],
+    "proposal_writer": [
+        "proposal", "write proposal", "client proposal", "business proposal",
+        "rfp response", "quote document", "statement of work",
+        "service proposal", "project proposal",
+    ],
+    "monetisation_strategist": [
+        "monetis", "monetiz", "revenue", "pricing model", "mrr",
+        "arr", "subscription", "upsell", "profit", "income", "earn",
+    ],
+    "pricing_strategist": [
+        "pricing strategy", "price point", "price tier", "tiered pricing",
+        "value-based pricing", "cost-plus", "competitor pricing",
+        "price increase", "pricing page", "how much to charge",
+    ],
+    "product_strategist": [
+        "product strategy", "product roadmap", "product vision",
+        "feature prioritisation", "feature prioritization", "mvp",
+        "product market fit", "user story", "product brief", "product spec",
+    ],
+    "sales_conversion": [
+        "prospect", "close", "objection", "deal", "pipeline", "crm",
+        "follow up", "pitch", "negotiate", "sales call", "cold",
+    ],
     "funnel_architect": [
         "conversion funnel", "sales funnel", "landing page strategy", "cro",
         "objection handling", "offer structure", "upsell map", "funnel design",
         "top of funnel", "bottom of funnel", "awareness funnel",
+    ],
+    "ecommerce_strategist": [
+        "ecommerce", "e-commerce", "shopify", "woocommerce", "online store",
+        "product listing", "basket", "checkout", "cart abandonment",
+        "product page", "shop strategy",
+    ],
+    "launch_orchestrator": [
+        "launch", "go to market", "gtm", "product launch", "campaign launch",
+        "release plan", "launch plan", "launch strategy", "ship",
+        "launch checklist", "launch timeline",
+    ],
+    "venture_ideator": [
+        "startup idea", "business idea", "venture idea", "new business",
+        "side project", "opportunity", "market gap", "business concept",
+        "idea validation", "new venture",
+    ],
+    "investor_pitch_writer": [
+        "investor pitch", "pitch deck", "fundraising", "seed round",
+        "series a", "angel investor", "vc pitch", "investment memo",
+        "pitch narrative", "funding deck",
+    ],
+
+    # ── Intelligence & Research ───────────────────────────────────────────────
+    "business_intelligence": [
+        "kpi", "metric", "dashboard", "bi report", "analytics report",
+        "forecast", "trend", "performance report", "revenue report",
+        "data analysis", "business report",
+    ],
+    "analytics_reporter": [
+        "analytics", "traffic data", "conversion data", "engagement data",
+        "retention data", "google analytics", "raw metrics", "metric report",
+        "data report", "weekly report", "monthly report",
+    ],
+    "research_analyst": [
+        "research", "market research", "competitive analysis", "due diligence",
+        "academic", "trend analysis", "fact finding", "deep research",
+        "investigate", "background research",
+    ],
+    "competitor_monitor": [
+        "competitor", "rival", "intel", "competitive", "market analysis",
+        "spy", "monitor competitor", "what are competitors", "compare to",
+        "scrape site",
+    ],
+    "seo_specialist": [
+        "seo", "search engine", "on-page", "meta tag", "schema markup",
+        "keyword gap", "keyword rank", "serp", "google ranking", "canonical",
+    ],
+    "supabase_intelligence": [
+        "supabase brain", "shared brain", "agent data", "learnings",
+        "chatroom", "who is agent", "which agent", "agent roster",
+        "orchestra status", "brain query",
+    ],
+
+    # ── Operations & Delivery ─────────────────────────────────────────────────
+    "automation_architect": [
+        "automat", "n8n", "workflow trigger", "webhook", "cron",
+        "zapier", "make.com", "integration build", "email sequence automation",
+        "automate task",
+    ],
+    "email_architect": [
+        "email sequence", "email campaign", "nurture sequence", "drip",
+        "follow-up email", "onboarding email", "re-engagement",
+        "cold email", "email series", "write emails",
+    ],
+    "project_manager": [
+        "project plan", "project timeline", "milestone", "task list",
+        "sprint", "kanban", "project brief", "project status",
+        "project scope", "resource plan",
+    ],
+    "customer_success": [
+        "customer success", "client health", "churn", "retention strategy",
+        "onboarding client", "client check-in", "nps", "client feedback",
+        "customer satisfaction", "account management",
+    ],
+    "knowledge_base_writer": [
+        "knowledge base", "help doc", "faq", "documentation", "how-to guide",
+        "support article", "user guide", "wiki", "write docs", "internal doc",
+    ],
+    "case_study_writer": [
+        "case study", "success story", "client win", "customer story",
+        "results story", "write case study", "testimonial narrative",
+        "before and after", "client results",
+    ],
+    "course_designer": [
+        "course", "curriculum", "lesson plan", "learning outcome",
+        "e-learning", "online course", "module design", "course outline",
+        "training programme", "course content",
+    ],
+    "chatbot_designer": [
+        "chatbot", "chat flow", "conversation design", "bot flow",
+        "whatsapp bot", "messenger bot", "ai chat", "chat script",
+        "dialogue design", "bot script",
+    ],
+    "persona_builder": [
+        "persona", "buyer persona", "customer avatar", "ideal client profile",
+        "icp", "target audience", "audience profile", "user persona",
+        "customer profile", "demographic profile",
+    ],
+    "financial_analyst": [
+        "financial", "cashflow", "cash flow", "p&l", "profit and loss",
+        "balance sheet", "financial model", "revenue projection",
+        "financial forecast", "unit economics", "burn rate",
+    ],
+    "legal_advisor": [
+        "legal", "contract", "terms and conditions", "gdpr", "compliance",
+        "privacy policy", "nda", "intellectual property", "ip",
+        "trademark", "legal risk", "data protection",
+    ],
+    "fact_checker": [
+        "is this accurate", "check this fact", "verify this", "source this",
+        "citation needed", "double check", "confirm this", "is it true",
+        "evidence for", "back this up",
+    ],
+    "ab_test_designer": [
+        "a/b test", "ab test", "split test", "experiment design",
+        "hypothesis test", "variant test", "conversion test",
+        "test design", "a/b variant", "multivariate",
     ],
 }
 
@@ -193,7 +412,7 @@ def route_node(state: SupervisorState) -> dict:
     return {"selected_role": selected}
 
 
-def execute_node(state: SupervisorState) -> dict:
+def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     """Dispatch to the selected skill node."""
     role        = state["selected_role"]
     workflow_id = state.get("workflow_id") or str(uuid.uuid4())
@@ -208,7 +427,7 @@ def execute_node(state: SupervisorState) -> dict:
 
     log.info("supervisor.executing", role=role, workflow_id=workflow_id)
 
-    # ── Technical agents ──────────────────────────────────────────────────────────
+    # ── Technical agents ──────────────────────────────────────────────────────
 
     if role == "github_intelligence":
         r = github_intelligence_node({
@@ -249,16 +468,6 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("validation_report", ""), "error": r.get("error")}
 
-    elif role == "brief_writer":
-        r = brief_writer_node({
-            **base, "agent": role,
-            "client_name": repo_owner, "brief_type": "proposal",
-            "context": task,
-            "goal": "Create a professional brief based on the provided context.",
-            "budget_hint": "", "timeline_hint": "", "brief": "",
-        })
-        return {"result": r.get("brief", ""), "error": r.get("error")}
-
     elif role == "code_reviewer":
         tokens     = task.split()
         file_paths = [t.strip(",;") for t in tokens if ("/" in t or "." in t) and len(t) > 3]
@@ -277,6 +486,107 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("dependency_report", ""), "error": r.get("error")}
 
+    elif role == "fullstack_architect":
+        r = fullstack_architect_node({
+            **base, "agent": role,
+            "brief": task, "stack_context": "", "architecture_spec": "",
+        })
+        return {"result": r.get("architecture_spec", ""), "error": r.get("error")}
+
+    elif role == "database_architect":
+        r = database_architect_node({
+            **base, "agent": role,
+            "brief": task, "existing_schema": "", "schema_spec": "",
+        })
+        return {"result": r.get("schema_spec", ""), "error": r.get("error")}
+
+    elif role == "supabase_specialist":
+        r = supabase_specialist_node({
+            **base, "agent": role,
+            "brief": task, "supabase_context": "", "supabase_spec": "",
+        })
+        return {"result": r.get("supabase_spec", ""), "error": r.get("error")}
+
+    elif role == "devops_engineer":
+        r = devops_engineer_node({
+            **base, "agent": role,
+            "brief": task, "repo_owner": repo_owner, "repo_name": repo_name,
+            "devops_spec": "",
+        })
+        return {"result": r.get("devops_spec", ""), "error": r.get("error")}
+
+    elif role == "deployment_specialist":
+        r = deployment_specialist_node({
+            **base, "agent": role,
+            "brief": task, "repo_owner": repo_owner, "repo_name": repo_name,
+            "deployment_plan": "",
+        })
+        return {"result": r.get("deployment_plan", ""), "error": r.get("error")}
+
+    elif role == "performance_auditor":
+        r = performance_auditor_node({
+            **base, "agent": role,
+            "url": task if task.startswith("http") else "",
+            "context": task, "focus": "general", "performance_report": "",
+        })
+        return {"result": r.get("performance_report", ""), "error": r.get("error")}
+
+    elif role == "mcp_builder":
+        r = mcp_builder_node({
+            **base, "agent": role,
+            "brief": task, "tools_list": "", "mcp_spec": "",
+        })
+        return {"result": r.get("mcp_spec", ""), "error": r.get("error")}
+
+    elif role == "gcp_ai_specialist":
+        r = gcp_ai_specialist_node({
+            **base, "agent": role,
+            "brief": task, "gcp_context": "", "gcp_spec": "",
+        })
+        return {"result": r.get("gcp_spec", ""), "error": r.get("error")}
+
+    elif role == "data_parser":
+        r = data_parser_node({
+            **base, "agent": role,
+            "raw_input": task, "target_format": "json",
+            "parsed_output": "", "parse_confidence": 0,
+        })
+        return {"result": r.get("parsed_output", ""), "error": r.get("error")}
+
+    elif role == "agent_builder":
+        r = agent_builder_node({
+            **base, "agent": role,
+            "agent_brief": task, "role_name": "",
+            "skill_file": "", "node_file": "",
+        })
+        result = r.get("skill_file") or r.get("node_file") or ""
+        return {"result": result, "error": r.get("error")}
+
+    elif role == "pipeline_monitor":
+        r = pipeline_monitor_node({
+            **base, "agent": role,
+            "focus": "general", "pipeline_report": "",
+        })
+        return {"result": r.get("pipeline_report", ""), "error": r.get("error")}
+
+    elif role == "process_auditor":
+        r = process_auditor_node({
+            **base, "agent": role,
+            "process_description": task, "focus": "general",
+            "process_report": "",
+        })
+        return {"result": r.get("process_report", ""), "error": r.get("error")}
+
+    elif role == "truth_verifier":
+        r = truth_verifier_node({
+            **base, "agent": role,
+            "claim": task, "context": "", "verification_report": "",
+            "verdict": "", "confidence": 0,
+        })
+        return {"result": r.get("verification_report", ""), "error": r.get("error")}
+
+    # ── Content & Creative agents ─────────────────────────────────────────────
+
     elif role == "social_post_generator":
         r = social_post_generator_node({
             **base, "agent": role,
@@ -287,39 +597,6 @@ def execute_node(state: SupervisorState) -> dict:
         copy = r.get("post_copy", {})
         return {"result": copy.get("facebook") or copy.get("instagram") or "",
                 "error": r.get("error")}
-
-    elif role == "supabase_intelligence":
-        r = supabase_intelligence_node({
-            **base, "agent": role,
-            "query": task, "focus": "general", "intelligence": "",
-        })
-        return {"result": r.get("intelligence", ""), "error": r.get("error")}
-
-    # ── Business intelligence agents ──────────────────────────────────────────────
-
-    elif role == "monetisation_strategist":
-        r = monetisation_strategist_node({
-            **base, "agent": role,
-            "client_name": repo_owner,
-            "business_context": task,
-            "current_revenue": "",
-            "goals": "Maximise revenue and build sustainable growth.",
-            "constraints": "",
-            "strategy": "",
-        })
-        return {"result": r.get("strategy", ""), "error": r.get("error")}
-
-    elif role == "sales_conversion":
-        r = sales_conversion_node({
-            **base, "agent": role,
-            "prospect_name": repo_owner,
-            "company": repo_name,
-            "deal_stage": "engaged",
-            "context": task,
-            "objections": "",
-            "close_strategy": "",
-        })
-        return {"result": r.get("close_strategy", ""), "error": r.get("error")}
 
     elif role == "content_scaler":
         r = content_scaler_node({
@@ -334,16 +611,195 @@ def execute_node(state: SupervisorState) -> dict:
         variants = r.get("variants", [])
         return {"result": "\n\n---\n\n".join(variants), "error": r.get("error")}
 
-    elif role == "automation_architect":
-        r = automation_architect_node({
+    elif role == "ad_copy_writer":
+        r = ad_copy_writer_node({
             **base, "agent": role,
-            "workflow_description": task,
-            "tools_available": "n8n, Resend, Supabase, OpenAI",
-            "trigger_type": "webhook",
-            "complexity": "medium",
-            "automation_spec": "",
+            "product": task, "audience": "Our target customer",
+            "platform": "facebook", "objective": "conversion",
+            "tone": "direct", "usp": "", "cta": "Learn More",
+            "ad_copy": {},
         })
-        return {"result": r.get("automation_spec", ""), "error": r.get("error")}
+        copy = r.get("ad_copy", {})
+        result = copy.get("headline", "") + "\n\n" + copy.get("body", "") if copy else ""
+        return {"result": result, "error": r.get("error")}
+
+    elif role == "copywriter":
+        r = copywriter_node({
+            **base, "agent": role,
+            "brief": task, "page_type": "general",
+            "brand_voice": "professional", "audience": "",
+            "copy": "",
+        })
+        return {"result": r.get("copy", ""), "error": r.get("error")}
+
+    elif role == "brand_voice_guide":
+        r = brand_voice_guide_node({
+            **base, "agent": role,
+            "brand_name": repo_owner, "brand_context": task,
+            "target_audience": "", "examples": "",
+            "brand_voice_guide": "",
+        })
+        return {"result": r.get("brand_voice_guide", ""), "error": r.get("error")}
+
+    elif role == "creative_director":
+        r = creative_director_node({
+            **base, "agent": role,
+            "brief": task, "brand_context": "",
+            "campaign_concept": "",
+        })
+        return {"result": r.get("campaign_concept", ""), "error": r.get("error")}
+
+    elif role == "video_brief_writer":
+        r = video_brief_writer_node({
+            **base, "agent": role,
+            "topic": task, "platform": "general", "duration_seconds": 60,
+            "hook_style": "direct", "cta": "Follow for more",
+            "brand_context": "", "video_brief": "",
+        })
+        return {"result": r.get("video_brief", ""), "error": r.get("error")}
+
+    elif role == "voice_synthesiser":
+        r = voice_synthesiser_node({
+            **base, "agent": role,
+            "brief": task, "voice_style": "conversational",
+            "duration_seconds": 60, "audience": "",
+            "voice_script": "",
+        })
+        return {"result": r.get("voice_script", ""), "error": r.get("error")}
+
+    elif role == "ui_designer":
+        r = ui_designer_node({
+            **base, "agent": role,
+            "brief": task, "design_system": "",
+            "platform": "web", "ui_spec": "",
+        })
+        return {"result": r.get("ui_spec", ""), "error": r.get("error")}
+
+    elif role == "content_auditor":
+        r = content_auditor_node({
+            **base, "agent": role,
+            "content": task, "focus": "general",
+            "content_audit_report": "",
+        })
+        return {"result": r.get("content_audit_report", ""), "error": r.get("error")}
+
+    elif role == "pr_writer":
+        r = pr_writer_node({
+            **base, "agent": role,
+            "announcement": task, "company": repo_owner,
+            "contact_name": "", "contact_email": "",
+            "press_release": "",
+        })
+        return {"result": r.get("press_release", ""), "error": r.get("error")}
+
+    # ── Business & Strategy agents ────────────────────────────────────────────
+
+    elif role == "brief_writer":
+        r = brief_writer_node({
+            **base, "agent": role,
+            "client_name": repo_owner, "brief_type": "proposal",
+            "context": task,
+            "goal": "Create a professional brief based on the provided context.",
+            "budget_hint": "", "timeline_hint": "", "brief": "",
+        })
+        return {"result": r.get("brief", ""), "error": r.get("error")}
+
+    elif role == "proposal_writer":
+        r = proposal_writer_node({
+            **base, "agent": role,
+            "client_name": repo_owner, "service_context": task,
+            "budget_hint": "", "timeline_hint": "",
+            "proposal": "",
+        })
+        return {"result": r.get("proposal", ""), "error": r.get("error")}
+
+    elif role == "monetisation_strategist":
+        r = monetisation_strategist_node({
+            **base, "agent": role,
+            "client_name": repo_owner,
+            "business_context": task,
+            "current_revenue": "",
+            "goals": "Maximise revenue and build sustainable growth.",
+            "constraints": "",
+            "strategy": "",
+        })
+        return {"result": r.get("strategy", ""), "error": r.get("error")}
+
+    elif role == "pricing_strategist":
+        r = pricing_strategist_node({
+            **base, "agent": role,
+            "product": task, "business_context": "",
+            "competitor_context": "", "audience": "",
+            "pricing_strategy": "",
+        })
+        return {"result": r.get("pricing_strategy", ""), "error": r.get("error")}
+
+    elif role == "product_strategist":
+        r = product_strategist_node({
+            **base, "agent": role,
+            "product": task, "stage": "growth",
+            "business_context": "", "constraints": "",
+            "product_strategy": "",
+        })
+        return {"result": r.get("product_strategy", ""), "error": r.get("error")}
+
+    elif role == "sales_conversion":
+        r = sales_conversion_node({
+            **base, "agent": role,
+            "prospect_name": repo_owner,
+            "company": repo_name,
+            "deal_stage": "engaged",
+            "context": task,
+            "objections": "",
+            "close_strategy": "",
+        })
+        return {"result": r.get("close_strategy", ""), "error": r.get("error")}
+
+    elif role == "funnel_architect":
+        r = funnel_architect_node({
+            **base, "agent": role,
+            "product": task, "audience": "Our target customer",
+            "funnel_stage": "consideration", "traffic_source": "organic_search",
+            "avg_order_value": "unknown", "current_conversion": "unknown",
+            "funnel_spec": "",
+        })
+        return {"result": r.get("funnel_spec", ""), "error": r.get("error")}
+
+    elif role == "ecommerce_strategist":
+        r = ecommerce_strategist_node({
+            **base, "agent": role,
+            "brief": task, "platform": "shopify",
+            "business_context": "", "ecommerce_strategy": "",
+        })
+        return {"result": r.get("ecommerce_strategy", ""), "error": r.get("error")}
+
+    elif role == "launch_orchestrator":
+        r = launch_orchestrator_node({
+            **base, "agent": role,
+            "product": task, "launch_date": "",
+            "audience": "", "channels": "",
+            "launch_plan": "",
+        })
+        return {"result": r.get("launch_plan", ""), "error": r.get("error")}
+
+    elif role == "venture_ideator":
+        r = venture_ideator_node({
+            **base, "agent": role,
+            "brief": task, "industry": "",
+            "constraints": "", "venture_ideas": "",
+        })
+        return {"result": r.get("venture_ideas", ""), "error": r.get("error")}
+
+    elif role == "investor_pitch_writer":
+        r = investor_pitch_writer_node({
+            **base, "agent": role,
+            "company": repo_owner, "brief": task,
+            "stage": "seed", "ask": "",
+            "pitch": "",
+        })
+        return {"result": r.get("pitch", ""), "error": r.get("error")}
+
+    # ── Intelligence & Research agents ────────────────────────────────────────
 
     elif role == "business_intelligence":
         r = business_intelligence_node({
@@ -357,6 +813,34 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("bi_report", ""), "error": r.get("error")}
 
+    elif role == "analytics_reporter":
+        r = analytics_reporter_node({
+            **base, "agent": role,
+            "raw_data": task, "focus": "general",
+            "period": "30d", "goal": "",
+            "trends": {}, "data_ready": False,
+            "analytics_report": "", "key_metrics": {},
+        })
+        return {"result": r.get("analytics_report", ""), "error": r.get("error")}
+
+    elif role == "research_analyst":
+        r = research_analyst_node({
+            **base, "agent": role,
+            "question": task, "research_type": "general",
+            "depth": "standard_report", "sources": "",
+            "domain": "", "thread_id": workflow_id,
+            "framework": "", "depth_spec": {},
+            "research_report": "", "confidence_score": 0,
+        })
+        return {"result": r.get("research_report", ""), "error": r.get("error")}
+
+    elif role == "competitor_monitor":
+        r = competitor_monitor_node({
+            **base, "agent": role,
+            "competitor_url": task.split()[0] if task.startswith("http") else "https://example.com",
+            "our_context": task, "focus": "general", "intel_report": "",
+        })
+        return {"result": r.get("intel_report", ""), "error": r.get("error")}
 
     elif role == "seo_specialist":
         r = seo_specialist_node({
@@ -367,13 +851,25 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("seo_report", ""), "error": r.get("error")}
 
-    elif role == "competitor_monitor":
-        r = competitor_monitor_node({
+    elif role == "supabase_intelligence":
+        r = supabase_intelligence_node({
             **base, "agent": role,
-            "competitor_url": task.split()[0] if task.startswith("http") else "https://example.com",
-            "our_context": task, "focus": "general", "intel_report": "",
+            "query": task, "focus": "general", "intelligence": "",
         })
-        return {"result": r.get("intel_report", ""), "error": r.get("error")}
+        return {"result": r.get("intelligence", ""), "error": r.get("error")}
+
+    # ── Operations & Delivery agents ──────────────────────────────────────────
+
+    elif role == "automation_architect":
+        r = automation_architect_node({
+            **base, "agent": role,
+            "workflow_description": task,
+            "tools_available": "n8n, Resend, Supabase, OpenAI",
+            "trigger_type": "webhook",
+            "complexity": "medium",
+            "automation_spec": "",
+        })
+        return {"result": r.get("automation_spec", ""), "error": r.get("error")}
 
     elif role == "email_architect":
         r = email_architect_node({
@@ -385,24 +881,104 @@ def execute_node(state: SupervisorState) -> dict:
         })
         return {"result": r.get("email_sequence", ""), "error": r.get("error")}
 
-    elif role == "video_brief_writer":
-        r = video_brief_writer_node({
+    elif role == "project_manager":
+        r = project_manager_node({
             **base, "agent": role,
-            "topic": task, "platform": "general", "duration_seconds": 60,
-            "hook_style": "direct", "cta": "Follow for more",
-            "brand_context": "", "video_brief": "",
+            "project_brief": task, "team_context": "",
+            "timeline_hint": "", "project_plan": "",
         })
-        return {"result": r.get("video_brief", ""), "error": r.get("error")}
+        return {"result": r.get("project_plan", ""), "error": r.get("error")}
 
-    elif role == "funnel_architect":
-        r = funnel_architect_node({
+    elif role == "customer_success":
+        r = customer_success_node({
             **base, "agent": role,
-            "product": task, "audience": "Our target customer",
-            "funnel_stage": "consideration", "traffic_source": "organic_search",
-            "avg_order_value": "unknown", "current_conversion": "unknown",
-            "funnel_spec": "",
+            "client_name": repo_owner, "context": task,
+            "health_score": 0, "cs_report": "",
         })
-        return {"result": r.get("funnel_spec", ""), "error": r.get("error")}
+        return {"result": r.get("cs_report", ""), "error": r.get("error")}
+
+    elif role == "knowledge_base_writer":
+        r = knowledge_base_writer_node({
+            **base, "agent": role,
+            "topic": task, "audience": "end users",
+            "format": "help_article", "kb_article": "",
+        })
+        return {"result": r.get("kb_article", ""), "error": r.get("error")}
+
+    elif role == "case_study_writer":
+        r = case_study_writer_node({
+            **base, "agent": role,
+            "client_name": repo_owner, "brief": task,
+            "results": "", "case_study": "",
+        })
+        return {"result": r.get("case_study", ""), "error": r.get("error")}
+
+    elif role == "course_designer":
+        r = course_designer_node({
+            **base, "agent": role,
+            "topic": task, "audience": "general",
+            "depth": "intermediate", "format": "online_course",
+            "course_outline": "",
+        })
+        return {"result": r.get("course_outline", ""), "error": r.get("error")}
+
+    elif role == "chatbot_designer":
+        r = chatbot_designer_node({
+            **base, "agent": role,
+            "brief": task, "platform": "website",
+            "tone": "friendly", "chatbot_flow": "",
+        })
+        return {"result": r.get("chatbot_flow", ""), "error": r.get("error")}
+
+    elif role == "persona_builder":
+        r = persona_builder_node({
+            **base, "agent": role,
+            "brief": task, "business_context": "",
+            "num_personas": 2, "personas": "",
+        })
+        return {"result": r.get("personas", ""), "error": r.get("error")}
+
+    elif role == "financial_analyst":
+        r = financial_analyst_node({
+            **base, "agent": role,
+            "financial_data": task, "focus": "general",
+            "period": "current", "financial_report": "",
+        })
+        return {"result": r.get("financial_report", ""), "error": r.get("error")}
+
+    elif role == "legal_advisor":
+        r = legal_advisor_node({
+            **base, "agent": role,
+            "brief": task, "jurisdiction": "UK",
+            "context": "", "legal_report": "",
+        })
+        return {"result": r.get("legal_report", ""), "error": r.get("error")}
+
+    elif role == "fact_checker":
+        r = fact_checker_node({
+            **base, "agent": role,
+            "claim": task, "context": "",
+            "fact_check_report": "", "verdict": "",
+        })
+        return {"result": r.get("fact_check_report", ""), "error": r.get("error")}
+
+    elif role == "ab_test_designer":
+        r = ab_test_designer_node({
+            **base, "agent": role,
+            "hypothesis": task, "element": "general",
+            "audience": "", "ab_test_plan": "",
+        })
+        return {"result": r.get("ab_test_plan", ""), "error": r.get("error")}
+
+    elif role == "pr_writer":
+        r = pr_writer_node({
+            **base, "agent": role,
+            "announcement": task, "company": repo_owner,
+            "contact_name": "", "contact_email": "",
+            "press_release": "",
+        })
+        return {"result": r.get("press_release", ""), "error": r.get("error")}
+
     else:
         return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}
 
