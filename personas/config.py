@@ -267,6 +267,12 @@ def get_all_personas() -> dict[str, dict]:
         "personality": os.getenv("CUSTOMER_SUCCESS_PERSONALITY", ""),
     },
 
+    "copywriter": {"name":os.getenv("COPYWRITER_NAME",""),"nickname":os.getenv("COPYWRITER_NICKNAME",""),"handle":os.getenv("COPYWRITER_HANDLE",""),"personality":os.getenv("COPYWRITER_PERSONALITY",""),},
+    "project_manager": {"name":os.getenv("PROJECT_MANAGER_NAME",""),"nickname":os.getenv("PROJECT_MANAGER_NICKNAME",""),"handle":os.getenv("PROJECT_MANAGER_HANDLE",""),"personality":os.getenv("PROJECT_MANAGER_PERSONALITY",""),},
+    "financial_analyst": {"name":os.getenv("FINANCIAL_ANALYST_NAME",""),"nickname":os.getenv("FINANCIAL_ANALYST_NICKNAME",""),"handle":os.getenv("FINANCIAL_ANALYST_HANDLE",""),"personality":os.getenv("FINANCIAL_ANALYST_PERSONALITY",""),},
+    "legal_advisor": {"name":os.getenv("LEGAL_ADVISOR_NAME",""),"nickname":os.getenv("LEGAL_ADVISOR_NICKNAME",""),"handle":os.getenv("LEGAL_ADVISOR_HANDLE",""),"personality":os.getenv("LEGAL_ADVISOR_PERSONALITY",""),},
+    "fact_checker": {"name":os.getenv("FACT_CHECKER_NAME",""),"nickname":os.getenv("FACT_CHECKER_NICKNAME",""),"handle":os.getenv("FACT_CHECKER_HANDLE",""),"personality":os.getenv("FACT_CHECKER_PERSONALITY",""),},
+
 }
 
     # proposal_writer
@@ -420,6 +426,32 @@ def get_all_personas() -> dict[str, dict]:
     creative_director_nickname: str = Field("")
     creative_director_handle: str = Field("")
     creative_director_personality: str = Field("")
+    # copywriter
+    copywriter_name: str = Field("")
+    copywriter_nickname: str = Field("")
+    copywriter_handle: str = Field("")
+    copywriter_personality: str = Field("")
+    # project_manager
+    project_manager_name: str = Field("")
+    project_manager_nickname: str = Field("")
+    project_manager_handle: str = Field("")
+    project_manager_personality: str = Field("")
+    # financial_analyst
+    financial_analyst_name: str = Field("")
+    financial_analyst_nickname: str = Field("")
+    financial_analyst_handle: str = Field("")
+    financial_analyst_personality: str = Field("")
+    # legal_advisor
+    legal_advisor_name: str = Field("")
+    legal_advisor_nickname: str = Field("")
+    legal_advisor_handle: str = Field("")
+    legal_advisor_personality: str = Field("")
+    # fact_checker
+    fact_checker_name: str = Field("")
+    fact_checker_nickname: str = Field("")
+    fact_checker_handle: str = Field("")
+    fact_checker_personality: str = Field("")
+
 
 
 
