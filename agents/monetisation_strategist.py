@@ -54,6 +54,8 @@ MAX_RETRIES      = 3
 RETRY_MIN_S      = 3
 RETRY_MAX_S      = 45
 MAX_TOKENS       = 1800   # Revenue blueprints need depth — pricing tables, funnel steps
+VALID_BUSINESS_MODELS = {"saas", "ecommerce", "marketplace", "agency", "content", "general"}
+
 CONTEXT_CHARS    = 3000
 GOALS_CHARS      = 1000
 
@@ -71,6 +73,8 @@ class MonetisationState(BaseState):
 
 
 # ── Prompt builder ───────────────────────────────────────────────────────────────
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
+
 def _build_strategy_prompt(state: "MonetisationState", persona: dict) -> str:
     """Build the monetisation strategy prompt. Pure function — no I/O."""
     constraints_block = (
@@ -122,6 +126,8 @@ Current Revenue : {state.get('current_revenue') or 'Pre-revenue / not provided'}
 ### Risk Flags
 [Top 2 risks to this strategy and how to mitigate them]"""
 
+
+_build_prompt = _build_strategy_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Generate (Claude call, retried on transient errors only) ─────────────
 @retry(
