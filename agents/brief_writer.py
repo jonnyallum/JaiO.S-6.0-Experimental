@@ -198,6 +198,8 @@ _BRIEF_TEMPLATES: dict[str, str] = {
 }
 
 
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
+
 def _build_brief_prompt(state: "BriefWriterState", persona: dict) -> str:
     """Build the brief generation prompt. Pure function — no I/O."""
     brief_type  = state.get("brief_type", "proposal")
@@ -224,6 +226,8 @@ Name          : {state['client_name']}{budget_line}{timeline_line}
 ━━━ TEMPLATE ━━━
 {template.format(client=state['client_name'])}"""
 
+
+_build_prompt = _build_brief_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Write (Claude call, retried on transient errors only) ────────────────
 @retry(
