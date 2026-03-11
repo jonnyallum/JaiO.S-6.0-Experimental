@@ -60,6 +60,8 @@ MAX_RETRIES  = 3
 RETRY_MIN_S  = 3
 RETRY_MAX_S  = 45
 MAX_TOKENS   = 1200   # Audit report — structured table + recommendations
+VALID_ECOSYSTEMS = {"npm", "pip", "cargo", "maven", "go_modules", "general"}
+
 FILE_CHARS   = 4000   # Per-manifest truncation (package.json can be large)
 FILE_LIMIT   = 4      # Max manifests included in a single prompt
 
@@ -123,6 +125,8 @@ def _collect_manifests(gh: GitHubTools, owner: str, repo: str) -> dict:
         "languages":       gh.get_languages(owner, repo),
     }
 
+
+_build_prompt = _build_audit_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Audit (Claude call, retried on transient errors only) ───────────────
 @retry(
