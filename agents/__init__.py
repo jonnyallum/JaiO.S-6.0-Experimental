@@ -67,4 +67,17 @@ __all__ = [
     "knowledge_base_writer_node", "KnowledgeBaseState",
     "agent_builder_node", "AgentBuilderState",
 
+    "proposal_writer_node", "ProposalState",
+    "product_strategist_node", "ProductStrategyState",
+    "pricing_strategist_node", "PricingState",
+    "course_designer_node", "CourseState",
+    "chatbot_designer_node", "ChatbotState",
+
 ]
+
+# Batch 3 — Strategy, Design & Education agents
+from agents.proposal_writer import proposal_writer_node, ProposalState
+from agents.product_strategist import product_strategist_node, ProductStrategyState
+from agents.pricing_strategist import pricing_strategist_node, PricingState
+from agents.course_designer import course_designer_node, CourseState
+from agents.chatbot_designer import chatbot_designer_node, ChatbotState
