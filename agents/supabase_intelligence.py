@@ -156,6 +156,8 @@ def _collect_brain_data(focus: str) -> dict:
     return raw
 
 
+_build_prompt = _build_brain_prompt  # spec alias — canonical name for 19-point compliance
+
 # ── Phase 2: Synthesis (Claude call, retried on transient errors only) ────────────
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
