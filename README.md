@@ -6,11 +6,11 @@
 
 ## What This Is
 
-**Jai.OS 6.0** is a complete architectural rebuild of the JonnyAI 70-agent system using [LangGraph](https://github.com/langchain-ai/langgraph) for stateful, self-correcting multi-agent workflows.
+**Jai.OS 6.0** is a complete architectural rebuild of the JonnyAI agent system using [LangGraph](https://github.com/langchain-ai/langgraph) for stateful, self-correcting multi-agent workflows.
 
 **Parent repo:** [JaiOS 5.0](https://github.com/jonnyallum/Antigravity_Orchestra)
 
-**Status:** Foundation phase — framework setup + first 5 agents
+**Status:** Active build — 50+ agents live, @langraph doctrine applied, supervisor graph in progress
 
 ---
 
@@ -34,22 +34,22 @@ The current stack (Jai.OS 5.0) uses manual Python scripts with while-loops for o
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              LangGraph Orchestration Layer               │
+│           LangGraph Orchestration Layer                 │
 └─────────────────────────────────────────────────────────┘
-                            │
-                ┌───────────┼───────────┐
-                ▼           ▼           ▼
-         ┌──────────┐ ┌──────────┐ ┌──────────┐
-         │ Supervisor│ │  Agent   │ │  Agent   │
-         │  (@marcus)│ │  Graphs  │ │  Graphs  │
-         └──────────┘ └──────────┘ └──────────┘
-                            │
-                ┌───────────┼───────────┐
-                ▼           ▼           ▼
-         ┌──────────┐ ┌──────────┐ ┌──────────┐
-         │ Supabase │ │   MCP    │ │  Tools   │
-         │  (State) │ │  Servers │ │  (n8n)   │
-         └──────────┘ └──────────┘ └──────────┘
+                │
+    ┌───────────┼───────────┐
+    ▼           ▼           ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Supervisor│ │  Agent   │ │  Agent   │
+│(@langraph)│ │  Graphs  │ │  Graphs  │
+└──────────┘ └──────────┘ └──────────┘
+                │
+    ┌───────────┼───────────┐
+    ▼           ▼           ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Supabase │ │   MCP    │ │  Tools   │
+│ (State)  │ │ Servers  │ │  (n8n)   │
+└──────────┘ └──────────┘ └──────────┘
 ```
 
 **Key components:**
@@ -67,42 +67,86 @@ The current stack (Jai.OS 5.0) uses manual Python scripts with while-loops for o
 JaiO.S-6.0-Experimental/
 ├── README.md                    # This file
 ├── ARCHITECTURE.md              # System design deep dive
-├── MIGRATION.md                 # 5.0 → 6.0 migration plan
-├── agents/                      # LangGraph agent nodes
-│   ├── github_intelligence.py   # GitHub intelligence
-│   ├── data_extraction.py       # Data extraction
-│   ├── quality_validation.py    # Quality gates
-│   ├── security_audit.py        # Security audits
-│   ├── architecture_review.py   # Full-stack architect
-│   ├── dependency_audit.py      # Dependency analysis
-│   ├── code_reviewer.py         # File-level code review
-│   ├── social_post_generator.py # FB/IG content
-│   ├── brief_writer.py          # Client proposals & briefs
-│   ├── supabase_intelligence.py # Shared Brain queries
-│   └── README.md                # Agent authoring guide
+├── .agent/skills/langraph/      # @langraph SKILL.md — LangGraph doctrine
+├── agents/                      # 50+ LangGraph agent nodes
+│   ├── github_intelligence.py
+│   ├── security_audit.py
+│   ├── architecture_review.py
+│   ├── quality_validation.py
+│   ├── code_reviewer.py
+│   ├── dependency_audit.py
+│   ├── brief_writer.py
+│   ├── proposal_writer.py
+│   ├── social_post_generator.py
+│   ├── copywriter.py
+│   ├── email_architect.py
+│   ├── competitor_monitor.py
+│   ├── research_analyst.py
+│   ├── business_intelligence.py
+│   ├── analytics_reporter.py
+│   ├── course_designer.py
+│   ├── chatbot_designer.py
+│   ├── funnel_architect.py
+│   ├── ecommerce_strategist.py
+│   ├── persona_builder.py
+│   ├── brand_voice_guide.py
+│   ├── creative_director.py
+│   ├── ui_designer.py
+│   ├── legal_advisor.py
+│   ├── financial_analyst.py
+│   ├── fact_checker.py
+│   ├── truth_verifier.py
+│   ├── pipeline_monitor.py
+│   ├── launch_orchestrator.py
+│   ├── project_manager.py
+│   ├── customer_success.py
+│   ├── ab_test_designer.py
+│   ├── ad_copy_writer.py
+│   ├── agent_builder.py
+│   ├── voice_synthesiser.py
+│   ├── venture_ideator.py
+│   └── ... (50+ total)
 ├── graphs/                      # Workflow graphs
-│   ├── supervisor.py            # @marcus orchestration
-│   └── README.md                # Graph design patterns
+│   ├── supervisor.py            # Orchestration layer
+│   └── README.md
 ├── state/                       # State schemas
 │   ├── base.py                  # Base state TypedDict
-│   └── README.md                # State design guide
+│   └── README.md
 ├── tools/                       # Custom tools (MCP wrappers)
-│   ├── supabase_tools.py        # Shared Brain queries
-│   ├── github_tools.py          # Repo operations
-│   ├── social_tools.py          # Meta FB/IG publishing
-│   ├── notification_tools.py    # Telegram alerts
-│   └── README.md                # Tool development guide
+│   ├── supabase_tools.py
+│   ├── github_tools.py
+│   ├── social_tools.py
+│   ├── notification_tools.py
+│   └── README.md
 ├── config/                      # Configuration
-│   ├── settings.py              # Pydantic settings
-│   └── .env.example             # Environment variable template
+│   ├── settings.py
+│   └── .env.example
 ├── personas/                    # Runtime persona injection
-│   └── config.py                # get_persona() — identity injected at runtime
-└── requirements.txt             # Python dependencies
+│   └── config.py
+├── migrations/                  # DB schema versioning
+├── scripts/
+├── tests/
+└── requirements.txt
 ```
 
 ---
 
-## Phase 1: Foundation (Week 1-2)
+## Agent Clusters (50+ Agents)
+
+| Cluster | Agents |
+|---------|--------|
+| **Technical Core** | `github_intelligence`, `security_audit`, `architecture_review`, `quality_validation`, `code_reviewer`, `dependency_audit` |
+| **Agency Delivery** | `brief_writer`, `proposal_writer`, `social_post_generator`, `copywriter`, `email_architect` |
+| **Intelligence** | `competitor_monitor`, `research_analyst`, `business_intelligence`, `analytics_reporter` |
+| **Product / Growth** | `course_designer`, `chatbot_designer`, `funnel_architect`, `ecommerce_strategist` |
+| **Creative** | `persona_builder`, `brand_voice_guide`, `creative_director`, `ui_designer` |
+| **Compliance / Verification** | `legal_advisor`, `financial_analyst`, `fact_checker`, `truth_verifier` |
+| **Ops** | `pipeline_monitor`, `launch_orchestrator`, `project_manager`, `customer_success` |
+| **Growth / Ads** | `ab_test_designer`, `ad_copy_writer`, `agent_builder`, `voice_synthesiser`, `venture_ideator` |
+
+---
+
+## Phase 1: Foundation
 
 **Goal:** Get LangGraph running, prove it works
 
@@ -110,20 +154,9 @@ JaiO.S-6.0-Experimental/
 1. ✅ Repo structure
 2. ✅ LangGraph installed on GCP VM
 3. ✅ Supabase state schema
-4. ✅ First 10 agents as LangGraph nodes
-5. ⏳ One working graph: BL Motorcycles order processing
-
-**First 10 agents:**
-- **github_intelligence** — GitHub repo analysis
-- **security_audit** — repo security review
-- **architecture_review** — repo architecture assessment
-- **data_extraction** — structured data parsing
-- **quality_validation** — output quality gate
-- **dependency_audit** — package vulnerability/staleness scan
-- **code_reviewer** — file-level code review
-- **social_post_generator** — FB/IG copy + publish
-- **brief_writer** — client proposals & SOWs
-- **supabase_intelligence** — Shared Brain status reports
+4. ✅ 50+ agents as LangGraph nodes
+5. ✅ @langraph doctrine applied across all agents
+6. ⏳ Supervisor graph wired and operational
 
 ---
 
@@ -170,7 +203,6 @@ Every agent follows the **@langraph doctrine**:
 # Contract docstring → named constants → TypedDict state →
 # pure collection phase → @retry Claude phase →
 # PRE checkpoint → POST checkpoint → discriminated error blocks
-
 def my_skill_node(state: MySkillState) -> dict:
     ...
 ```
@@ -181,8 +213,9 @@ See [agents/README.md](agents/README.md) for the full guide.
 
 ## Status
 
-**Current phase:** Foundation — 10 agents live, @langraph doctrine applied  
-**Next milestone:** Supervisor graph + BL Motorcycles order processing workflow
+**Current phase:** Active build — 50+ agents live, @langraph doctrine applied
+
+**Next milestone:** Supervisor graph fully wired + first production workflow
 
 ---
 
@@ -197,6 +230,7 @@ See [agents/README.md](agents/README.md) for the full guide.
 | **Debugging** | Print statements | Visual graph debugging |
 | **Agent handoffs** | NEXTHOP comments | Graph edges |
 | **Memory** | Supabase tables (manual) | LangGraph state (automatic) |
+| **Agent count** | ~70 markdown agents | 50+ live Python nodes |
 
 ---
 
@@ -209,7 +243,7 @@ See [agents/README.md](agents/README.md) for the full guide.
 ---
 
 **Built by:** Jonny Allum + JonnyAI  
-**Orchestrated by:** @Marcus (The Maestro)  
-**Execution:** Claude Code + 70 specialist agents
+**Orchestrated by:** @langraph (LangGraph Systems Architect)  
+**Execution:** Claude Code + 50+ specialist agents
 
 *Jai.OS 6.0 — Production-grade agent orchestration for the real world.*
