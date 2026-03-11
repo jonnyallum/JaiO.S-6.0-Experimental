@@ -395,5 +395,31 @@ def get_all_personas() -> dict[str, dict]:
     deployment_specialist_nickname: str = Field("")
     deployment_specialist_handle: str = Field("")
     deployment_specialist_personality: str = Field("")
+    # performance_auditor
+    performance_auditor_name: str = Field("")
+    performance_auditor_nickname: str = Field("")
+    performance_auditor_handle: str = Field("")
+    performance_auditor_personality: str = Field("")
+    # mcp_builder
+    mcp_builder_name: str = Field("")
+    mcp_builder_nickname: str = Field("")
+    mcp_builder_handle: str = Field("")
+    mcp_builder_personality: str = Field("")
+    # gcp_ai_specialist
+    gcp_ai_specialist_name: str = Field("")
+    gcp_ai_specialist_nickname: str = Field("")
+    gcp_ai_specialist_handle: str = Field("")
+    gcp_ai_specialist_personality: str = Field("")
+    # ui_designer
+    ui_designer_name: str = Field("")
+    ui_designer_nickname: str = Field("")
+    ui_designer_handle: str = Field("")
+    ui_designer_personality: str = Field("")
+    # creative_director
+    creative_director_name: str = Field("")
+    creative_director_nickname: str = Field("")
+    creative_director_handle: str = Field("")
+    creative_director_personality: str = Field("")
+
 
 
