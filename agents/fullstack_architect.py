@@ -1,5 +1,5 @@
 """
-Fullstack Architect — 19-point @langraph compliant agent node.
+Fullstack Architect - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), stack_context (str), output_type (VALID_OUTPUT_TYPES), framework (VALID_FRAMEWORKS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before stack analysis
-    POST — architecture_doc + stack_decision persisted after successful generation
+    PRE  - state snapshot before stack analysis
+    POST - architecture_doc + stack_decision persisted after successful generation
 """
 
 from __future__ import annotations
@@ -82,11 +82,11 @@ _STACK_PROFILES = {
 
 _ARCHITECTURE_PRINCIPLES = [
     "Type-safety end-to-end (Zod / Pydantic validation at every boundary)",
-    "Separation of concerns — UI / business logic / data access layers distinct",
-    "API contract-first — define schema before implementation",
+    "Separation of concerns - UI / business logic / data access layers distinct",
+    "API contract-first - define schema before implementation",
     "Error boundaries at every async boundary",
-    "Environment-aware config — never hardcode secrets",
-    "Progressive enhancement — core functionality without JS where possible",
+    "Environment-aware config - never hardcode secrets",
+    "Progressive enhancement - core functionality without JS where possible",
     "Optimistic UI with rollback for all mutations",
 ]
 
@@ -104,9 +104,9 @@ class FullstackArchitectState(TypedDict, total=False):
     stack_decision:   str
 
 
-# ── Phase 1 — Stack Analysis (pure, no Claude) ────────────────────────────────
+# ── Phase 1 - Stack Analysis (pure, no Claude) ────────────────────────────────
 def _analyse_stack(framework: str, task: str) -> dict:
-    """Returns stack_data dict — pure lookup, no Claude."""
+    """Returns stack_data dict - pure lookup, no Claude."""
     profile   = _STACK_PROFILES.get(framework, _STACK_PROFILES["general"])
     task_lower = task.lower()
     flags: list[str] = []
@@ -115,9 +115,9 @@ def _analyse_stack(framework: str, task: str) -> dict:
     if "auth" in task_lower:
         flags.append("Auth: Supabase Auth / NextAuth / Clerk recommended")
     if "payment" in task_lower:
-        flags.append("Payment: Stripe — use webhooks not polling")
+        flags.append("Payment: Stripe - use webhooks not polling")
     if "upload" in task_lower or "file" in task_lower:
-        flags.append("File handling: Supabase Storage / S3 — stream, don't buffer")
+        flags.append("File handling: Supabase Storage / S3 - stream, don't buffer")
     if "search" in task_lower:
         flags.append("Search: Supabase pg_vector / Algolia / Typesense")
     return {**profile, "flags": flags, "principles": _ARCHITECTURE_PRINCIPLES}
@@ -125,7 +125,7 @@ def _analyse_stack(framework: str, task: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Architecture Doc ─────────────────────────────────────────
+# ── Phase 2 - Claude Architecture Doc ─────────────────────────────────────────
 def _build_arch_prompt(state: FullstackArchitectState, stack_data: dict) -> str:
     persona      = get_persona(ROLE)
     task         = state["task"]
@@ -133,10 +133,8 @@ def _build_arch_prompt(state: FullstackArchitectState, stack_data: dict) -> str:
     output_type  = state.get("output_type", "architecture_doc")
     framework    = state.get("framework", "general")
 
-    flags_text = "
-".join(f"  ⚡ {f}" for f in stack_data["flags"]) or "  None detected"
-    principles = "
-".join(f"  • {p}" for p in stack_data["principles"])
+    flags_text = "\n".join(f"  ⚡ {f}" for f in stack_data["flags"]) or "  None detected"
+    principles = "\n".join(f"  • {p}" for p in stack_data["principles"])
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -169,13 +167,13 @@ OUTPUT FORMAT:
 ## Fullstack Architecture: {output_type.replace('_', ' ').title()}
 
 ### Overview
-[2–3 sentences — what this builds and why this approach]
+[2–3 sentences - what this builds and why this approach]
 
 ### Component Structure
 [Directory tree + responsibility of each layer]
 
 ### Data Flow
-[Request lifecycle — client → API → DB → response, with type annotations]
+[Request lifecycle - client → API → DB → response, with type annotations]
 
 ### Key Technical Decisions
 | Decision | Choice | Rationale | Trade-offs |

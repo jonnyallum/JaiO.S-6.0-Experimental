@@ -1,5 +1,5 @@
 """
-Performance Auditor — 19-point @langraph compliant agent node.
+Performance Auditor - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), perf_context (str), output_type (VALID_OUTPUT_TYPES), target_platform (VALID_PLATFORMS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before perf heuristic analysis
-    POST — perf_report + score_summary persisted after successful generation
+    PRE  - state snapshot before perf heuristic analysis
+    POST - perf_report + score_summary persisted after successful generation
 """
 
 from __future__ import annotations
@@ -58,9 +58,9 @@ _CORE_WEB_VITALS = {
 _PLATFORM_CHECKS = {
     "web_nextjs": [
         "Image optimisation: next/image with width/height + priority on hero",
-        "Font optimisation: next/font — no layout shift from web fonts",
+        "Font optimisation: next/font - no layout shift from web fonts",
         "Bundle splitting: dynamic imports for heavy components",
-        "ISR / SSG where possible — reduce server compute",
+        "ISR / SSG where possible - reduce server compute",
         "Edge runtime for lightweight API routes",
         "No unused CSS in production (Tailwind purge active)",
         "Streaming with Suspense for slow data fetches",
@@ -71,27 +71,27 @@ _PLATFORM_CHECKS = {
         "Hermes engine enabled",
         "Bundle size: npx expo export --dump-assetmap",
         "No synchronous storage reads on main thread",
-        "Reanimated for animations — not Animated API",
+        "Reanimated for animations - not Animated API",
     ],
     "api_node": [
         "Connection pooling configured (pg-pool / Prisma pool)",
         "Response compression (gzip/brotli)",
         "Cache-Control headers on immutable assets",
-        "Avoid await in loops — use Promise.all()",
+        "Avoid await in loops - use Promise.all()",
         "Rate limiting per IP (express-rate-limit / upstash)",
-        "Streaming large responses — no buffering",
+        "Streaming large responses - no buffering",
     ],
     "supabase_db": [
         "EXPLAIN ANALYZE on slow queries",
         "Indexes on all FK columns + frequent WHERE columns",
-        "Avoid SELECT * — explicit column lists",
+        "Avoid SELECT * - explicit column lists",
         "Use connection pooling (pgBouncer via Supabase)",
         "Batch inserts with unnest() not row-by-row",
         "Materialised views for complex aggregations",
     ],
     "general": [
-        "Profile before optimising — measure, don't guess",
-        "Largest bottleneck first — 80/20 rule",
+        "Profile before optimising - measure, don't guess",
+        "Largest bottleneck first - 80/20 rule",
         "Cache aggressively at every layer",
         "Lazy-load below-the-fold content",
         "Compress all assets",
@@ -101,7 +101,7 @@ _PLATFORM_CHECKS = {
 _ANTI_PATTERNS = [
     ("Unoptimised images",          r'<img\s',                    "Replace with next/image or expo-image"),
     ("Blocking script tags",        r'<script\s+src=',            "Add async/defer or move to module"),
-    ("SELECT *",                    r'SELECT\s+\*\s+FROM',        "Explicit column list — fetch only what you need"),
+    ("SELECT *",                    r'SELECT\s+\*\s+FROM',        "Explicit column list - fetch only what you need"),
     ("await in loop",               r'for\s*\(.*\)\s*\{[^}]*await', "Replace with Promise.all()"),
     ("console.log in production",   r'console\.log\(',            "Remove or gate behind NODE_ENV check"),
 ]
@@ -120,9 +120,9 @@ class PerformanceAuditorState(TypedDict, total=False):
     score_summary:   str
 
 
-# ── Phase 1 — Heuristic Analysis (pure, no Claude) ────────────────────────────
+# ── Phase 1 - Heuristic Analysis (pure, no Claude) ────────────────────────────
 def _analyse_perf_signals(task: str, perf_context: str, platform: str) -> dict:
-    """Returns perf_data dict — pure heuristics and lookups."""
+    """Returns perf_data dict - pure heuristics and lookups."""
     combined    = (task + " " + perf_context).lower()
     checks      = _PLATFORM_CHECKS.get(platform, _PLATFORM_CHECKS["general"])
     anti_hits: list[str] = []
@@ -131,13 +131,13 @@ def _analyse_perf_signals(task: str, perf_context: str, platform: str) -> dict:
             anti_hits.append(f"{label} → {fix}")
     flags: list[str] = []
     if "slow" in combined or "latency" in combined:
-        flags.append("Latency complaint — profile DB queries and API round-trips first")
+        flags.append("Latency complaint - profile DB queries and API round-trips first")
     if "lighthouse" in combined or "score" in combined:
-        flags.append("Lighthouse target — focus on LCP, INP, CLS in that order")
+        flags.append("Lighthouse target - focus on LCP, INP, CLS in that order")
     if "bundle" in combined or "size" in combined:
-        flags.append("Bundle bloat — run bundle analyser, find largest culprits")
+        flags.append("Bundle bloat - run bundle analyser, find largest culprits")
     if "mobile" in combined:
-        flags.append("Mobile-first — test on mid-range Android, not just iPhone")
+        flags.append("Mobile-first - test on mid-range Android, not just iPhone")
     return {
         "platform_checks": checks,
         "anti_patterns":   anti_hits,
@@ -148,7 +148,7 @@ def _analyse_perf_signals(task: str, perf_context: str, platform: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Perf Report ───────────────────────────────────────────────
+# ── Phase 2 - Claude Perf Report ───────────────────────────────────────────────
 def _build_perf_prompt(state: PerformanceAuditorState, perf_data: dict) -> str:
     persona   = get_persona(ROLE)
     task      = state["task"]
@@ -156,14 +156,10 @@ def _build_perf_prompt(state: PerformanceAuditorState, perf_data: dict) -> str:
     out_type  = state.get("output_type", "general")
     platform  = state.get("target_platform", "general")
 
-    checks_text = "
-".join(f"  ☐ {c}" for c in perf_data["platform_checks"])
-    flags_text  = "
-".join(f"  ⚡ {f}" for f in perf_data["flags"]) or "  None detected"
-    anti_text   = "
-".join(f"  ✗ {a}" for a in perf_data["anti_patterns"]) or "  None detected in context"
-    cwv_text    = "
-".join(
+    checks_text = "\n".join(f"  ☐ {c}" for c in perf_data["platform_checks"])
+    flags_text  = "\n".join(f"  ⚡ {f}" for f in perf_data["flags"]) or "  None detected"
+    anti_text   = "\n".join(f"  ✗ {a}" for a in perf_data["anti_patterns"]) or "  None detected in context"
+    cwv_text    = "\n".join(
         f"  {k}: good <{v['good']}{v['unit']} | needs work <{v['needs_improvement']}{v['unit']} ({v['label']})"
         for k, v in perf_data["cwv"].items()
     )
@@ -191,7 +187,7 @@ CONTEXT / CODE SNIPPET:
 {ctx[:3000] or "None provided"}
 
 OUTPUT FORMAT:
-## Performance Audit: {out_type.replace('_',' ').title()} — {platform}
+## Performance Audit: {out_type.replace('_',' ').title()} - {platform}
 
 ### Score Summary
 | Metric | Current | Target | Status |
@@ -199,10 +195,10 @@ OUTPUT FORMAT:
 [Estimated or measured values]
 
 ### Critical Issues (fix first)
-[Numbered — each with: problem, impact, exact fix, effort estimate]
+[Numbered - each with: problem, impact, exact fix, effort estimate]
 
 ### Platform Checklist Review
-[Each item: PASS / FAIL / UNKNOWN — with evidence]
+[Each item: PASS / FAIL / UNKNOWN - with evidence]
 
 ### Anti-Pattern Fixes
 [Each detected anti-pattern with code-level fix]
@@ -211,7 +207,7 @@ OUTPUT FORMAT:
 [5 changes that immediately move the needle]
 
 ### Monitoring Setup
-[What to measure ongoing — tools, thresholds, alerts]
+[What to measure ongoing - tools, thresholds, alerts]
 
 ### Next Action
 [Single highest-ROI step]

@@ -1,5 +1,5 @@
 """
-Deployment Specialist — 19-point @langraph compliant agent node.
+Deployment Specialist - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), deploy_context (str), output_type (VALID_OUTPUT_TYPES), target (VALID_TARGETS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before deployment pre-flight checks
-    POST — deployment_plan + deploy_commands persisted after successful generation
+    PRE  - state snapshot before deployment pre-flight checks
+    POST - deployment_plan + deploy_commands persisted after successful generation
 """
 
 from __future__ import annotations
@@ -59,7 +59,7 @@ _PREFLIGHT_GATES = {
         "✓ Domain / SSL certificate active",
     ],
     "hostinger_vps": [
-        "✓ SSH key authentication — password auth disabled",
+        "✓ SSH key authentication - password auth disabled",
         "✓ Firewall: only 22, 80, 443 open",
         "✓ Nginx config tested: nginx -t",
         "✓ SSL cert valid: certbot renew --dry-run",
@@ -85,7 +85,7 @@ _PREFLIGHT_GATES = {
 }
 
 _ROLLBACK_STRATEGIES = {
-    "vercel":        "vercel rollback [deployment-url] — instant, no downtime",
+    "vercel":        "vercel rollback [deployment-url] - instant, no downtime",
     "hostinger_vps": "Restore from /var/backups/ tarball + restart PM2",
     "railway":       "Railway dashboard → Deployments → Rollback to previous",
     "fly_io":        "fly deploy --image [previous-image-tag]",
@@ -93,11 +93,11 @@ _ROLLBACK_STRATEGIES = {
 }
 
 _DOWNTIME_RISK_SIGNALS = {
-    "database migration":  "HIGH — test on staging first, use transactions",
-    "dependency upgrade":  "MEDIUM — breaking changes possible",
-    "env var change":      "LOW — immediate effect, no restart needed on most platforms",
-    "new feature":         "LOW — behind feature flag recommended",
-    "infrastructure":      "HIGH — blue-green or canary deploy required",
+    "database migration":  "HIGH - test on staging first, use transactions",
+    "dependency upgrade":  "MEDIUM - breaking changes possible",
+    "env var change":      "LOW - immediate effect, no restart needed on most platforms",
+    "new feature":         "LOW - behind feature flag recommended",
+    "infrastructure":      "HIGH - blue-green or canary deploy required",
 }
 
 
@@ -114,9 +114,9 @@ class DeploymentSpecialistState(TypedDict, total=False):
     deploy_commands:  str
 
 
-# ── Phase 1 — Pre-flight Analysis (pure, no Claude) ───────────────────────────
+# ── Phase 1 - Pre-flight Analysis (pure, no Claude) ───────────────────────────
 def _run_preflight_analysis(task: str, target: str) -> dict:
-    """Returns preflight_data dict — pure lookup and risk scoring."""
+    """Returns preflight_data dict - pure lookup and risk scoring."""
     gates       = _PREFLIGHT_GATES.get(target, _PREFLIGHT_GATES["general"])
     rollback    = _ROLLBACK_STRATEGIES.get(target, _ROLLBACK_STRATEGIES["general"])
     task_lower  = task.lower()
@@ -141,7 +141,7 @@ def _run_preflight_analysis(task: str, target: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Deployment Plan ──────────────────────────────────────────
+# ── Phase 2 - Claude Deployment Plan ──────────────────────────────────────────
 def _build_deploy_prompt(state: DeploymentSpecialistState, preflight: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -149,10 +149,8 @@ def _build_deploy_prompt(state: DeploymentSpecialistState, preflight: dict) -> s
     output_type = state.get("output_type", "deployment_runbook")
     target      = state.get("target", "general")
 
-    gates_text  = "
-".join(f"  {g}" for g in preflight["gates"])
-    risks_text  = "
-".join(f"  ⚠ {r}" for r in preflight["risk_flags"]) or "  No high-risk signals detected"
+    gates_text  = "\n".join(f"  {g}" for g in preflight["gates"])
+    risks_text  = "\n".join(f"  ⚠ {r}" for r in preflight["risk_flags"]) or "  No high-risk signals detected"
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -179,26 +177,26 @@ OUTPUT FORMAT:
 [2-sentence justification]
 
 ### Pre-flight Checklist
-[Go through each gate — verify or add target-specific gates]
+[Go through each gate - verify or add target-specific gates]
 
 ### Deployment Steps
 ```bash
-# Ordered commands — each with a comment explaining why
+# Ordered commands - each with a comment explaining why
 ```
 
 ### Zero-Downtime Measures
-[Specific technique for this stack — blue-green / rolling / feature flags]
+[Specific technique for this stack - blue-green / rolling / feature flags]
 
 ### Verification Steps (post-deploy)
 [What to check, in order, within 5 minutes of deploying]
 
 ### Rollback Procedure
 ```bash
-# Exact commands to roll back — tested, not theoretical
+# Exact commands to roll back - tested, not theoretical
 ```
 
 ### Communication
-[Who to notify, when, and what to say — internal + external if customer-facing]
+[Who to notify, when, and what to say - internal + external if customer-facing]
 
 ### Next Action
 [Single most important step right now]

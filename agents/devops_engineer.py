@@ -1,5 +1,5 @@
 """
-DevOps Engineer — 19-point @langraph compliant agent node.
+DevOps Engineer - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), infra_context (str), output_type (VALID_OUTPUT_TYPES), platform (VALID_PLATFORMS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before infra analysis
-    POST — devops_plan + config_output persisted after successful generation
+    PRE  - state snapshot before infra analysis
+    POST - devops_plan + config_output persisted after successful generation
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ _PLATFORM_PROFILES = {
     "vercel": {
         "deploy_cmd":    "vercel --prod",
         "env_mgmt":      "vercel env pull .env.local / Vercel dashboard",
-        "ci_trigger":    "Git push to main — auto-deploy",
+        "ci_trigger":    "Git push to main - auto-deploy",
         "strengths":     ["Zero-config Next.js", "edge network", "preview deploys"],
         "gotchas":       ["No persistent disk", "serverless cold starts", "10s function timeout (hobby)"],
         "config_file":   "vercel.json",
@@ -66,7 +66,7 @@ _PLATFORM_PROFILES = {
     },
     "hostinger": {
         "deploy_cmd":    "rsync -avz --delete dist/ user@host:/path/",
-        "env_mgmt":      ".env on server — never commit",
+        "env_mgmt":      ".env on server - never commit",
         "ci_trigger":    "GitHub Actions → SSH deploy",
         "strengths":     ["Low cost", "persistent VPS", "full control"],
         "gotchas":       ["Manual SSL renewal if not auto", "no auto-scaling", "SSH key management"],
@@ -91,14 +91,14 @@ _PLATFORM_PROFILES = {
 }
 
 _SECURITY_BASELINE = [
-    "Never commit secrets — use platform secret managers",
+    "Never commit secrets - use platform secret managers",
     "Principle of least privilege on all service accounts",
     "Rotate API keys on every team member departure",
     "Enable dependabot / Renovate for dependency updates",
-    "HTTPS only — enforce HSTS headers",
+    "HTTPS only - enforce HSTS headers",
     "Content Security Policy header on all responses",
     "Rate limiting on all public endpoints",
-    "Structured logging — no PII in logs",
+    "Structured logging - no PII in logs",
 ]
 
 
@@ -115,21 +115,21 @@ class DevOpsEngineerState(TypedDict, total=False):
     config_output:  str
 
 
-# ── Phase 1 — Infra Analysis (pure, no Claude) ────────────────────────────────
+# ── Phase 1 - Infra Analysis (pure, no Claude) ────────────────────────────────
 def _analyse_infra(task: str, platform: str) -> dict:
-    """Returns infra_data dict — pure lookup and heuristics."""
+    """Returns infra_data dict - pure lookup and heuristics."""
     profile    = _PLATFORM_PROFILES.get(platform, _PLATFORM_PROFILES["general"])
     task_lower = task.lower()
     flags: list[str] = []
 
     if "secret" in task_lower or "env" in task_lower:
-        flags.append("Environment management required — use platform secrets, never .env in repo")
+        flags.append("Environment management required - use platform secrets, never .env in repo")
     if "docker" in task_lower:
-        flags.append("Dockerfile needed — use multi-stage build to minimise image size")
+        flags.append("Dockerfile needed - use multi-stage build to minimise image size")
     if "monitor" in task_lower or "alert" in task_lower:
         flags.append("Monitoring stack: Sentry (errors) + Uptime Robot (availability) + platform logs")
     if "scale" in task_lower or "load" in task_lower:
-        flags.append("Horizontal scaling — ensure stateless app + external session store")
+        flags.append("Horizontal scaling - ensure stateless app + external session store")
     if "rollback" in task_lower or "zero-downtime" in task_lower:
         flags.append("Zero-downtime deploy: blue-green or rolling strategy required")
     if "cron" in task_lower or "schedule" in task_lower:
@@ -140,7 +140,7 @@ def _analyse_infra(task: str, platform: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude DevOps Plan ───────────────────────────────────────────────
+# ── Phase 2 - Claude DevOps Plan ───────────────────────────────────────────────
 def _build_devops_prompt(state: DevOpsEngineerState, infra_data: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -148,10 +148,8 @@ def _build_devops_prompt(state: DevOpsEngineerState, infra_data: dict) -> str:
     output_type = state.get("output_type", "general")
     platform    = state.get("platform", "general")
 
-    flags_text    = "
-".join(f"  ⚡ {f}" for f in infra_data["flags"]) or "  None detected"
-    security_text = "
-".join(f"  • {s}" for s in infra_data["security_baseline"][:5])
+    flags_text    = "\n".join(f"  ⚡ {f}" for f in infra_data["flags"]) or "  None detected"
+    security_text = "\n".join(f"  • {s}" for s in infra_data["security_baseline"][:5])
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -204,7 +202,7 @@ OUTPUT FORMAT:
 [What to monitor, which tools, alert thresholds]
 
 ### Rollback Procedure
-[Step-by-step rollback — tested, not theoretical]
+[Step-by-step rollback - tested, not theoretical]
 
 ### Next Action
 [Single most important first step]

@@ -187,9 +187,9 @@ VIABILITY PRE-SCORE:
   Distribution Channels: {', '.join(viability['platforms'])}
 
 IDEA CONTEXT:
-"""
+'''
 {idea_context[:4000]}
-"""
+'''
 
 YOUR TASK:
 1. Name the venture (punchy, memorable, domain-available style).

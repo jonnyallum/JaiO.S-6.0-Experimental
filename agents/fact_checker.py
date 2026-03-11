@@ -1,5 +1,5 @@
 """
-Fact Checker — 19-point @langraph compliant agent node.
+Fact Checker - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : claim (str), supporting_context (str), output_type (VALID_OUTPUT_TYPES), domain (VALID_DOMAINS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty claim, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before claim analysis
-    POST — fact_check_report + verdict persisted after successful generation
+    PRE  - state snapshot before claim analysis
+    POST - fact_check_report + verdict persisted after successful generation
 """
 
 from __future__ import annotations
@@ -48,34 +48,34 @@ VALID_DOMAINS = {
 
 # ── Claim Pattern Library ──────────────────────────────────────────────────────
 _CLAIM_RED_FLAGS = [
-    (r'\d+\s*%',                               "statistic",    "Percentage claim — requires source and methodology"),
-    (r'(best|fastest|largest|most|only|first)', "superlative",  "Superlative — requires comparative evidence"),
-    (r'(proven|guaranteed|certain|definitive)', "certainty",    "Certainty claim — science rarely uses these words"),
-    (r'(always|never|all|none|every)',          "absolute",     "Absolute claim — almost always false or misleading"),
-    (r'(experts say|studies show|research proves)', "vague_authority", "Vague authority — who? which study? when?"),
-    (r'(recently|new study|new research)',      "time_vague",   "Temporal vagueness — when exactly?"),
-    (r'"[^"]{10,}"',                                "quote",        "Quoted statement — verify exact wording and source"),
-    (r'\$[\d,]+|\£[\d,]+|€[\d,]+',                "financial",    "Financial figure — verify currency, date, and source"),
+    (r'\d+\s*%',                               "statistic",    "Percentage claim - requires source and methodology"),
+    (r'(best|fastest|largest|most|only|first)', "superlative",  "Superlative - requires comparative evidence"),
+    (r'(proven|guaranteed|certain|definitive)', "certainty",    "Certainty claim - science rarely uses these words"),
+    (r'(always|never|all|none|every)',          "absolute",     "Absolute claim - almost always false or misleading"),
+    (r'(experts say|studies show|research proves)', "vague_authority", "Vague authority - who? which study? when?"),
+    (r'(recently|new study|new research)',      "time_vague",   "Temporal vagueness - when exactly?"),
+    (r'"[^"]{10,}"',                                "quote",        "Quoted statement - verify exact wording and source"),
+    (r'\$[\d,]+|\£[\d,]+|€[\d,]+',                "financial",    "Financial figure - verify currency, date, and source"),
 ]
 
 _VERDICT_LEVELS = {
     "TRUE":             "Claim is accurate and well-supported by evidence",
     "MOSTLY_TRUE":      "Claim is largely accurate with minor caveats or missing context",
     "MIXED":            "Claim has elements of truth but is misleading or incomplete",
-    "MOSTLY_FALSE":     "Claim is largely inaccurate — some kernel of truth exists",
+    "MOSTLY_FALSE":     "Claim is largely inaccurate - some kernel of truth exists",
     "FALSE":            "Claim is factually incorrect",
     "UNVERIFIABLE":     "Insufficient evidence to confirm or deny the claim",
-    "OPINION":          "Claim is subjective — not a factual assertion",
+    "OPINION":          "Claim is subjective - not a factual assertion",
 }
 
 _DOMAIN_STANDARDS = {
-    "technology":  ["Check version/date — tech moves fast", "Distinguish marketing claims from benchmarks", "Verify compatibility claims"],
+    "technology":  ["Check version/date - tech moves fast", "Distinguish marketing claims from benchmarks", "Verify compatibility claims"],
     "business":    ["Revenue claims need fiscal year and accounting standard", "Market size: TAM vs SAM vs SOM", "Growth rates: YoY vs MoM"],
     "science":     ["Peer-reviewed > preprint > press release", "Correlation ≠ causation", "Sample size and methodology matter"],
     "health":      ["RCT > observational study", "Relative risk vs absolute risk", "Regulatory approval status"],
     "finance":     ["Past performance ≠ future results (required disclosure)", "Verify exchange rates and dates", "GAAP vs non-GAAP metrics"],
-    "marketing":   ["Survey methodology and sample size", "Award claims — verify awarding body", "Comparison terms — vs what?"],
-    "legal":       ["Jurisdiction specific — law varies by country", "Court ruling ≠ settled law", "Verify case citation"],
+    "marketing":   ["Survey methodology and sample size", "Award claims - verify awarding body", "Comparison terms - vs what?"],
+    "legal":       ["Jurisdiction specific - law varies by country", "Court ruling ≠ settled law", "Verify case citation"],
     "general":     ["Primary source > secondary source", "Date of information matters", "Conflict of interest disclosure"],
 }
 
@@ -93,9 +93,9 @@ class FactCheckerState(TypedDict, total=False):
     verdict:           str
 
 
-# ── Phase 1 — Claim Analysis (pure, no Claude) ────────────────────────────────
+# ── Phase 1 - Claim Analysis (pure, no Claude) ────────────────────────────────
 def _analyse_claim(claim: str, domain: str) -> dict:
-    """Returns claim_data dict — pure regex and lookup, no Claude."""
+    """Returns claim_data dict - pure regex and lookup, no Claude."""
     flags: list[tuple] = []
     for pattern, flag_type, description in _CLAIM_RED_FLAGS:
         matches = re.findall(pattern, claim, re.IGNORECASE)
@@ -116,7 +116,7 @@ def _analyse_claim(claim: str, domain: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Fact Check ────────────────────────────────────────────────
+# ── Phase 2 - Claude Fact Check ────────────────────────────────────────────────
 def _build_fact_check_prompt(state: FactCheckerState, claim_data: dict) -> str:
     persona  = get_persona(ROLE)
     claim    = state["claim"]
@@ -124,16 +124,13 @@ def _build_fact_check_prompt(state: FactCheckerState, claim_data: dict) -> str:
     out_type = state.get("output_type", "claim_verification")
     domain   = state.get("domain", "general")
 
-    flags_text = "
-".join(
-        f"  ⚠ [{ftype}] {desc} — found: {matches}"
+    flags_text = "\n".join(
+        f"  ⚠ [{ftype}] {desc} - found: {matches}"
         for ftype, desc, matches in claim_data["flags"]
     ) or "  No red-flag patterns detected"
 
-    standards_text = "
-".join(f"  • {s}" for s in claim_data["domain_standards"])
-    verdicts_text  = "
-".join(f"  {v}: {d}" for v, d in claim_data["verdict_levels"].items())
+    standards_text = "\n".join(f"  • {s}" for s in claim_data["domain_standards"])
+    verdicts_text  = "\n".join(f"  {v}: {d}" for v, d in claim_data["verdict_levels"].items())
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -152,12 +149,12 @@ VERDICT SCALE:
 {verdicts_text}
 
 CLAIM TO VERIFY:
-"""
+'''
 {claim}
-"""
+'''
 
 SUPPORTING CONTEXT / EVIDENCE:
-{ctx or "None provided — evaluate claim on its own merits and internal consistency"}
+{ctx or "None provided - evaluate claim on its own merits and internal consistency"}
 
 YOUR TASK:
 1. Break the claim into individual verifiable sub-claims.
@@ -167,7 +164,7 @@ YOUR TASK:
 5. Flag any misleading framing even if technically accurate.
 
 OUTPUT FORMAT:
-## Fact Check Report: {out_type.replace('_',' ').title()} — {domain}
+## Fact Check Report: {out_type.replace('_',' ').title()} - {domain}
 
 ### Claim Breakdown
 | # | Sub-Claim | Verdict | Confidence | Evidence Required |

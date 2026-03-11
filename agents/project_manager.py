@@ -1,5 +1,5 @@
 """
-Project Manager — 19-point @langraph compliant agent node.
+Project Manager - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), project_context (str), output_type (VALID_OUTPUT_TYPES), methodology (VALID_METHODOLOGIES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before project analysis
-    POST — pm_output + action_items persisted after successful generation
+    PRE  - state snapshot before project analysis
+    POST - pm_output + action_items persisted after successful generation
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ _METHODOLOGY_PROFILES = {
         "artifacts":  ["pitch", "hill chart", "appetite", "scopes"],
         "ceremonies": ["betting table", "kickoff", "cooldown"],
         "strengths":  "Fixed time + variable scope, kills scope creep by design",
-        "pitfalls":   "Requires trust and autonomy — won't work with micromanagement",
+        "pitfalls":   "Requires trust and autonomy - won't work with micromanagement",
     },
     "general": {
         "cadence":    "Context-dependent",
@@ -87,10 +87,10 @@ _RISK_CATEGORIES = {
 }
 
 _STATUS_SIGNALS = {
-    "on_track":    r'(on track|ahead|ahead of schedule|green)',
-    "at_risk":     r'(at risk|delayed|blocked|behind|amber)',
-    "off_track":   r'(off track|overdue|missed|critical|red)',
-    "completed":   r'(done|complete|shipped|delivered|closed)',
+    "on_track":    r'(on track|ahead|ahead of schedule|green)',
+    "at_risk":     r'(at risk|delayed|blocked|behind|amber)',
+    "off_track":   r'(off track|overdue|missed|critical|red)',
+    "completed":   r'(done|complete|shipped|delivered|closed)',
 }
 
 
@@ -107,9 +107,9 @@ class ProjectManagerState(TypedDict, total=False):
     action_items:    list
 
 
-# ── Phase 1 — Project Analysis (pure, no Claude) ──────────────────────────────
+# ── Phase 1 - Project Analysis (pure, no Claude) ──────────────────────────────
 def _analyse_project(task: str, methodology: str) -> dict:
-    """Returns project_data dict — pure lookup and signal detection."""
+    """Returns project_data dict - pure lookup and signal detection."""
     profile    = _METHODOLOGY_PROFILES.get(methodology, _METHODOLOGY_PROFILES["general"])
     task_lower = task.lower()
     flags: list[str] = []
@@ -120,13 +120,13 @@ def _analyse_project(task: str, methodology: str) -> dict:
             risks.append(f"{category.title()}: {risk} → {mitigation}")
 
     if "deadline" in task_lower or "urgent" in task_lower:
-        flags.append("Hard deadline detected — build critical path analysis first")
+        flags.append("Hard deadline detected - build critical path analysis first")
     if "stakeholder" in task_lower or "client" in task_lower:
-        flags.append("Stakeholder management required — written communication trail essential")
+        flags.append("Stakeholder management required - written communication trail essential")
     if "team" in task_lower or "resource" in task_lower:
-        flags.append("Team coordination — assign owners to every task, not groups")
+        flags.append("Team coordination - assign owners to every task, not groups")
     if "budget" in task_lower or "cost" in task_lower:
-        flags.append("Budget tracking required — weekly spend vs forecast")
+        flags.append("Budget tracking required - weekly spend vs forecast")
 
     # Detect project status from context
     status = "unknown"
@@ -146,7 +146,7 @@ def _analyse_project(task: str, methodology: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude PM Output ─────────────────────────────────────────────────
+# ── Phase 2 - Claude PM Output ─────────────────────────────────────────────────
 def _build_pm_prompt(state: ProjectManagerState, proj_data: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -155,10 +155,8 @@ def _build_pm_prompt(state: ProjectManagerState, proj_data: dict) -> str:
     methodology = state.get("methodology", "general")
     profile     = proj_data["profile"]
 
-    flags_text = "
-".join(f"  ⚡ {f}" for f in proj_data["flags"]) or "  None detected"
-    risks_text = "
-".join(f"  ⚠ {r}" for r in proj_data["risks"]) or "  No specific risks detected in context"
+    flags_text = "\n".join(f"  ⚡ {f}" for f in proj_data["flags"]) or "  None detected"
+    risks_text = "\n".join(f"  ⚠ {r}" for r in proj_data["risks"]) or "  No specific risks detected in context"
     arts_text  = ", ".join(profile["artifacts"])
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
@@ -187,10 +185,10 @@ PROJECT CONTEXT:
 {proj_ctx or "None provided"}
 
 OUTPUT FORMAT:
-## Project Plan: {out_type.replace('_',' ').title()} — {methodology}
+## Project Plan: {out_type.replace('_',' ').title()} - {methodology}
 
 ### Project Overview
-[Objective, scope, success criteria — 3 bullet points each]
+[Objective, scope, success criteria - 3 bullet points each]
 
 ### Timeline
 | Phase | Duration | Key Deliverable | Owner | Status |
@@ -203,16 +201,16 @@ OUTPUT FORMAT:
 ### Risk Register
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |---|---|---|---|---|
-[rows — minimum 3]
+[rows - minimum 3]
 
 ### Action Items (next 48 hours)
-[Numbered list — each: specific task, owner, due date]
+[Numbered list - each: specific task, owner, due date]
 
 ### Communication Plan
 [Who gets what update, when, in what format]
 
 ### Definition of Done
-[Specific criteria — not "complete" but measurable]
+[Specific criteria - not "complete" but measurable]
 
 ACTION_ITEMS: [comma-separated list of the next 3 immediate actions]
 """

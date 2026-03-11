@@ -1,5 +1,5 @@
 """
-Database Architect — 19-point @langraph compliant agent node.
+Database Architect - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), db_context (str), output_type (VALID_OUTPUT_TYPES), db_engine (VALID_DB_ENGINES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before schema analysis
-    POST — db_design + schema_summary persisted after successful generation
+    PRE  - state snapshot before schema analysis
+    POST - db_design + schema_summary persisted after successful generation
 """
 
 from __future__ import annotations
@@ -47,10 +47,10 @@ VALID_DB_ENGINES = {
 
 # ── DB Design Heuristics ───────────────────────────────────────────────────────
 _NORMAL_FORM_CHECKS = [
-    ("UUID primary keys",          r'serial|integer\s+primary\s+key', "Use UUID v4 or gen_random_uuid() — portability + security"),
+    ("UUID primary keys",          r'serial|integer\s+primary\s+key', "Use UUID v4 or gen_random_uuid() - portability + security"),
     ("Timestamp audit columns",    r'created_at|updated_at',                   "Every table needs created_at + updated_at (auto-managed by trigger)"),
     ("Soft delete pattern",        r'deleted_at|is_deleted',                   "Prefer deleted_at (soft delete) over hard DELETE for audit trails"),
-    ("No nullable FKs without reason", r'references\s+\w+\s*\(',             "Nullable FK = optional relationship — document the business reason"),
+    ("No nullable FKs without reason", r'references\s+\w+\s*\(',             "Nullable FK = optional relationship - document the business reason"),
 ]
 
 _RLS_PATTERNS = {
@@ -67,7 +67,7 @@ _INDEX_RULES = [
     "Partial index: WHERE deleted_at IS NULL for soft-delete tables",
     "GIN index for JSONB columns queried with @> or ?",
     "pg_trgm index for LIKE/ILIKE search on text columns",
-    "Avoid over-indexing — each index slows writes",
+    "Avoid over-indexing - each index slows writes",
 ]
 
 
@@ -84,26 +84,26 @@ class DatabaseArchitectState(TypedDict, total=False):
     schema_summary: str
 
 
-# ── Phase 1 — Schema Heuristics (pure, no Claude) ─────────────────────────────
+# ── Phase 1 - Schema Heuristics (pure, no Claude) ─────────────────────────────
 def _analyse_requirements(task: str, db_engine: str) -> dict:
-    """Returns requirements_data dict — pure heuristic analysis."""
+    """Returns requirements_data dict - pure heuristic analysis."""
     task_lower = task.lower()
     flags: list[str] = []
 
     if any(w in task_lower for w in ["user", "account", "auth", "login"]):
-        flags.append("Users table required — reference Supabase auth.users via FK")
+        flags.append("Users table required - reference Supabase auth.users via FK")
     if any(w in task_lower for w in ["tenant", "organisation", "org", "team"]):
-        flags.append("Multi-tenant pattern — add org_id to all user-scoped tables")
+        flags.append("Multi-tenant pattern - add org_id to all user-scoped tables")
     if any(w in task_lower for w in ["payment", "invoice", "subscription"]):
-        flags.append("Financial data — use NUMERIC not FLOAT for monetary values")
+        flags.append("Financial data - use NUMERIC not FLOAT for monetary values")
     if any(w in task_lower for w in ["file", "upload", "image", "attachment"]):
         flags.append("Store file metadata in DB, actual files in object storage (Supabase Storage / S3)")
     if any(w in task_lower for w in ["search", "fulltext", "fts"]):
-        flags.append("Full-text search — add tsvector column with GIN index + pg_trgm extension")
+        flags.append("Full-text search - add tsvector column with GIN index + pg_trgm extension")
     if any(w in task_lower for w in ["realtime", "live", "notification"]):
         flags.append("Enable Supabase Realtime on tables requiring live updates")
     if any(w in task_lower for w in ["audit", "history", "log", "track"]):
-        flags.append("Audit log pattern — separate audit_log table with trigger-based writes")
+        flags.append("Audit log pattern - separate audit_log table with trigger-based writes")
 
     supabase_specific = db_engine == "supabase"
     return {
@@ -117,7 +117,7 @@ def _analyse_requirements(task: str, db_engine: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude DB Design ─────────────────────────────────────────────────
+# ── Phase 2 - Claude DB Design ─────────────────────────────────────────────────
 def _build_db_prompt(state: DatabaseArchitectState, req_data: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -125,10 +125,8 @@ def _build_db_prompt(state: DatabaseArchitectState, req_data: dict) -> str:
     output_type = state.get("output_type", "schema_design")
     db_engine   = state.get("db_engine", "postgresql")
 
-    flags_text  = "
-".join(f"  ⚡ {f}" for f in req_data["flags"]) or "  None detected"
-    index_text  = "
-".join(f"  • {r}" for r in req_data["index_rules"])
+    flags_text  = "\n".join(f"  ⚡ {f}" for f in req_data["flags"]) or "  None detected"
+    index_text  = "\n".join(f"  • {r}" for r in req_data["index_rules"])
     supabase_note = "Supabase-specific: Use gen_random_uuid(), auth.uid() in RLS, enable Realtime where needed." if req_data["supabase_mode"] else ""
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.

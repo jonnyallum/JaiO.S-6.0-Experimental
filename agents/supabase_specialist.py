@@ -1,5 +1,5 @@
 """
-Supabase Specialist — 19-point @langraph compliant agent node.
+Supabase Specialist - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), project_context (str), output_type (VALID_OUTPUT_TYPES), area (VALID_AREAS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before Supabase spec generation
-    POST — supabase_spec + sql_output persisted after successful generation
+    PRE  - state snapshot before Supabase spec generation
+    POST - supabase_spec + sql_output persisted after successful generation
 """
 
 from __future__ import annotations
@@ -71,14 +71,14 @@ serve(async (req: Request) => {
 })"""
 
 _COMMON_PITFALLS = [
-    "RLS disabled by default — always call ALTER TABLE ... ENABLE ROW LEVEL SECURITY",
-    "anon key is public — never use service_role key client-side",
+    "RLS disabled by default - always call ALTER TABLE ... ENABLE ROW LEVEL SECURITY",
+    "anon key is public - never use service_role key client-side",
     "Realtime: enable replica identity FULL for UPDATE/DELETE events",
     "Storage: bucket policies are separate from table RLS",
     "Edge Functions: use SUPABASE_SERVICE_ROLE_KEY only server-side",
-    "PostgREST: use exact column names — JS camelCase is NOT auto-converted",
+    "PostgREST: use exact column names - JS camelCase is NOT auto-converted",
     "Migrations: use supabase db push for local, supabase db push --db-url for remote",
-    "auth.uid() returns null for unauthenticated — always handle the null case",
+    "auth.uid() returns null for unauthenticated - always handle the null case",
 ]
 
 _AREA_CHECKLIST = {
@@ -106,9 +106,9 @@ class SupabaseSpecialistState(TypedDict, total=False):
     sql_output:       str
 
 
-# ── Phase 1 — Supabase Context (pure, no Claude) ──────────────────────────────
+# ── Phase 1 - Supabase Context (pure, no Claude) ──────────────────────────────
 def _build_supabase_context(area: str, output_type: str) -> dict:
-    """Returns context dict — pure lookup, no Claude."""
+    """Returns context dict - pure lookup, no Claude."""
     checklist = _AREA_CHECKLIST.get(area, _AREA_CHECKLIST["general"])
     return {
         "checklist":        checklist,
@@ -120,7 +120,7 @@ def _build_supabase_context(area: str, output_type: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Supabase Spec ────────────────────────────────────────────
+# ── Phase 2 - Claude Supabase Spec ────────────────────────────────────────────
 def _build_supabase_prompt(state: SupabaseSpecialistState, ctx: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -128,10 +128,8 @@ def _build_supabase_prompt(state: SupabaseSpecialistState, ctx: dict) -> str:
     output_type = state.get("output_type", "general")
     area        = state.get("area", "general")
 
-    checklist_text = "
-".join(f"  ☐ {c}" for c in ctx["checklist"])
-    pitfalls_text  = "
-".join(f"  ⚠ {p}" for p in ctx["common_pitfalls"][:5])
+    checklist_text = "\n".join(f"  ☐ {c}" for c in ctx["checklist"])
+    pitfalls_text  = "\n".join(f"  ⚠ {p}" for p in ctx["common_pitfalls"][:5])
 
     edge_section = f"""
 EDGE FUNCTION BOILERPLATE:
@@ -141,7 +139,7 @@ EDGE FUNCTION BOILERPLATE:
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
-MISSION: Produce a production-ready {output_type} for Supabase — area: {area}.
+MISSION: Produce a production-ready {output_type} for Supabase - area: {area}.
 
 AREA CHECKLIST:
 {checklist_text}
@@ -172,7 +170,7 @@ OUTPUT FORMAT:
 ```
 
 ### Checklist Verification
-[Go through each checklist item — PASS / FAIL / N/A]
+[Go through each checklist item - PASS / FAIL / N/A]
 
 ### Pitfall Mitigations
 [Address each relevant pitfall with specific mitigation]

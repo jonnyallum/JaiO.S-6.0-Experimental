@@ -1,5 +1,5 @@
 """
-UI / Visual Designer — 19-point @langraph compliant agent node.
+UI / Visual Designer - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), design_context (str), output_type (VALID_OUTPUT_TYPES), component_type (VALID_COMPONENT_TYPES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before design spec generation
-    POST — design_spec + component_code persisted after successful generation
+    PRE  - state snapshot before design spec generation
+    POST - design_spec + component_code persisted after successful generation
 """
 
 from __future__ import annotations
@@ -48,12 +48,12 @@ VALID_COMPONENT_TYPES = {
 
 # ── Design System Reference ────────────────────────────────────────────────────
 _TAILWIND_PATTERNS = {
-    "spacing":     "space-y-4, gap-6, p-8 — use 4-unit increments",
+    "spacing":     "space-y-4, gap-6, p-8 - use 4-unit increments",
     "typography":  "text-4xl font-bold tracking-tight / text-muted-foreground text-sm",
     "shadows":     "shadow-sm (cards) / shadow-lg (modals) / shadow-none (flat)",
     "radii":       "rounded-lg (cards) / rounded-full (badges/avatars) / rounded-xl (modals)",
     "motion":      "transition-all duration-200 ease-out for hover states",
-    "dark_mode":   "dark: prefix — always pair light/dark variants",
+    "dark_mode":   "dark: prefix - always pair light/dark variants",
     "responsive":  "mobile-first: base → sm: → md: → lg: → xl:",
 }
 
@@ -66,14 +66,14 @@ _FRAMER_MOTION_PATTERNS = {
 }
 
 _DESIGN_PRINCIPLES = [
-    "8-point grid — all spacing multiples of 8px (Tailwind: 2, 4, 6, 8...)",
-    "3-colour rule — primary, neutral, accent only (+ semantic: error/success)",
-    "Typography scale: 4 sizes max per view — do not mix too many weights",
-    "One clear CTA per section — no competing primary actions",
-    "White space is not wasted space — breathing room = clarity",
-    "Mobile-first layout — test at 375px before desktop",
+    "8-point grid - all spacing multiples of 8px (Tailwind: 2, 4, 6, 8...)",
+    "3-colour rule - primary, neutral, accent only (+ semantic: error/success)",
+    "Typography scale: 4 sizes max per view - do not mix too many weights",
+    "One clear CTA per section - no competing primary actions",
+    "White space is not wasted space - breathing room = clarity",
+    "Mobile-first layout - test at 375px before desktop",
     "Accessible contrast: 4.5:1 minimum for body text, 3:1 for large text",
-    "Micro-interactions on every interactive element — 200ms hover state",
+    "Micro-interactions on every interactive element - 200ms hover state",
 ]
 
 _COMPONENT_SPECS = {
@@ -118,23 +118,23 @@ class UiDesignerState(TypedDict, total=False):
     component_code: str
 
 
-# ── Phase 1 — Design Analysis (pure, no Claude) ───────────────────────────────
+# ── Phase 1 - Design Analysis (pure, no Claude) ───────────────────────────────
 def _analyse_design_requirements(task: str, component_type: str) -> dict:
-    """Returns design_data dict — pure lookup, no Claude."""
+    """Returns design_data dict - pure lookup, no Claude."""
     comp_spec  = _COMPONENT_SPECS.get(component_type, _COMPONENT_SPECS["general"])
     task_lower = task.lower()
     flags: list[str] = []
 
     if "dark" in task_lower or "theme" in task_lower:
-        flags.append("Dark mode required — use CSS variables + Tailwind dark: variants")
+        flags.append("Dark mode required - use CSS variables + Tailwind dark: variants")
     if "animation" in task_lower or "motion" in task_lower:
-        flags.append("Framer Motion required — import from framer-motion, not @/lib")
+        flags.append("Framer Motion required - import from framer-motion, not @/lib")
     if "mobile" in task_lower or "responsive" in task_lower:
-        flags.append("Mobile-first — design 375px breakpoint first")
+        flags.append("Mobile-first - design 375px breakpoint first")
     if "accessible" in task_lower or "a11y" in task_lower or "wcag" in task_lower:
-        flags.append("Accessibility required — aria-labels, focus rings, keyboard navigation")
+        flags.append("Accessibility required - aria-labels, focus rings, keyboard navigation")
     if "loading" in task_lower or "skeleton" in task_lower:
-        flags.append("Skeleton loading state required — never show empty containers")
+        flags.append("Skeleton loading state required - never show empty containers")
 
     return {
         "component_spec":      comp_spec,
@@ -147,7 +147,7 @@ def _analyse_design_requirements(task: str, component_type: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Design Spec ───────────────────────────────────────────────
+# ── Phase 2 - Claude Design Spec ───────────────────────────────────────────────
 def _build_design_prompt(state: UiDesignerState, design_data: dict) -> str:
     persona    = get_persona(ROLE)
     task       = state["task"]
@@ -156,15 +156,11 @@ def _build_design_prompt(state: UiDesignerState, design_data: dict) -> str:
     comp_type  = state.get("component_type", "general")
     comp_spec  = design_data["component_spec"]
 
-    flags_text      = "
-".join(f"  ⚡ {f}" for f in design_data["flags"]) or "  None detected"
-    principles_text = "
-".join(f"  • {p}" for p in design_data["design_principles"])
-    mistakes_text   = "
-".join(f"  ✗ {m}" for m in comp_spec["common_mistakes"])
+    flags_text      = "\n".join(f"  ⚡ {f}" for f in design_data["flags"]) or "  None detected"
+    principles_text = "\n".join(f"  • {p}" for p in design_data["design_principles"])
+    mistakes_text   = "\n".join(f"  ✗ {m}" for m in comp_spec["common_mistakes"])
 
-    motion_text = "
-".join(f"  {k}: {v}" for k, v in design_data["motion_patterns"].items())
+    motion_text = "\n".join(f"  {k}: {v}" for k, v in design_data["motion_patterns"].items())
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -195,31 +191,31 @@ TASK:
 {task}
 
 DESIGN CONTEXT / BRAND:
-{ctx or "None provided — use clean, modern defaults"}
+{ctx or "None provided - use clean, modern defaults"}
 
 OUTPUT FORMAT:
-## UI Design Spec: {out_type.replace('_',' ').title()} — {comp_type}
+## UI Design Spec: {out_type.replace('_',' ').title()} - {comp_type}
 
 ### Design Decisions
-[3–5 key choices with rationale — colour, layout, motion, typography]
+[3–5 key choices with rationale - colour, layout, motion, typography]
 
 ### Component Code
 ```tsx
 // Production-ready React + Tailwind + Framer Motion
-// Full component — no placeholders, no TODO comments
+// Full component - no placeholders, no TODO comments
 ```
 
 ### Responsive Behaviour
-[Mobile → tablet → desktop — specific breakpoint changes]
+[Mobile → tablet → desktop - specific breakpoint changes]
 
 ### States
-[Default / Hover / Active / Focus / Loading / Empty / Error — describe each]
+[Default / Hover / Active / Focus / Loading / Empty / Error - describe each]
 
 ### Accessibility
 [aria attributes, keyboard nav, focus management, contrast ratios]
 
 ### Animation Spec
-[Timing, easing, trigger, what property animates — reference Framer Motion]
+[Timing, easing, trigger, what property animates - reference Framer Motion]
 
 ### Next Action
 [Single most important first step]

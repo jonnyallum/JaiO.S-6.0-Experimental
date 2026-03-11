@@ -1,5 +1,5 @@
 """
-Truth Verifier — 19-point @langraph compliant agent node.
+Truth Verifier - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : artifact (str), artifact_type (VALID_ARTIFACT_TYPES), check_level (VALID_CHECK_LEVELS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty artifact, invalid type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before gate analysis
-    POST — verification_report + gate scores persisted after successful generation
+    PRE  - state snapshot before gate analysis
+    POST - verification_report + gate scores persisted after successful generation
 """
 
 from __future__ import annotations
@@ -46,24 +46,23 @@ VALID_CHECK_LEVELS = {"quick_scan", "standard_audit", "deep_verify"}
 
 # ── 13-Gate Checklist ─────────────────────────────────────────────────────────
 _GATES = {
-    "G01": ("No placeholder text (TBD / lorem ipsum / TODO)",        r'(TBD|TODO|lorem ipsum|PLACEHOLDER|FIXME)'),
-    "G02": ("No unqualified superlatives (best, fastest, #1)",       r'(best|fastest|number one|#1|world-class|industry-leading)'),
-    "G03": ("No unverified statistics (X% without source)",          r'\d+\s*%(?!\s*[–\-]\s*\d+\s*%)[^\.
-]{0,80}(?!source|ref|cite|\[)'),
-    "G04": ("No vague timeframes (soon, shortly, in the future)",    r'(soon|shortly|in the future|at some point|eventually)'),
-    "G05": ("No passive-voice evasion on claims",                    r'(it is believed|it has been said|some say|reportedly)'),
+    "G01": ("No placeholder text (TBD / lorem ipsum / TODO)",        r'(TBD|TODO|lorem ipsum|PLACEHOLDER|FIXME)'),
+    "G02": ("No unqualified superlatives (best, fastest, #1)",       r'(best|fastest|number one|#1|world-class|industry-leading)'),
+    "G03": ("No unverified statistics (X% without source)", r'\d+\s*%[^\.]{0,80}(?!source|ref|cite|\[)'),
+    "G04": ("No vague timeframes (soon, shortly, in the future)",    r'(soon|shortly|in the future|at some point|eventually)'),
+    "G05": ("No passive-voice evasion on claims",                    r'(it is believed|it has been said|some say|reportedly)'),
     "G06": ("No contradictory statements within same document",      None),  # LLM gate
     "G07": ("No unattributed quotes",                                r'"[^"]{20,}"(?!\s*[-–]\s*\w)'),
     "G08": ("No fabricated examples or case studies",                None),  # LLM gate
     "G09": ("No broken/circular logic chains",                       None),  # LLM gate
-    "G10": ("No hardcoded personal/company names in templates",      r'(Antigravity|jonnyallum)'),
-    "G11": ("Confidence signals present (HIGH/MEDIUM/LOW labels)",   r'(HIGH|MEDIUM|LOW)\s*confidence'),
-    "G12": ("Actionable outputs — not just observations",            None),  # LLM gate
-    "G13": ("No Latin placeholder text",                             r'(lorem|ipsum|dolor|consectetur|adipiscing)'),
+    "G10": ("No hardcoded personal/company names in templates",      r'(Antigravity|jonnyallum)'),
+    "G11": ("Confidence signals present (HIGH/MEDIUM/LOW labels)",   r'(HIGH|MEDIUM|LOW)\s*confidence'),
+    "G12": ("Actionable outputs - not just observations",            None),  # LLM gate
+    "G13": ("No Latin placeholder text",                             r'(lorem|ipsum|dolor|consectetur|adipiscing)'),
 }
 
 _DEPTH_SETTINGS = {
-    "quick_scan":      {"llm_gates": False, "note": "Regex gates only — fast pass/fail"},
+    "quick_scan":      {"llm_gates": False, "note": "Regex gates only - fast pass/fail"},
     "standard_audit":  {"llm_gates": True,  "note": "Regex + LLM reasoning for G06/G08/G09/G12"},
     "deep_verify":     {"llm_gates": True,  "note": "Full 13-gate analysis with confidence scoring"},
 }
@@ -83,7 +82,7 @@ class TruthVerifierState(TypedDict, total=False):
     confidence:          str
 
 
-# ── Phase 1 — Gate Analysis (pure, no Claude) ─────────────────────────────────
+# ── Phase 1 - Gate Analysis (pure, no Claude) ─────────────────────────────────
 def _run_gate_checks(artifact: str, check_level: str) -> tuple[int, int, dict[str, Any]]:
     """Run regex gates; returns (passed, failed, gate_results)."""
     gate_results: dict[str, Any] = {}
@@ -91,7 +90,7 @@ def _run_gate_checks(artifact: str, check_level: str) -> tuple[int, int, dict[st
     failed = 0
     for gate_id, (description, pattern) in _GATES.items():
         if pattern is None:
-            # LLM gate — mark as "deferred" for Phase 2
+            # LLM gate - mark as "deferred" for Phase 2
             gate_results[gate_id] = {"description": description, "result": "DEFERRED", "match": None}
         else:
             matches = re.findall(pattern, artifact, re.IGNORECASE)
@@ -109,16 +108,14 @@ def _format_gate_summary(gate_results: dict) -> str:
         icon = {"PASS": "✓", "FAIL": "✗", "DEFERRED": "◌"}.get(data["result"], "?")
         line = f"  {icon} [{gate_id}] {data['description']}"
         if data.get("match"):
-            line += f"
-      ↳ Found: {data['match']}"
+            line += f"\n      \u21b3 Found: {data['match']}"
         lines.append(line)
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 _build_prompt = None  # assigned below after _build_verify_prompt definition
 
 
-# ── Phase 2 — Claude Verification ────────────────────────────────────────────
+# ── Phase 2 - Claude Verification ────────────────────────────────────────────
 def _build_verify_prompt(state: TruthVerifierState, gate_results: dict, passed: int, failed: int) -> str:
     persona       = get_persona(ROLE)
     artifact      = state["artifact"]
@@ -132,7 +129,7 @@ def _build_verify_prompt(state: TruthVerifierState, gate_results: dict, passed: 
 
 MISSION: Perform a truth-lock verification audit on the artifact below.
 
-CHECK LEVEL: {check_level} — {depth_note}
+CHECK LEVEL: {check_level} - {depth_note}
 ARTIFACT TYPE: {artifact_type}
 
 REGEX GATE RESULTS ({passed} passed, {failed} failed):
@@ -141,9 +138,9 @@ REGEX GATE RESULTS ({passed} passed, {failed} failed):
 DEFERRED LLM GATES TO EVALUATE: {', '.join(deferred) if deferred else 'None'}
 
 ARTIFACT:
-"""
+'''
 {artifact[:6000]}
-"""
+'''
 
 YOUR TASK:
 1. Evaluate all DEFERRED gates (G06, G08, G09, G12) with specific evidence from the artifact.
@@ -167,12 +164,12 @@ OUTPUT FORMAT:
 [X / 13 gates passed]
 
 ### Verdict
-[APPROVED — safe to use | CONDITIONAL — fix listed violations first | BLOCKED — fundamental trust issues]
+[APPROVED - safe to use | CONDITIONAL - fix listed violations first | BLOCKED - fundamental trust issues]
 
 ### Recommended Fixes
 [Specific, actionable corrections for every FAIL]
 
-CONFIDENCE SCORE: [HIGH / MEDIUM / LOW] — [one-sentence justification]
+CONFIDENCE SCORE: [HIGH / MEDIUM / LOW] - [one-sentence justification]
 """
 
 _build_prompt = _build_verify_prompt  # spec alias
@@ -210,7 +207,7 @@ def truth_verifier_node(state: TruthVerifierState) -> TruthVerifierState:
     artifact_type = state.get("artifact_type", "general")
     check_level   = state.get("check_level", "standard_audit")
 
-    # ── Phase 1 — validate inputs ────────────────────────────────────────────
+    # ── Phase 1 - validate inputs ────────────────────────────────────────────
     if not artifact:
         raise ValueError("PERMANENT: artifact is required.")
     if artifact_type not in VALID_ARTIFACT_TYPES:
@@ -222,7 +219,7 @@ def truth_verifier_node(state: TruthVerifierState) -> TruthVerifierState:
 
     passed, failed, gate_results = _run_gate_checks(artifact, check_level)
 
-    # ── Phase 2 — Claude verification ────────────────────────────────────────
+    # ── Phase 2 - Claude verification ────────────────────────────────────────
     client  = anthropic.Anthropic()
     metrics = CallMetrics(thread_id, ROLE)
     prompt  = _build_verify_prompt(state, gate_results, passed, failed)

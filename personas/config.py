@@ -26,136 +26,330 @@ class PersonaSettings(BaseSettings):
         extra="ignore",
     )
 
-    # GitHub Intelligence
+    # ── Core Technical ────────────────────────────────────────────────────
     persona_github_intelligence_name: str = Field("")
     persona_github_intelligence_nickname: str = Field("")
     persona_github_intelligence_handle: str = Field("")
     persona_github_intelligence_personality: str = Field("")
 
-    # Security Audit
     persona_security_audit_name: str = Field("")
     persona_security_audit_nickname: str = Field("")
     persona_security_audit_handle: str = Field("")
     persona_security_audit_personality: str = Field("")
 
-    # Architecture Review
     persona_architecture_review_name: str = Field("")
     persona_architecture_review_nickname: str = Field("")
     persona_architecture_review_handle: str = Field("")
     persona_architecture_review_personality: str = Field("")
 
-    # Data Extraction
     persona_data_extraction_name: str = Field("")
     persona_data_extraction_nickname: str = Field("")
     persona_data_extraction_handle: str = Field("")
     persona_data_extraction_personality: str = Field("")
 
-    # Quality Validation
     persona_quality_validation_name: str = Field("")
     persona_quality_validation_nickname: str = Field("")
     persona_quality_validation_handle: str = Field("")
     persona_quality_validation_personality: str = Field("")
 
-    # Brief Writer
     persona_brief_writer_name: str = Field("")
     persona_brief_writer_nickname: str = Field("")
     persona_brief_writer_handle: str = Field("")
     persona_brief_writer_personality: str = Field("")
 
-    # Code Reviewer
     persona_code_reviewer_name: str = Field("")
     persona_code_reviewer_nickname: str = Field("")
     persona_code_reviewer_handle: str = Field("")
     persona_code_reviewer_personality: str = Field("")
 
-    # Dependency Audit
     persona_dependency_audit_name: str = Field("")
     persona_dependency_audit_nickname: str = Field("")
     persona_dependency_audit_handle: str = Field("")
     persona_dependency_audit_personality: str = Field("")
 
-    # Social Post Generator
     persona_social_post_generator_name: str = Field("")
     persona_social_post_generator_nickname: str = Field("")
     persona_social_post_generator_handle: str = Field("")
     persona_social_post_generator_personality: str = Field("")
 
-    # Supabase Intelligence
     persona_supabase_intelligence_name: str = Field("")
     persona_supabase_intelligence_nickname: str = Field("")
     persona_supabase_intelligence_handle: str = Field("")
     persona_supabase_intelligence_personality: str = Field("")
 
-    # Monetisation Strategist
+    # ── Business Intelligence ─────────────────────────────────────────────
     persona_monetisation_strategist_name: str = Field("")
     persona_monetisation_strategist_nickname: str = Field("")
     persona_monetisation_strategist_handle: str = Field("")
     persona_monetisation_strategist_personality: str = Field("")
 
-    # Sales Conversion
     persona_sales_conversion_name: str = Field("")
     persona_sales_conversion_nickname: str = Field("")
     persona_sales_conversion_handle: str = Field("")
     persona_sales_conversion_personality: str = Field("")
 
-    # Content Scaler
     persona_content_scaler_name: str = Field("")
     persona_content_scaler_nickname: str = Field("")
     persona_content_scaler_handle: str = Field("")
     persona_content_scaler_personality: str = Field("")
 
-    # Automation Architect
     persona_automation_architect_name: str = Field("")
     persona_automation_architect_nickname: str = Field("")
     persona_automation_architect_handle: str = Field("")
     persona_automation_architect_personality: str = Field("")
 
-    # Business Intelligence
     persona_business_intelligence_name: str = Field("")
     persona_business_intelligence_nickname: str = Field("")
     persona_business_intelligence_handle: str = Field("")
     persona_business_intelligence_personality: str = Field("")
 
-
-    # SEO Specialist
+    # ── Growth & Intelligence ─────────────────────────────────────────────
     persona_seo_specialist_name: str = Field("")
     persona_seo_specialist_nickname: str = Field("")
     persona_seo_specialist_handle: str = Field("")
     persona_seo_specialist_personality: str = Field("")
 
-    # Competitor Monitor
     persona_competitor_monitor_name: str = Field("")
     persona_competitor_monitor_nickname: str = Field("")
     persona_competitor_monitor_handle: str = Field("")
     persona_competitor_monitor_personality: str = Field("")
 
-    # Email Architect
     persona_email_architect_name: str = Field("")
     persona_email_architect_nickname: str = Field("")
     persona_email_architect_handle: str = Field("")
     persona_email_architect_personality: str = Field("")
 
-    # Video Brief Writer
     persona_video_brief_writer_name: str = Field("")
     persona_video_brief_writer_nickname: str = Field("")
     persona_video_brief_writer_handle: str = Field("")
     persona_video_brief_writer_personality: str = Field("")
 
-    # Funnel Architect
     persona_funnel_architect_name: str = Field("")
     persona_funnel_architect_nickname: str = Field("")
     persona_funnel_architect_handle: str = Field("")
     persona_funnel_architect_personality: str = Field("")
-    # Orchestrator
+
     persona_orchestrator_name: str = Field("")
     persona_orchestrator_nickname: str = Field("")
     persona_orchestrator_handle: str = Field("")
     persona_orchestrator_personality: str = Field("")
 
+    # ── Extended Roster ───────────────────────────────────────────────────
+    analytics_reporter_name: str = Field("")
+    analytics_reporter_nickname: str = Field("")
+    analytics_reporter_handle: str = Field("")
+    analytics_reporter_personality: str = Field("")
+
+    ad_copy_writer_name: str = Field("")
+    ad_copy_writer_nickname: str = Field("")
+    ad_copy_writer_handle: str = Field("")
+    ad_copy_writer_personality: str = Field("")
+
+    launch_orchestrator_name: str = Field("")
+    launch_orchestrator_nickname: str = Field("")
+    launch_orchestrator_handle: str = Field("")
+    launch_orchestrator_personality: str = Field("")
+
+    case_study_writer_name: str = Field("")
+    case_study_writer_nickname: str = Field("")
+    case_study_writer_handle: str = Field("")
+    case_study_writer_personality: str = Field("")
+
+    knowledge_base_writer_name: str = Field("")
+    knowledge_base_writer_nickname: str = Field("")
+    knowledge_base_writer_handle: str = Field("")
+    knowledge_base_writer_personality: str = Field("")
+
+    agent_builder_name: str = Field("")
+    agent_builder_nickname: str = Field("")
+    agent_builder_handle: str = Field("")
+    agent_builder_personality: str = Field("")
+
+    proposal_writer_name: str = Field("")
+    proposal_writer_nickname: str = Field("")
+    proposal_writer_handle: str = Field("")
+    proposal_writer_personality: str = Field("")
+
+    product_strategist_name: str = Field("")
+    product_strategist_nickname: str = Field("")
+    product_strategist_handle: str = Field("")
+    product_strategist_personality: str = Field("")
+
+    pricing_strategist_name: str = Field("")
+    pricing_strategist_nickname: str = Field("")
+    pricing_strategist_handle: str = Field("")
+    pricing_strategist_personality: str = Field("")
+
+    course_designer_name: str = Field("")
+    course_designer_nickname: str = Field("")
+    course_designer_handle: str = Field("")
+    course_designer_personality: str = Field("")
+
+    chatbot_designer_name: str = Field("")
+    chatbot_designer_nickname: str = Field("")
+    chatbot_designer_handle: str = Field("")
+    chatbot_designer_personality: str = Field("")
+
+    persona_builder_name: str = Field("")
+    persona_builder_nickname: str = Field("")
+    persona_builder_handle: str = Field("")
+    persona_builder_personality: str = Field("")
+
+    pr_writer_name: str = Field("")
+    pr_writer_nickname: str = Field("")
+    pr_writer_handle: str = Field("")
+    pr_writer_personality: str = Field("")
+
+    ab_test_designer_name: str = Field("")
+    ab_test_designer_nickname: str = Field("")
+    ab_test_designer_handle: str = Field("")
+    ab_test_designer_personality: str = Field("")
+
+    investor_pitch_writer_name: str = Field("")
+    investor_pitch_writer_nickname: str = Field("")
+    investor_pitch_writer_handle: str = Field("")
+    investor_pitch_writer_personality: str = Field("")
+
+    brand_voice_guide_name: str = Field("")
+    brand_voice_guide_nickname: str = Field("")
+    brand_voice_guide_handle: str = Field("")
+    brand_voice_guide_personality: str = Field("")
+
+    # ── Batch 5 ───────────────────────────────────────────────────────────
+    ecommerce_strategist_name: str = Field("")
+    ecommerce_strategist_nickname: str = Field("")
+    ecommerce_strategist_handle: str = Field("")
+    ecommerce_strategist_personality: str = Field("")
+
+    data_parser_name: str = Field("")
+    data_parser_nickname: str = Field("")
+    data_parser_handle: str = Field("")
+    data_parser_personality: str = Field("")
+
+    research_analyst_name: str = Field("")
+    research_analyst_nickname: str = Field("")
+    research_analyst_handle: str = Field("")
+    research_analyst_personality: str = Field("")
+
+    pipeline_monitor_name: str = Field("")
+    pipeline_monitor_nickname: str = Field("")
+    pipeline_monitor_handle: str = Field("")
+    pipeline_monitor_personality: str = Field("")
+
+    customer_success_name: str = Field("")
+    customer_success_nickname: str = Field("")
+    customer_success_handle: str = Field("")
+    customer_success_personality: str = Field("")
+
+    # ── Batch 6 ───────────────────────────────────────────────────────────
+    truth_verifier_name: str = Field("")
+    truth_verifier_nickname: str = Field("")
+    truth_verifier_handle: str = Field("")
+    truth_verifier_personality: str = Field("")
+
+    content_auditor_name: str = Field("")
+    content_auditor_nickname: str = Field("")
+    content_auditor_handle: str = Field("")
+    content_auditor_personality: str = Field("")
+
+    process_auditor_name: str = Field("")
+    process_auditor_nickname: str = Field("")
+    process_auditor_handle: str = Field("")
+    process_auditor_personality: str = Field("")
+
+    venture_ideator_name: str = Field("")
+    venture_ideator_nickname: str = Field("")
+    venture_ideator_handle: str = Field("")
+    venture_ideator_personality: str = Field("")
+
+    voice_synthesiser_name: str = Field("")
+    voice_synthesiser_nickname: str = Field("")
+    voice_synthesiser_handle: str = Field("")
+    voice_synthesiser_personality: str = Field("")
+
+    # ── Batch 7 ───────────────────────────────────────────────────────────
+    fullstack_architect_name: str = Field("")
+    fullstack_architect_nickname: str = Field("")
+    fullstack_architect_handle: str = Field("")
+    fullstack_architect_personality: str = Field("")
+
+    database_architect_name: str = Field("")
+    database_architect_nickname: str = Field("")
+    database_architect_handle: str = Field("")
+    database_architect_personality: str = Field("")
+
+    supabase_specialist_name: str = Field("")
+    supabase_specialist_nickname: str = Field("")
+    supabase_specialist_handle: str = Field("")
+    supabase_specialist_personality: str = Field("")
+
+    devops_engineer_name: str = Field("")
+    devops_engineer_nickname: str = Field("")
+    devops_engineer_handle: str = Field("")
+    devops_engineer_personality: str = Field("")
+
+    deployment_specialist_name: str = Field("")
+    deployment_specialist_nickname: str = Field("")
+    deployment_specialist_handle: str = Field("")
+    deployment_specialist_personality: str = Field("")
+
+    # ── Batch 8 ───────────────────────────────────────────────────────────
+    performance_auditor_name: str = Field("")
+    performance_auditor_nickname: str = Field("")
+    performance_auditor_handle: str = Field("")
+    performance_auditor_personality: str = Field("")
+
+    mcp_builder_name: str = Field("")
+    mcp_builder_nickname: str = Field("")
+    mcp_builder_handle: str = Field("")
+    mcp_builder_personality: str = Field("")
+
+    gcp_ai_specialist_name: str = Field("")
+    gcp_ai_specialist_nickname: str = Field("")
+    gcp_ai_specialist_handle: str = Field("")
+    gcp_ai_specialist_personality: str = Field("")
+
+    ui_designer_name: str = Field("")
+    ui_designer_nickname: str = Field("")
+    ui_designer_handle: str = Field("")
+    ui_designer_personality: str = Field("")
+
+    creative_director_name: str = Field("")
+    creative_director_nickname: str = Field("")
+    creative_director_handle: str = Field("")
+    creative_director_personality: str = Field("")
+
+    # ── Batch 9 ───────────────────────────────────────────────────────────
+    copywriter_name: str = Field("")
+    copywriter_nickname: str = Field("")
+    copywriter_handle: str = Field("")
+    copywriter_personality: str = Field("")
+
+    project_manager_name: str = Field("")
+    project_manager_nickname: str = Field("")
+    project_manager_handle: str = Field("")
+    project_manager_personality: str = Field("")
+
+    financial_analyst_name: str = Field("")
+    financial_analyst_nickname: str = Field("")
+    financial_analyst_handle: str = Field("")
+    financial_analyst_personality: str = Field("")
+
+    legal_advisor_name: str = Field("")
+    legal_advisor_nickname: str = Field("")
+    legal_advisor_handle: str = Field("")
+    legal_advisor_personality: str = Field("")
+
+    fact_checker_name: str = Field("")
+    fact_checker_nickname: str = Field("")
+    fact_checker_handle: str = Field("")
+    fact_checker_personality: str = Field("")
+
 
 _persona_settings = PersonaSettings()
 
-# Role -> env field prefix mapping
+# Role slug → env field prefix
+# Original 21 use "persona_<role>" prefix; all others use "<role>" prefix directly.
 _ROLE_MAP: dict[str, str] = {
     # Core technical
     "github_intelligence":    "persona_github_intelligence",
@@ -175,19 +369,60 @@ _ROLE_MAP: dict[str, str] = {
     "automation_architect":    "persona_automation_architect",
     "business_intelligence":   "persona_business_intelligence",
     # Growth & intelligence
-    "seo_specialist":       "persona_seo_specialist",
-    "competitor_monitor":   "persona_competitor_monitor",
-    "email_architect":      "persona_email_architect",
-    "video_brief_writer":   "persona_video_brief_writer",
-    "funnel_architect":     "persona_funnel_architect",
+    "seo_specialist":          "persona_seo_specialist",
+    "competitor_monitor":      "persona_competitor_monitor",
+    "email_architect":         "persona_email_architect",
+    "video_brief_writer":      "persona_video_brief_writer",
+    "funnel_architect":        "persona_funnel_architect",
     # Orchestration
     "orchestrator":            "persona_orchestrator",
-    "analytics_reporter":   ("analytics_reporter_name", "analytics_reporter_nickname", "analytics_reporter_handle", "analytics_reporter_personality"),
-    "ad_copy_writer":       ("ad_copy_writer_name", "ad_copy_writer_nickname", "ad_copy_writer_handle", "ad_copy_writer_personality"),
-    "launch_orchestrator":  ("launch_orchestrator_name", "launch_orchestrator_nickname", "launch_orchestrator_handle", "launch_orchestrator_personality"),
-    "case_study_writer":    ("case_study_writer_name", "case_study_writer_nickname", "case_study_writer_handle", "case_study_writer_personality"),
-    "knowledge_base_writer":("knowledge_base_writer_name", "knowledge_base_writer_nickname", "knowledge_base_writer_handle", "knowledge_base_writer_personality"),
-    "agent_builder":        ("agent_builder_name", "agent_builder_nickname", "agent_builder_handle", "agent_builder_personality"),
+    # Extended roster
+    "analytics_reporter":      "analytics_reporter",
+    "ad_copy_writer":          "ad_copy_writer",
+    "launch_orchestrator":     "launch_orchestrator",
+    "case_study_writer":       "case_study_writer",
+    "knowledge_base_writer":   "knowledge_base_writer",
+    "agent_builder":           "agent_builder",
+    "proposal_writer":         "proposal_writer",
+    "product_strategist":      "product_strategist",
+    "pricing_strategist":      "pricing_strategist",
+    "course_designer":         "course_designer",
+    "chatbot_designer":        "chatbot_designer",
+    "persona_builder":         "persona_builder",
+    "pr_writer":               "pr_writer",
+    "ab_test_designer":        "ab_test_designer",
+    "investor_pitch_writer":   "investor_pitch_writer",
+    "brand_voice_guide":       "brand_voice_guide",
+    # Batch 5
+    "ecommerce_strategist":    "ecommerce_strategist",
+    "data_parser":             "data_parser",
+    "research_analyst":        "research_analyst",
+    "pipeline_monitor":        "pipeline_monitor",
+    "customer_success":        "customer_success",
+    # Batch 6
+    "truth_verifier":          "truth_verifier",
+    "content_auditor":         "content_auditor",
+    "process_auditor":         "process_auditor",
+    "venture_ideator":         "venture_ideator",
+    "voice_synthesiser":       "voice_synthesiser",
+    # Batch 7
+    "fullstack_architect":     "fullstack_architect",
+    "database_architect":      "database_architect",
+    "supabase_specialist":     "supabase_specialist",
+    "devops_engineer":         "devops_engineer",
+    "deployment_specialist":   "deployment_specialist",
+    # Batch 8
+    "performance_auditor":     "performance_auditor",
+    "mcp_builder":             "mcp_builder",
+    "gcp_ai_specialist":       "gcp_ai_specialist",
+    "ui_designer":             "ui_designer",
+    "creative_director":       "creative_director",
+    # Batch 9
+    "copywriter":              "copywriter",
+    "project_manager":         "project_manager",
+    "financial_analyst":       "financial_analyst",
+    "legal_advisor":           "legal_advisor",
+    "fact_checker":            "fact_checker",
 }
 
 
@@ -226,232 +461,4 @@ def get_persona(role: str) -> dict:
 
 def get_all_personas() -> dict[str, dict]:
     """Return all configured personas. Useful for dashboards and sync."""
-    return {role: get_persona(role) for role in _ROLE_MAP    "proposal_writer":      ("proposal_writer_name", "proposal_writer_nickname", "proposal_writer_handle", "proposal_writer_personality"),
-    "product_strategist":   ("product_strategist_name", "product_strategist_nickname", "product_strategist_handle", "product_strategist_personality"),
-    "pricing_strategist":   ("pricing_strategist_name", "pricing_strategist_nickname", "pricing_strategist_handle", "pricing_strategist_personality"),
-    "course_designer":      ("course_designer_name", "course_designer_nickname", "course_designer_handle", "course_designer_personality"),
-    "chatbot_designer":     ("chatbot_designer_name", "chatbot_designer_nickname", "chatbot_designer_handle", "chatbot_designer_personality"),
-    "persona_builder":       ("persona_builder_name", "persona_builder_nickname", "persona_builder_handle", "persona_builder_personality"),
-    "pr_writer":             ("pr_writer_name", "pr_writer_nickname", "pr_writer_handle", "pr_writer_personality"),
-    "ab_test_designer":      ("ab_test_designer_name", "ab_test_designer_nickname", "ab_test_designer_handle", "ab_test_designer_personality"),
-    "investor_pitch_writer": ("investor_pitch_writer_name", "investor_pitch_writer_nickname", "investor_pitch_writer_handle", "investor_pitch_writer_personality"),
-    "brand_voice_guide":     ("brand_voice_guide_name", "brand_voice_guide_nickname", "brand_voice_guide_handle", "brand_voice_guide_personality"),
-    "ecommerce_strategist": {
-        "name": os.getenv("ECOMMERCE_STRATEGIST_NAME", ""),
-        "nickname": os.getenv("ECOMMERCE_STRATEGIST_NICKNAME", ""),
-        "handle": os.getenv("ECOMMERCE_STRATEGIST_HANDLE", ""),
-        "personality": os.getenv("ECOMMERCE_STRATEGIST_PERSONALITY", ""),
-    },
-    "data_parser": {
-        "name": os.getenv("DATA_PARSER_NAME", ""),
-        "nickname": os.getenv("DATA_PARSER_NICKNAME", ""),
-        "handle": os.getenv("DATA_PARSER_HANDLE", ""),
-        "personality": os.getenv("DATA_PARSER_PERSONALITY", ""),
-    },
-    "research_analyst": {
-        "name": os.getenv("RESEARCH_ANALYST_NAME", ""),
-        "nickname": os.getenv("RESEARCH_ANALYST_NICKNAME", ""),
-        "handle": os.getenv("RESEARCH_ANALYST_HANDLE", ""),
-        "personality": os.getenv("RESEARCH_ANALYST_PERSONALITY", ""),
-    },
-    "pipeline_monitor": {
-        "name": os.getenv("PIPELINE_MONITOR_NAME", ""),
-        "nickname": os.getenv("PIPELINE_MONITOR_NICKNAME", ""),
-        "handle": os.getenv("PIPELINE_MONITOR_HANDLE", ""),
-        "personality": os.getenv("PIPELINE_MONITOR_PERSONALITY", ""),
-    },
-    "customer_success": {
-        "name": os.getenv("CUSTOMER_SUCCESS_NAME", ""),
-        "nickname": os.getenv("CUSTOMER_SUCCESS_NICKNAME", ""),
-        "handle": os.getenv("CUSTOMER_SUCCESS_HANDLE", ""),
-        "personality": os.getenv("CUSTOMER_SUCCESS_PERSONALITY", ""),
-    },
-
-    "copywriter": {"name":os.getenv("COPYWRITER_NAME",""),"nickname":os.getenv("COPYWRITER_NICKNAME",""),"handle":os.getenv("COPYWRITER_HANDLE",""),"personality":os.getenv("COPYWRITER_PERSONALITY",""),},
-    "project_manager": {"name":os.getenv("PROJECT_MANAGER_NAME",""),"nickname":os.getenv("PROJECT_MANAGER_NICKNAME",""),"handle":os.getenv("PROJECT_MANAGER_HANDLE",""),"personality":os.getenv("PROJECT_MANAGER_PERSONALITY",""),},
-    "financial_analyst": {"name":os.getenv("FINANCIAL_ANALYST_NAME",""),"nickname":os.getenv("FINANCIAL_ANALYST_NICKNAME",""),"handle":os.getenv("FINANCIAL_ANALYST_HANDLE",""),"personality":os.getenv("FINANCIAL_ANALYST_PERSONALITY",""),},
-    "legal_advisor": {"name":os.getenv("LEGAL_ADVISOR_NAME",""),"nickname":os.getenv("LEGAL_ADVISOR_NICKNAME",""),"handle":os.getenv("LEGAL_ADVISOR_HANDLE",""),"personality":os.getenv("LEGAL_ADVISOR_PERSONALITY",""),},
-    "fact_checker": {"name":os.getenv("FACT_CHECKER_NAME",""),"nickname":os.getenv("FACT_CHECKER_NICKNAME",""),"handle":os.getenv("FACT_CHECKER_HANDLE",""),"personality":os.getenv("FACT_CHECKER_PERSONALITY",""),},
-
-}
-
-    # proposal_writer
-    proposal_writer_name: str = Field("")
-    proposal_writer_nickname: str = Field("")
-    proposal_writer_handle: str = Field("")
-    proposal_writer_personality: str = Field("")
-    # product_strategist
-    product_strategist_name: str = Field("")
-    product_strategist_nickname: str = Field("")
-    product_strategist_handle: str = Field("")
-    product_strategist_personality: str = Field("")
-    # pricing_strategist
-    pricing_strategist_name: str = Field("")
-    pricing_strategist_nickname: str = Field("")
-    pricing_strategist_handle: str = Field("")
-    pricing_strategist_personality: str = Field("")
-    # course_designer
-    course_designer_name: str = Field("")
-    course_designer_nickname: str = Field("")
-    course_designer_handle: str = Field("")
-    course_designer_personality: str = Field("")
-    # chatbot_designer
-    chatbot_designer_name: str = Field("")
-    chatbot_designer_nickname: str = Field("")
-    chatbot_designer_handle: str = Field("")
-    chatbot_designer_personality: str = Field("")
-
-    # persona_builder
-    persona_builder_name: str = Field("")
-    persona_builder_nickname: str = Field("")
-    persona_builder_handle: str = Field("")
-    persona_builder_personality: str = Field("")
-    # pr_writer
-    pr_writer_name: str = Field("")
-    pr_writer_nickname: str = Field("")
-    pr_writer_handle: str = Field("")
-    pr_writer_personality: str = Field("")
-    # ab_test_designer
-    ab_test_designer_name: str = Field("")
-    ab_test_designer_nickname: str = Field("")
-    ab_test_designer_handle: str = Field("")
-    ab_test_designer_personality: str = Field("")
-    # investor_pitch_writer
-    investor_pitch_writer_name: str = Field("")
-    investor_pitch_writer_nickname: str = Field("")
-    investor_pitch_writer_handle: str = Field("")
-    investor_pitch_writer_personality: str = Field("")
-    # brand_voice_guide
-    brand_voice_guide_name: str = Field("")
-    brand_voice_guide_nickname: str = Field("")
-    brand_voice_guide_handle: str = Field("")
-    brand_voice_guide_personality: str = Field("")
-    # ecommerce_strategist
-    ecommerce_strategist_name: str = Field("")
-    ecommerce_strategist_nickname: str = Field("")
-    ecommerce_strategist_handle: str = Field("")
-    ecommerce_strategist_personality: str = Field("")
-    # data_parser
-    data_parser_name: str = Field("")
-    data_parser_nickname: str = Field("")
-    data_parser_handle: str = Field("")
-    data_parser_personality: str = Field("")
-    # research_analyst
-    research_analyst_name: str = Field("")
-    research_analyst_nickname: str = Field("")
-    research_analyst_handle: str = Field("")
-    research_analyst_personality: str = Field("")
-    # pipeline_monitor
-    pipeline_monitor_name: str = Field("")
-    pipeline_monitor_nickname: str = Field("")
-    pipeline_monitor_handle: str = Field("")
-    pipeline_monitor_personality: str = Field("")
-    # customer_success
-    customer_success_name: str = Field("")
-    customer_success_nickname: str = Field("")
-    customer_success_handle: str = Field("")
-    customer_success_personality: str = Field("")
-    # truth_verifier
-    truth_verifier_name: str = Field("")
-    truth_verifier_nickname: str = Field("")
-    truth_verifier_handle: str = Field("")
-    truth_verifier_personality: str = Field("")
-    # content_auditor
-    content_auditor_name: str = Field("")
-    content_auditor_nickname: str = Field("")
-    content_auditor_handle: str = Field("")
-    content_auditor_personality: str = Field("")
-    # process_auditor
-    process_auditor_name: str = Field("")
-    process_auditor_nickname: str = Field("")
-    process_auditor_handle: str = Field("")
-    process_auditor_personality: str = Field("")
-    # venture_ideator
-    venture_ideator_name: str = Field("")
-    venture_ideator_nickname: str = Field("")
-    venture_ideator_handle: str = Field("")
-    venture_ideator_personality: str = Field("")
-    # voice_synthesiser
-    voice_synthesiser_name: str = Field("")
-    voice_synthesiser_nickname: str = Field("")
-    voice_synthesiser_handle: str = Field("")
-    voice_synthesiser_personality: str = Field("")
-    # fullstack_architect
-    fullstack_architect_name: str = Field("")
-    fullstack_architect_nickname: str = Field("")
-    fullstack_architect_handle: str = Field("")
-    fullstack_architect_personality: str = Field("")
-    # database_architect
-    database_architect_name: str = Field("")
-    database_architect_nickname: str = Field("")
-    database_architect_handle: str = Field("")
-    database_architect_personality: str = Field("")
-    # supabase_specialist
-    supabase_specialist_name: str = Field("")
-    supabase_specialist_nickname: str = Field("")
-    supabase_specialist_handle: str = Field("")
-    supabase_specialist_personality: str = Field("")
-    # devops_engineer
-    devops_engineer_name: str = Field("")
-    devops_engineer_nickname: str = Field("")
-    devops_engineer_handle: str = Field("")
-    devops_engineer_personality: str = Field("")
-    # deployment_specialist
-    deployment_specialist_name: str = Field("")
-    deployment_specialist_nickname: str = Field("")
-    deployment_specialist_handle: str = Field("")
-    deployment_specialist_personality: str = Field("")
-    # performance_auditor
-    performance_auditor_name: str = Field("")
-    performance_auditor_nickname: str = Field("")
-    performance_auditor_handle: str = Field("")
-    performance_auditor_personality: str = Field("")
-    # mcp_builder
-    mcp_builder_name: str = Field("")
-    mcp_builder_nickname: str = Field("")
-    mcp_builder_handle: str = Field("")
-    mcp_builder_personality: str = Field("")
-    # gcp_ai_specialist
-    gcp_ai_specialist_name: str = Field("")
-    gcp_ai_specialist_nickname: str = Field("")
-    gcp_ai_specialist_handle: str = Field("")
-    gcp_ai_specialist_personality: str = Field("")
-    # ui_designer
-    ui_designer_name: str = Field("")
-    ui_designer_nickname: str = Field("")
-    ui_designer_handle: str = Field("")
-    ui_designer_personality: str = Field("")
-    # creative_director
-    creative_director_name: str = Field("")
-    creative_director_nickname: str = Field("")
-    creative_director_handle: str = Field("")
-    creative_director_personality: str = Field("")
-    # copywriter
-    copywriter_name: str = Field("")
-    copywriter_nickname: str = Field("")
-    copywriter_handle: str = Field("")
-    copywriter_personality: str = Field("")
-    # project_manager
-    project_manager_name: str = Field("")
-    project_manager_nickname: str = Field("")
-    project_manager_handle: str = Field("")
-    project_manager_personality: str = Field("")
-    # financial_analyst
-    financial_analyst_name: str = Field("")
-    financial_analyst_nickname: str = Field("")
-    financial_analyst_handle: str = Field("")
-    financial_analyst_personality: str = Field("")
-    # legal_advisor
-    legal_advisor_name: str = Field("")
-    legal_advisor_nickname: str = Field("")
-    legal_advisor_handle: str = Field("")
-    legal_advisor_personality: str = Field("")
-    # fact_checker
-    fact_checker_name: str = Field("")
-    fact_checker_nickname: str = Field("")
-    fact_checker_handle: str = Field("")
-    fact_checker_personality: str = Field("")
-
-
-
-
+    return {role: get_persona(role) for role in _ROLE_MAP}

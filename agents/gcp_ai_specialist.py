@@ -1,5 +1,5 @@
 """
-GCP AI Platform Specialist — 19-point @langraph compliant agent node.
+GCP AI Platform Specialist - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), gcp_context (str), output_type (VALID_OUTPUT_TYPES), gcp_service (VALID_GCP_SERVICES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before GCP architecture design
-    POST — gcp_spec + terraform_output persisted after successful generation
+    PRE  - state snapshot before GCP architecture design
+    POST - gcp_spec + terraform_output persisted after successful generation
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ _SERVICE_PROFILES = {
         "auth":        "gcloud auth application-default login + GOOGLE_CLOUD_PROJECT env var",
         "pricing":     "Per compute-hour + prediction requests",
         "strengths":   ["Managed ML ops", "AutoML", "Model Garden (Gemini, Claude, Llama)"],
-        "gotchas":     ["Region lock — model availability varies by region", "Quota limits on first use"],
+        "gotchas":     ["Region lock - model availability varies by region", "Quota limits on first use"],
     },
     "agent_engine": {
         "use_case":    "Managed agent deployment and orchestration at scale",
@@ -65,15 +65,15 @@ _SERVICE_PROFILES = {
         "gotchas":     ["ADK required for agent definition", "Limited to supported regions"],
     },
     "adk": {
-        "use_case":    "Agent Development Kit — build multi-agent systems locally + deploy to Agent Engine",
+        "use_case":    "Agent Development Kit - build multi-agent systems locally + deploy to Agent Engine",
         "sdk":         "google-adk (pip install google-adk)",
         "auth":        "GOOGLE_GENAI_USE_VERTEXAI=true + project/location env vars",
-        "pricing":     "No ADK cost — billed on underlying Gemini/Vertex calls",
+        "pricing":     "No ADK cost - billed on underlying Gemini/Vertex calls",
         "strengths":   ["LangGraph-compatible", "A2A protocol support", "Local dev → cloud deploy"],
         "gotchas":     ["Python 3.10+ required", "Tools must be decorated with @tool", "State via InMemorySessionService for local"],
     },
     "cloud_run": {
-        "use_case":    "Containerised app/API deployment — serverless",
+        "use_case":    "Containerised app/API deployment - serverless",
         "sdk":         "gcloud run deploy",
         "auth":        "Service account with roles/run.invoker",
         "pricing":     "Per request + CPU/memory seconds",
@@ -86,7 +86,7 @@ _SERVICE_PROFILES = {
         "auth":        "ADC (Application Default Credentials)",
         "pricing":     "Service-specific",
         "strengths":   ["Global infrastructure", "managed services", "IAM"],
-        "gotchas":     ["IAM permissions are granular — least-privilege always"],
+        "gotchas":     ["IAM permissions are granular - least-privilege always"],
     },
 }
 
@@ -97,21 +97,21 @@ _A2A_PROTOCOL_NOTES = """Agent-to-Agent (A2A) Protocol (Google, 2025):
 - Authentication: API key or OAuth2 bearer token
 - ADK agents auto-expose A2A endpoints when deployed to Agent Engine"""
 
-_ADK_BOILERPLATE = """from google.adk.agents import Agent
-from google.adk.tools import tool
-
-@tool
-def my_tool(param: str) -> str:
-    """Tool description — shown to the model."""
-    return f"Result: {param}"
-
-root_agent = Agent(
-    name="my_agent",
-    model="gemini-2.0-flash",
-    description="Agent description",
-    instruction="Agent system prompt",
-    tools=[my_tool],
-)"""
+_ADK_BOILERPLATE = (
+    "from google.adk.agents import Agent\n"
+    "from google.adk.tools import tool\n\n"
+    "@tool\n"
+    "def my_tool(param: str) -> str:\n"
+    "    \'Tool description - shown to the model.\'\n"
+    "    return f\"Result: {param}\"\n\n"
+    "root_agent = Agent(\n"
+    "    name=\"my_agent\",\n"
+    "    model=\"gemini-2.0-flash\",\n"
+    "    description=\"Agent description\",\n"
+    "    instruction=\"Agent system prompt\",\n"
+    "    tools=[my_tool],\n"
+    ")"
+)
 
 
 class GcpAiSpecialistState(TypedDict, total=False):
@@ -127,9 +127,9 @@ class GcpAiSpecialistState(TypedDict, total=False):
     terraform_output: str
 
 
-# ── Phase 1 — GCP Architecture (pure, no Claude) ──────────────────────────────
+# ── Phase 1 - GCP Architecture (pure, no Claude) ──────────────────────────────
 def _design_gcp_architecture(task: str, gcp_service: str, output_type: str) -> dict:
-    """Returns gcp_data dict — pure lookup, no Claude."""
+    """Returns gcp_data dict - pure lookup, no Claude."""
     profile    = _SERVICE_PROFILES.get(gcp_service, _SERVICE_PROFILES["general"])
     task_lower = task.lower()
     flags: list[str] = []
@@ -139,7 +139,7 @@ def _design_gcp_architecture(task: str, gcp_service: str, output_type: str) -> d
     if "a2a" in task_lower or "multi-agent" in task_lower:
         flags.append("A2A protocol: each agent needs Agent Card + /tasks endpoint")
     if "terraform" in task_lower or "iac" in task_lower:
-        flags.append("IaC required: use google provider — run terraform plan before apply")
+        flags.append("IaC required: use google provider - run terraform plan before apply")
     if "bigquery" in task_lower or "analytics" in task_lower:
         flags.append("BigQuery: partition by date, cluster by high-cardinality filter columns")
     if "realtime" in task_lower or "stream" in task_lower:
@@ -158,7 +158,7 @@ def _design_gcp_architecture(task: str, gcp_service: str, output_type: str) -> d
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude GCP Spec ──────────────────────────────────────────────────
+# ── Phase 2 - Claude GCP Spec ──────────────────────────────────────────────────
 def _build_gcp_prompt(state: GcpAiSpecialistState, gcp_data: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -167,17 +167,10 @@ def _build_gcp_prompt(state: GcpAiSpecialistState, gcp_data: dict) -> str:
     gcp_service = state.get("gcp_service", "general")
     profile     = gcp_data["profile"]
 
-    flags_text = "
-".join(f"  ⚡ {f}" for f in gcp_data["flags"]) or "  None detected"
+    flags_text = "\n".join(f"  ⚡ {f}" for f in gcp_data["flags"]) or "  None detected"
 
-    a2a_section = f"
-A2A PROTOCOL REFERENCE:
-{gcp_data['a2a_notes']}" if gcp_data["a2a_notes"] else ""
-    adk_section = f"
-ADK BOILERPLATE:
-```python
-{gcp_data['adk_boilerplate']}
-```" if gcp_data["adk_boilerplate"] else ""
+    a2a_section = (f"\nA2A PROTOCOL REFERENCE:\n{gcp_data['a2a_notes']}" if gcp_data["a2a_notes"] else "")
+    adk_section = (f"\nADK BOILERPLATE:\n```python\n{gcp_data['adk_boilerplate']}\n```" if gcp_data["adk_boilerplate"] else "")
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -203,14 +196,14 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## GCP AI Spec: {out_type.replace('_',' ').title()} — {gcp_service}
+## GCP AI Spec: {out_type.replace('_',' ').title()} - {gcp_service}
 
 ### Architecture Overview
-[Diagram-style description — services, data flow, auth boundaries]
+[Diagram-style description - services, data flow, auth boundaries]
 
 ### Implementation
 ```python
-# Python SDK code — production ready
+# Python SDK code - production ready
 ```
 
 ```terraform

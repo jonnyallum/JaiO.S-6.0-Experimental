@@ -1,5 +1,5 @@
 """
-Content Depth Auditor — 19-point @langraph compliant agent node.
+Content Depth Auditor - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : content (str), content_type (VALID_CONTENT_TYPES), audit_focus (VALID_AUDIT_FOCUSES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty content, invalid type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before fluff scan
-    POST — audit_report + depth_score persisted after successful generation
+    PRE  - state snapshot before fluff scan
+    POST - audit_report + depth_score persisted after successful generation
 """
 
 from __future__ import annotations
@@ -45,16 +45,16 @@ VALID_AUDIT_FOCUSES = {"depth", "truth_lock", "fluff_removal", "storytelling", "
 
 # ── Fluff Patterns ────────────────────────────────────────────────────────────
 _FLUFF_PATTERNS = [
-    r'in today's (fast-paced|digital|modern|ever-changing) world',
-    r'(game-?changer|paradigm shift|synergy|leverage|circle back|bandwidth)',
-    r'(it goes without saying|needless to say|as we all know)',
-    r'(very|extremely|incredibly|absolutely|totally)\s+\w+',
-    r'(utilize|utilisation)',  # just say "use"
-    r'(deep dive|unpack|double-click on|drill down)',
-    r'(seamless(ly)?|frictionless(ly)?|robust|scalable)(?!\s+\w+\s+that)',
-    r'(comprehensive|holistic|end-to-end|best-in-class)',
-    r'(transformative|revolutionary|cutting-edge|state-of-the-art)',
-    r'(at the end of the day|when all is said and done|the bottom line is)',
+    r"in today\'s (fast-paced|digital|modern|ever-changing) world",
+    r'(game-?changer|paradigm shift|synergy|leverage|circle back|bandwidth)',
+    r'(it goes without saying|needless to say|as we all know)',
+    r'(very|extremely|incredibly|absolutely|totally)\s+\w+',
+    r'(utilize|utilisation)',  # just say "use"
+    r'(deep dive|unpack|double-click on|drill down)',
+    r'(seamless(ly)?|frictionless(ly)?|robust|scalable)(?!\s+\w+\s+that)',
+    r'(comprehensive|holistic|end-to-end|best-in-class)',
+    r'(transformative|revolutionary|cutting-edge|state-of-the-art)',
+    r'(at the end of the day|when all is said and done|the bottom line is)',
 ]
 
 _DEPTH_BENCHMARKS = {
@@ -83,7 +83,7 @@ class ContentAuditorState(TypedDict, total=False):
     fluff_count:  int
 
 
-# ── Phase 1 — Fluff Scan (pure, no Claude) ────────────────────────────────────
+# ── Phase 1 - Fluff Scan (pure, no Claude) ────────────────────────────────────
 def _scan_for_fluff(content: str) -> tuple[int, list[str], int]:
     """Returns (fluff_count, examples, depth_score_0_10)."""
     examples: list[str] = []
@@ -100,7 +100,7 @@ def _scan_for_fluff(content: str) -> tuple[int, list[str], int]:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Audit ─────────────────────────────────────────────────────
+# ── Phase 2 - Claude Audit ─────────────────────────────────────────────────────
 def _build_audit_prompt(state: ContentAuditorState, fluff_count: int, examples: list, depth_score: int) -> str:
     persona      = get_persona(ROLE)
     content      = state["content"]
@@ -122,15 +122,15 @@ REGEX PRE-SCAN:
   Fluff examples found: {examples}
 
 CONTENT:
-"""
+'''
 {content[:5000]}
-"""
+'''
 
 YOUR TASK:
-1. Identify every piece of fluff, vague claim, or filler — quote it exactly.
+1. Identify every piece of fluff, vague claim, or filler - quote it exactly.
 2. Check for required depth elements: {benchmark['required']}
 3. Assess storytelling quality (hook, tension, resolution).
-4. Provide a rewritten version of the weakest paragraph — zero fluff, maximum punch.
+4. Provide a rewritten version of the weakest paragraph - zero fluff, maximum punch.
 5. Give an overall verdict.
 
 OUTPUT FORMAT:
@@ -147,13 +147,13 @@ OUTPUT FORMAT:
 [Which required elements are absent or underdeveloped]
 
 ### Storytelling Assessment
-[Hook strength, tension, resolution — 2–3 sentences each]
+[Hook strength, tension, resolution - 2–3 sentences each]
 
 ### Rewritten Sample
-[One weak paragraph, rewritten to full depth — no fluff]
+[One weak paragraph, rewritten to full depth - no fluff]
 
 ### Verdict
-[STRONG — publish ready | NEEDS WORK — fix listed issues | REJECT — rewrite from scratch]
+[STRONG - publish ready | NEEDS WORK - fix listed issues | REJECT - rewrite from scratch]
 
 DEPTH_SCORE: [0-10]
 """

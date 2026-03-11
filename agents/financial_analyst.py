@@ -1,5 +1,5 @@
 """
-Financial Analyst — 19-point @langraph compliant agent node.
+Financial Analyst - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), financial_context (str), output_type (VALID_OUTPUT_TYPES), analysis_type (VALID_ANALYSIS_TYPES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before financial data analysis
-    POST — financial_report + key_metrics persisted after successful generation
+    PRE  - state snapshot before financial data analysis
+    POST - financial_report + key_metrics persisted after successful generation
 """
 
 from __future__ import annotations
@@ -105,23 +105,23 @@ class FinancialAnalystState(TypedDict, total=False):
     key_metrics:       str
 
 
-# ── Phase 1 — Financial Signal Detection (pure, no Claude) ────────────────────
+# ── Phase 1 - Financial Signal Detection (pure, no Claude) ────────────────────
 def _detect_financial_signals(task: str, analysis_type: str) -> dict:
-    """Returns financial_data dict — pure lookup and heuristics."""
+    """Returns financial_data dict - pure lookup and heuristics."""
     kpi_set    = _KPI_SETS.get(analysis_type, _KPI_SETS["general"])
     task_lower = task.lower()
     flags: list[str] = []
 
     if any(w in task_lower for w in ["churn", "retention", "cancel"]):
-        flags.append("Churn analysis — segment by cohort, age, and plan tier")
+        flags.append("Churn analysis - segment by cohort, age, and plan tier")
     if any(w in task_lower for w in ["burn", "runway", "cash"]):
-        flags.append("Cash management — 18-month projection minimum")
+        flags.append("Cash management - 18-month projection minimum")
     if any(w in task_lower for w in ["investor", "raise", "funding"]):
-        flags.append("Investor framing — lead with growth rate + TAM + LTV:CAC")
+        flags.append("Investor framing - lead with growth rate + TAM + LTV:CAC")
     if any(w in task_lower for w in ["pricing", "price", "tier"]):
-        flags.append("Pricing — anchor high, justify value, test willingness to pay")
+        flags.append("Pricing - anchor high, justify value, test willingness to pay")
     if any(w in task_lower for w in ["forecast", "projection", "plan"]):
-        flags.append("Forecasting — base / optimistic / pessimistic scenarios required")
+        flags.append("Forecasting - base / optimistic / pessimistic scenarios required")
 
     return {
         "kpi_set":   kpi_set,
@@ -132,7 +132,7 @@ def _detect_financial_signals(task: str, analysis_type: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Financial Report ─────────────────────────────────────────
+# ── Phase 2 - Claude Financial Report ─────────────────────────────────────────
 def _build_financial_prompt(state: FinancialAnalystState, fin_data: dict) -> str:
     persona       = get_persona(ROLE)
     task          = state["task"]
@@ -141,15 +141,11 @@ def _build_financial_prompt(state: FinancialAnalystState, fin_data: dict) -> str
     analysis_type = state.get("analysis_type", "general")
     kpi_set       = fin_data["kpi_set"]
 
-    flags_text     = "
-".join(f"  ⚡ {f}" for f in fin_data["flags"]) or "  None detected"
+    flags_text     = "\n".join(f"  ⚡ {f}" for f in fin_data["flags"]) or "  None detected"
     kpis_text      = ", ".join(kpi_set["kpis"])
-    benchmarks_txt = "
-".join(f"  {k}: {v}" for k, v in kpi_set["benchmarks"].items()) or "  General benchmarks apply"
-    red_flags_txt  = "
-".join(f"  🚨 {r}" for r in kpi_set["red_flags"])
-    formulas_txt   = "
-".join(f"  {k} = {v}" for k, v in fin_data["formulas"].items())
+    benchmarks_txt = "\n".join(f"  {k}: {v}" for k, v in kpi_set["benchmarks"].items()) or "  General benchmarks apply"
+    red_flags_txt  = "\n".join(f"  🚨 {r}" for r in kpi_set["red_flags"])
+    formulas_txt   = "\n".join(f"  {k} = {v}" for k, v in fin_data["formulas"].items())
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -174,10 +170,10 @@ TASK:
 {task}
 
 FINANCIAL CONTEXT / DATA:
-{fin_ctx or "None provided — provide framework and guidance for gathering the right data"}
+{fin_ctx or "None provided - provide framework and guidance for gathering the right data"}
 
 OUTPUT FORMAT:
-## Financial Analysis: {out_type.replace('_',' ').title()} — {analysis_type}
+## Financial Analysis: {out_type.replace('_',' ').title()} - {analysis_type}
 
 ### Executive Summary
 [3 bullet points: current position, biggest opportunity, biggest risk]
@@ -188,7 +184,7 @@ OUTPUT FORMAT:
 [rows for all relevant KPIs]
 
 ### Key Findings
-[Numbered — each with: observation, implication, recommended action]
+[Numbered - each with: observation, implication, recommended action]
 
 ### Scenario Analysis (if forecasting)
 | Scenario | Revenue 3M | Revenue 6M | Revenue 12M | Key Assumption |
@@ -196,10 +192,10 @@ OUTPUT FORMAT:
 [Base / Optimistic / Pessimistic]
 
 ### Red Flag Assessment
-[Each red flag: present / not present / unknown — with evidence]
+[Each red flag: present / not present / unknown - with evidence]
 
 ### Recommendations
-[Top 3 — prioritised by financial impact, specific and actionable]
+[Top 3 - prioritised by financial impact, specific and actionable]
 
 ### Next Action
 [Single highest-ROI financial action right now]

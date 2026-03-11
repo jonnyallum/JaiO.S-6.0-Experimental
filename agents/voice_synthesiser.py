@@ -1,5 +1,5 @@
 """
-ElevenLabs Voice Synthesis Specialist — 19-point @langraph compliant agent node.
+ElevenLabs Voice Synthesis Specialist - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : script_brief (str), voice_use (VALID_VOICE_USES), tone_style (VALID_TONE_STYLES), duration_target_seconds (int)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty brief, invalid use) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before voice spec calculation
-    POST — production_script + voice_direction persisted after successful generation
+    PRE  - state snapshot before voice spec calculation
+    POST - production_script + voice_direction persisted after successful generation
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ VALID_TONE_STYLES = {
 # ── Voice Specification Matrix ────────────────────────────────────────────────
 _VOICE_SPECS = {
     "podcast_intro": {
-        "pacing":               "medium — 130–150 wpm, pause after hook",
+        "pacing":               "medium - 130–150 wpm, pause after hook",
         "emphasis":             "first line punchy, brand name stressed",
         "style_note":           "conversational but polished, host-like warmth",
         "model_recommendation": "eleven_turbo_v2_5 (low latency) or eleven_multilingual_v2",
@@ -56,15 +56,15 @@ _VOICE_SPECS = {
         "ssml_hints":           ['<break time="500ms"/>', '<prosody rate="slow">key phrase</prosody>'],
     },
     "explainer": {
-        "pacing":               "slow-medium — 120–130 wpm, pause between steps",
+        "pacing":               "slow-medium - 120–130 wpm, pause between steps",
         "emphasis":             "step numbers, key terms, outcomes",
-        "style_note":           "clear, friendly, no jargon — 'you' language throughout",
+        "style_note":           "clear, friendly, no jargon - 'you' language throughout",
         "model_recommendation": "eleven_multilingual_v2 (clarity focus)",
         "word_budget_per_min":  125,
         "ssml_hints":           ['<break time="300ms"/>', '<emphasis level="strong">key term</emphasis>'],
     },
     "ad_voiceover": {
-        "pacing":               "dynamic — fast build, slow CTA",
+        "pacing":               "dynamic - fast build, slow CTA",
         "emphasis":             "problem hook, product name, CTA phrase",
         "style_note":           "energy peak at 70% through, land soft on CTA",
         "model_recommendation": "eleven_turbo_v2_5 (crisp, broadcast-ready)",
@@ -72,15 +72,15 @@ _VOICE_SPECS = {
         "ssml_hints":           ['<prosody rate="fast">', '<prosody rate="slow">call to action</prosody>'],
     },
     "character_voice": {
-        "pacing":               "character-defined — match the persona's energy",
+        "pacing":               "character-defined - match the persona's energy",
         "emphasis":             "character-specific verbal tics and catch phrases",
-        "style_note":           "consistency is key — establish voice in first 3 lines",
+        "style_note":           "consistency is key - establish voice in first 3 lines",
         "model_recommendation": "eleven_multilingual_v2 with custom voice clone (IVC/PVC)",
         "word_budget_per_min":  130,
         "ssml_hints":           ['<prosody pitch="high">', '<prosody pitch="low">deep moment</prosody>'],
     },
     "notification": {
-        "pacing":               "fast — 160–180 wpm, punchy and complete",
+        "pacing":               "fast - 160–180 wpm, punchy and complete",
         "emphasis":             "action word, key data point",
         "style_note":           "2–3 sentences max, mobile-friendly, no fluff",
         "model_recommendation": "eleven_turbo_v2_5 (ultra-low latency)",
@@ -88,7 +88,7 @@ _VOICE_SPECS = {
         "ssml_hints":           [],
     },
     "ux_audio": {
-        "pacing":               "natural — matches UI interaction rhythm",
+        "pacing":               "natural - matches UI interaction rhythm",
         "emphasis":             "confirmation words (done, complete, ready)",
         "style_note":           "warm and reassuring, never condescending",
         "model_recommendation": "eleven_turbo_v2_5 (real-time)",
@@ -96,15 +96,15 @@ _VOICE_SPECS = {
         "ssml_hints":           ['<prosody volume="soft">'],
     },
     "training_narration": {
-        "pacing":               "deliberate — 110–120 wpm, pause after each key point",
+        "pacing":               "deliberate - 110–120 wpm, pause after each key point",
         "emphasis":             "learning objectives, warnings, summaries",
-        "style_note":           "authoritative but approachable — 'let us look at' not 'you must'",
+        "style_note":           "authoritative but approachable - 'let us look at' not 'you must'",
         "model_recommendation": "eleven_multilingual_v2",
         "word_budget_per_min":  115,
         "ssml_hints":           ['<break time="700ms"/>', '<emphasis level="moderate">objective</emphasis>'],
     },
     "general": {
-        "pacing":               "medium — 130 wpm",
+        "pacing":               "medium - 130 wpm",
         "emphasis":             "key nouns and action verbs",
         "style_note":           "clear, engaging, natural delivery",
         "model_recommendation": "eleven_turbo_v2_5",
@@ -116,7 +116,7 @@ _VOICE_SPECS = {
 _TONE_MODIFIERS = {
     "professional":  "measured, precise, zero filler words, confident pauses",
     "casual":        "contractions throughout, conversational fillers OK, relaxed rhythm",
-    "dramatic":      "dynamic range — quiet build to strong peaks, cinematic pacing",
+    "dramatic":      "dynamic range - quiet build to strong peaks, cinematic pacing",
     "warm":          "smiling voice implied, empathetic language, personal pronouns",
     "authoritative": "declarative sentences, strong endings, no upward inflection",
     "energetic":     "faster overall pace, punchy short sentences, exclamation rhythm",
@@ -137,9 +137,9 @@ class VoiceSynthesiserState(TypedDict, total=False):
     voice_direction:         str
 
 
-# ── Phase 1 — Voice Brief (pure, no Claude) ───────────────────────────────────
+# ── Phase 1 - Voice Brief (pure, no Claude) ───────────────────────────────────
 def _build_voice_spec(voice_use: str, tone_style: str, duration_target_seconds: int) -> dict:
-    """Returns voice_spec dict — pure calculation, no Claude."""
+    """Returns voice_spec dict - pure calculation, no Claude."""
     spec          = _VOICE_SPECS.get(voice_use, _VOICE_SPECS["general"])
     tone_mod      = _TONE_MODIFIERS.get(tone_style, "")
     word_budget   = round(spec["word_budget_per_min"] * duration_target_seconds / 60)
@@ -156,7 +156,7 @@ def _build_voice_spec(voice_use: str, tone_style: str, duration_target_seconds: 
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Script Generation ─────────────────────────────────────────
+# ── Phase 2 - Claude Script Generation ─────────────────────────────────────────
 def _build_script_prompt(state: VoiceSynthesiserState, voice_spec: dict) -> str:
     persona    = get_persona(ROLE)
     brief      = state["script_brief"]
@@ -164,8 +164,7 @@ def _build_script_prompt(state: VoiceSynthesiserState, voice_spec: dict) -> str:
     tone_style = state.get("tone_style", "professional")
     duration   = state.get("duration_target_seconds", 60)
 
-    ssml_hints_text = "
-".join(f"  {h}" for h in voice_spec["ssml_hints"]) if voice_spec["ssml_hints"] else "  None required"
+    ssml_hints_text = "\n".join(f"  {h}" for h in voice_spec["ssml_hints"]) if voice_spec["ssml_hints"] else "  None required"
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -186,14 +185,14 @@ VOICE SPECIFICATION:
 {ssml_hints_text}
 
 SCRIPT BRIEF:
-"""
+'''
 {brief[:3000]}
-"""
+'''
 
 YOUR TASK:
-1. Write the production script — exactly {voice_spec['word_budget']} words (±10%).
+1. Write the production script - exactly {voice_spec['word_budget']} words (±10%).
 2. Mark emphasis with [STRESS: word], pauses with [PAUSE: Xms], and tone shifts with [SHIFT: direction].
-3. Write the ElevenLabs Voice Direction card — 5 specific parameters.
+3. Write the ElevenLabs Voice Direction card - 5 specific parameters.
 4. Suggest 3 voice profile characteristics for voice casting or cloning.
 
 OUTPUT FORMAT:
@@ -204,18 +203,18 @@ OUTPUT FORMAT:
 **Recommended Model:** {voice_spec['model_recommendation']}
 
 ---
-[PRODUCTION SCRIPT — marked up with STRESS / PAUSE / SHIFT tags]
+[PRODUCTION SCRIPT - marked up with STRESS / PAUSE / SHIFT tags]
 ---
 
 ## ElevenLabs Voice Direction
-**Stability:** [0.0–1.0 — lower = more expressive]
-**Similarity Boost:** [0.0–1.0 — higher = closer to reference]
-**Style:** [0.0–1.0 — exaggeration level]
+**Stability:** [0.0–1.0 - lower = more expressive]
+**Similarity Boost:** [0.0–1.0 - higher = closer to reference]
+**Style:** [0.0–1.0 - exaggeration level]
 **Speaker Boost:** [true/false]
 **Speed:** [0.5–2.0]
 
 ## Voice Casting Profile
-1. [characteristic — e.g. "slightly gravelly, mid-30s male, broadcast trained"]
+1. [characteristic - e.g. "slightly gravelly, mid-30s male, broadcast trained"]
 2. [characteristic]
 3. [characteristic]
 

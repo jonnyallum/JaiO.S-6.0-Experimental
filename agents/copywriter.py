@@ -1,5 +1,5 @@
 """
-Copywriter — 19-point @langraph compliant agent node.
+Copywriter - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), brand_context (str), output_type (VALID_OUTPUT_TYPES), copy_format (VALID_COPY_FORMATS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before copy analysis
-    POST — copy_output + headline persisted after successful generation
+    PRE  - state snapshot before copy analysis
+    POST - copy_output + headline persisted after successful generation
 """
 
 from __future__ import annotations
@@ -49,9 +49,9 @@ VALID_COPY_FORMATS = {
 # ── Copy Frameworks ────────────────────────────────────────────────────────────
 _COPY_FORMULAS = {
     "headline":       "Specific Outcome + Time Frame + Objection Handled",
-    "cta":            "Verb + Benefit (not 'Submit' — 'Get my free report')",
+    "cta":            "Verb + Benefit (not 'Submit' - 'Get my free report')",
     "value_prop":     "We help [WHO] achieve [OUTCOME] without [PAIN]",
-    "email_subject":  "Curiosity gap OR self-interest OR urgency — never all three",
+    "email_subject":  "Curiosity gap OR self-interest OR urgency - never all three",
     "error_message":  "What happened + Why + What to do next (3-part formula)",
     "onboarding":     "Welcome → First win → Next step (never 'explore the app')",
 }
@@ -76,11 +76,11 @@ _POWER_WORDS = {
 }
 
 _COPY_KILLERS = [
-    ("Passive voice",          r'(is being|was being|have been|will be)',  "Use active voice"),
-    ("Weasel words",           r'(some|many|often|usually|typically|may)', "Be specific or cut it"),
-    ("Feature not benefit",    r'(features?|functionality|capability)',    "Lead with the outcome, not the feature"),
-    ("Weak CTA",               r'(click here|learn more|submit|read more)',"Use action + benefit CTAs"),
-    ("Corporate fluff",        r'(leverage|synergy|solutions|cutting-edge)',"Replace with plain language"),
+    ("Passive voice",          r'(is being|was being|have been|will be)',  "Use active voice"),
+    ("Weasel words",           r'(some|many|often|usually|typically|may)', "Be specific or cut it"),
+    ("Feature not benefit",    r'(features?|functionality|capability)',    "Lead with the outcome, not the feature"),
+    ("Weak CTA",               r'(click here|learn more|submit|read more)',"Use action + benefit CTAs"),
+    ("Corporate fluff",        r'(leverage|synergy|solutions|cutting-edge)',"Replace with plain language"),
 ]
 
 
@@ -97,9 +97,9 @@ class CopywriterState(TypedDict, total=False):
     headline:      str
 
 
-# ── Phase 1 — Copy Analysis (pure, no Claude) ─────────────────────────────────
+# ── Phase 1 - Copy Analysis (pure, no Claude) ─────────────────────────────────
 def _analyse_copy_brief(task: str, copy_format: str) -> dict:
-    """Returns copy_data dict — pure lookup and heuristics."""
+    """Returns copy_data dict - pure lookup and heuristics."""
     tone       = _TONE_GUIDES.get(copy_format, _TONE_GUIDES["general"])
     task_lower = task.lower()
     flags: list[str] = []
@@ -126,7 +126,7 @@ def _analyse_copy_brief(task: str, copy_format: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Copy ──────────────────────────────────────────────────────
+# ── Phase 2 - Claude Copy ──────────────────────────────────────────────────────
 def _build_copy_prompt(state: CopywriterState, copy_data: dict) -> str:
     persona     = get_persona(ROLE)
     task        = state["task"]
@@ -134,10 +134,8 @@ def _build_copy_prompt(state: CopywriterState, copy_data: dict) -> str:
     out_type    = state.get("output_type", "general")
     copy_format = state.get("copy_format", "general")
 
-    flags_text  = "
-".join(f"  ⚡ {f}" for f in copy_data["flags"]) or "  None detected"
-    killers_txt = "
-".join(f"  ✗ {label}: {fix}" for label, _, fix in copy_data["copy_killers"])
+    flags_text  = "\n".join(f"  ⚡ {f}" for f in copy_data["flags"]) or "  None detected"
+    killers_txt = "\n".join(f"  ✗ {label}: {fix}" for label, _, fix in copy_data["copy_killers"])
     power_txt   = " | ".join(f"{k}: {', '.join(v[:3])}" for k, v in copy_data["power_words"].items())
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
@@ -159,23 +157,23 @@ TASK:
 {task}
 
 BRAND CONTEXT:
-{brand_ctx or "None provided — infer voice from task and use clean, direct defaults"}
+{brand_ctx or "None provided - infer voice from task and use clean, direct defaults"}
 
 OUTPUT FORMAT:
-## Copy: {out_type.replace('_',' ').title()} — {copy_format}
+## Copy: {out_type.replace('_',' ').title()} - {copy_format}
 
 ### Headline Variants (5 options)
-1. [Option A — curiosity gap]
-2. [Option B — direct benefit]
-3. [Option C — social proof angle]
-4. [Option D — urgency/loss]
-5. [Option E — bold provocation]
+1. [Option A - curiosity gap]
+2. [Option B - direct benefit]
+3. [Option C - social proof angle]
+4. [Option D - urgency/loss]
+5. [Option E - bold provocation]
 
 ### Primary Copy
-[Full copy output — no placeholders, no [INSERT NAME], production ready]
+[Full copy output - no placeholders, no [INSERT NAME], production ready]
 
 ### Microcopy Variants
-[CTAs, button labels, helper text, error messages — if applicable]
+[CTAs, button labels, helper text, error messages - if applicable]
 
 ### Copy Notes
 [Tone decisions, word choices, what was deliberately cut and why]

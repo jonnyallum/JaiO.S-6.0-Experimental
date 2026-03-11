@@ -1,5 +1,5 @@
 """
-MCP Server Builder — 19-point @langraph compliant agent node.
+MCP Server Builder - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), mcp_context (str), output_type (VALID_OUTPUT_TYPES), transport (VALID_TRANSPORTS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before MCP spec generation
-    POST — mcp_spec + server_code persisted after successful generation
+    PRE  - state snapshot before MCP spec generation
+    POST - mcp_spec + server_code persisted after successful generation
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ const transport = new StdioServerTransport();
 await server.connect(transport);""",
     "sse": """import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-// SSE transport — use with Express or Hono for HTTP server""",
+// SSE transport - use with Express or Hono for HTTP server""",
     "general": "// Transport TBD based on deployment context",
 }
 
@@ -85,8 +85,8 @@ _TOOL_TEMPLATE = """{
 }"""
 
 _MCP_GOTCHAS = [
-    "Tool names must be snake_case — no hyphens",
-    "inputSchema must be valid JSON Schema — test with ajv",
+    "Tool names must be snake_case - no hyphens",
+    "inputSchema must be valid JSON Schema - test with ajv",
     "Error responses must use McpError, not thrown JS errors",
     "stdio transport: all debug output to stderr, never stdout",
     "dotenv: path from dist/ to root = '../../../.env' (3 levels if src/index.ts → dist/index.js)",
@@ -121,21 +121,21 @@ class McpBuilderState(TypedDict, total=False):
     server_code:  str
 
 
-# ── Phase 1 — MCP Design (pure, no Claude) ────────────────────────────────────
+# ── Phase 1 - MCP Design (pure, no Claude) ────────────────────────────────────
 def _design_mcp_structure(task: str, transport: str, output_type: str) -> dict:
-    """Returns mcp_data dict — pure lookup, no Claude."""
+    """Returns mcp_data dict - pure lookup, no Claude."""
     boilerplate = _MCP_BOILERPLATE.get(transport, _MCP_BOILERPLATE["general"])
     task_lower  = task.lower()
     flags: list[str] = []
 
     if "resource" in task_lower:
-        flags.append("Resources required — define stable URI scheme: protocol://path/{id}")
+        flags.append("Resources required - define stable URI scheme: protocol://path/{id}")
     if "prompt" in task_lower:
-        flags.append("Prompt templates required — use ListPromptsRequestSchema")
+        flags.append("Prompt templates required - use ListPromptsRequestSchema")
     if "auth" in task_lower or "token" in task_lower:
-        flags.append("Auth tokens: load via dotenv / process.env — never hardcode")
+        flags.append("Auth tokens: load via dotenv / process.env - never hardcode")
     if "scrape" in task_lower or "fetch" in task_lower:
-        flags.append("HTTP fetching: use node-fetch or built-in fetch — handle rate limits")
+        flags.append("HTTP fetching: use node-fetch or built-in fetch - handle rate limits")
     if "database" in task_lower or "supabase" in task_lower:
         flags.append("DB connection: initialise once at server startup, not per-request")
 
@@ -150,7 +150,7 @@ def _design_mcp_structure(task: str, transport: str, output_type: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude MCP Spec ──────────────────────────────────────────────────
+# ── Phase 2 - Claude MCP Spec ──────────────────────────────────────────────────
 def _build_mcp_prompt(state: McpBuilderState, mcp_data: dict) -> str:
     persona    = get_persona(ROLE)
     task       = state["task"]
@@ -158,16 +158,13 @@ def _build_mcp_prompt(state: McpBuilderState, mcp_data: dict) -> str:
     out_type   = state.get("output_type", "full_server")
     transport  = state.get("transport", "stdio")
 
-    flags_text    = "
-".join(f"  ⚡ {f}" for f in mcp_data["flags"]) or "  None detected"
-    gotchas_text  = "
-".join(f"  ⚠ {g}" for g in mcp_data["gotchas"])
-    checklist_txt = "
-".join(f"  ☐ {c}" for c in mcp_data["checklist"])
+    flags_text    = "\n".join(f"  ⚡ {f}" for f in mcp_data["flags"]) or "  None detected"
+    gotchas_text  = "\n".join(f"  ⚠ {g}" for g in mcp_data["gotchas"])
+    checklist_txt = "\n".join(f"  ☐ {c}" for c in mcp_data["checklist"])
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
-MISSION: Build a production-ready MCP server — output type: {out_type}, transport: {transport}.
+MISSION: Build a production-ready MCP server - output type: {out_type}, transport: {transport}.
 
 BOILERPLATE:
 ```typescript
@@ -198,7 +195,7 @@ OUTPUT FORMAT:
 ## MCP Server: {out_type.replace('_',' ').title()} ({transport})
 
 ### Server Overview
-[Name, version, capabilities, purpose — 3 sentences]
+[Name, version, capabilities, purpose - 3 sentences]
 
 ### Tool Definitions
 ```typescript
@@ -207,7 +204,7 @@ OUTPUT FORMAT:
 
 ### Server Implementation
 ```typescript
-// Full server code — production ready
+// Full server code - production ready
 ```
 
 ### .mcp.json Registration

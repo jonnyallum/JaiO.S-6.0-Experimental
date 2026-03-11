@@ -1,5 +1,5 @@
 """
-Legal Advisor — 19-point @langraph compliant agent node.
+Legal Advisor - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), legal_context (str), output_type (VALID_OUTPUT_TYPES), jurisdiction (VALID_JURISDICTIONS)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty task, invalid output_type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before legal risk analysis
-    POST — legal_advice + risk_level persisted after successful generation
+    PRE  - state snapshot before legal risk analysis
+    POST - legal_advice + risk_level persisted after successful generation
 """
 
 from __future__ import annotations
@@ -52,8 +52,8 @@ _GDPR_REQUIREMENTS = [
     "Lawful basis for processing must be documented (Art. 6)",
     "Privacy notice must be clear, accessible, and complete (Art. 13/14)",
     "Data subject rights: access, erasure, portability, rectification (Art. 15–20)",
-    "Data minimisation — collect only what is necessary (Art. 5)",
-    "Purpose limitation — use data only for stated purposes (Art. 5)",
+    "Data minimisation - collect only what is necessary (Art. 5)",
+    "Purpose limitation - use data only for stated purposes (Art. 5)",
     "Consent must be freely given, specific, informed, unambiguous (Art. 7)",
     "DPA required for all processors (Art. 28)",
     "72-hour breach notification to ICO (Art. 33)",
@@ -71,29 +71,29 @@ _IP_CHECKLIST = [
 ]
 
 _CONTRACT_RED_FLAGS = [
-    "Unlimited liability clauses — always cap at contract value",
-    "IP ownership unclear — must state who owns deliverables",
-    "No termination clause — define notice periods and conditions",
+    "Unlimited liability clauses - always cap at contract value",
+    "IP ownership unclear - must state who owns deliverables",
+    "No termination clause - define notice periods and conditions",
     "Auto-renewal with no notice period",
     "Jurisdiction in an unfavourable territory",
     "Payment terms > 30 days without interest on late payment",
-    "Non-compete scope too broad — unenforceable in many jurisdictions",
+    "Non-compete scope too broad - unenforceable in many jurisdictions",
 ]
 
 _RISK_SIGNALS = {
-    "high":   [r'(lawsuit|litigation|breach|violation|penalty|fine|GDPR|ICO|FTC)'],
-    "medium": [r'(contract|agreement|IP|copyright|trademark|NDA|liability)'],
-    "low":    [r'(terms|privacy|policy|compliance|review|audit)'],
+    "high":   [r'(lawsuit|litigation|breach|violation|penalty|fine|GDPR|ICO|FTC)'],
+    "medium": [r'(contract|agreement|IP|copyright|trademark|NDA|liability)'],
+    "low":    [r'(terms|privacy|policy|compliance|review|audit)'],
 }
 
 _JURISDICTION_NOTES = {
     "uk":          "UK GDPR (post-Brexit) mirrors EU GDPR. ICO is the supervisory authority. Companies Act 2006 applies.",
-    "eu":          "EU GDPR — EDPB oversees. Member state DPAs enforce locally. DSA/DMA also relevant for platforms.",
+    "eu":          "EU GDPR - EDPB oversees. Member state DPAs enforce locally. DSA/DMA also relevant for platforms.",
     "us":          "No federal privacy law yet. FTC enforces. State laws vary: CA (CCPA/CPRA), VA, CO, TX active.",
     "us_california":"CCPA/CPRA applies to businesses meeting thresholds. Right to opt out of sale of personal data.",
     "australia":   "Privacy Act 1988 + Australian Privacy Principles. OAIC is the regulator.",
     "canada":       "PIPEDA federally + provincial laws (Quebec Law 25 most stringent). OPC enforces.",
-    "general":      "Jurisdiction not specified — flag where local law review is required.",
+    "general":      "Jurisdiction not specified - flag where local law review is required.",
 }
 
 
@@ -110,9 +110,9 @@ class LegalAdvisorState(TypedDict, total=False):
     risk_level:    str
 
 
-# ── Phase 1 — Risk Signal Detection (pure, no Claude) ─────────────────────────
+# ── Phase 1 - Risk Signal Detection (pure, no Claude) ─────────────────────────
 def _detect_legal_risks(task: str, legal_context: str) -> dict:
-    """Returns legal_data dict — pure pattern matching and lookups."""
+    """Returns legal_data dict - pure pattern matching and lookups."""
     combined  = (task + " " + legal_context).lower()
     risk_level = "low"
     for level in ["high", "medium", "low"]:
@@ -124,14 +124,14 @@ def _detect_legal_risks(task: str, legal_context: str) -> dict:
             break
 
     flags: list[str] = []
-    if re.search(r'(personal data|user data|email|name|address|payment)', combined):
-        flags.append("Personal data processing detected — GDPR/privacy law applies")
-    if re.search(r'(contractor|freelancer|agency|work for hire)', combined):
-        flags.append("Contractor relationship — IP assignment clause essential")
-    if re.search(r'(open.?source|licence|MIT|GPL|Apache)', combined, re.IGNORECASE):
-        flags.append("Open-source licence in scope — check compatibility and attribution")
-    if re.search(r'(children|under 13|under 16|COPPA|KOSA)', combined):
-        flags.append("Children's data — COPPA (US) / GDPR Article 8 (EU) — heightened obligations")
+    if re.search(r'(personal data|user data|email|name|address|payment)', combined):
+        flags.append("Personal data processing detected - GDPR/privacy law applies")
+    if re.search(r'(contractor|freelancer|agency|work for hire)', combined):
+        flags.append("Contractor relationship - IP assignment clause essential")
+    if re.search(r'(open.?source|licence|MIT|GPL|Apache)', combined, re.IGNORECASE):
+        flags.append("Open-source licence in scope - check compatibility and attribution")
+    if re.search(r'(children|under 13|under 16|COPPA|KOSA)', combined):
+        flags.append("Children's data - COPPA (US) / GDPR Article 8 (EU) - heightened obligations")
 
     return {
         "risk_level":      risk_level,
@@ -145,7 +145,7 @@ def _detect_legal_risks(task: str, legal_context: str) -> dict:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Legal Advice ──────────────────────────────────────────────
+# ── Phase 2 - Claude Legal Advice ──────────────────────────────────────────────
 def _build_legal_prompt(state: LegalAdvisorState, legal_data: dict) -> str:
     persona      = get_persona(ROLE)
     task         = state["task"]
@@ -154,14 +154,10 @@ def _build_legal_prompt(state: LegalAdvisorState, legal_data: dict) -> str:
     jurisdiction = state.get("jurisdiction", "general")
     juris_note   = _JURISDICTION_NOTES.get(jurisdiction, _JURISDICTION_NOTES["general"])
 
-    flags_text = "
-".join(f"  ⚡ {f}" for f in legal_data["flags"]) or "  None detected"
-    gdpr_text  = "
-".join(f"  ☐ {r}" for r in legal_data["gdpr_reqs"][:6])
-    ip_text    = "
-".join(f"  ☐ {c}" for c in legal_data["ip_checklist"][:4])
-    red_flags  = "
-".join(f"  🚨 {f}" for f in legal_data["contract_flags"][:4])
+    flags_text = "\n".join(f"  ⚡ {f}" for f in legal_data["flags"]) or "  None detected"
+    gdpr_text  = "\n".join(f"  ☐ {r}" for r in legal_data["gdpr_reqs"][:6])
+    ip_text    = "\n".join(f"  ☐ {c}" for c in legal_data["ip_checklist"][:4])
+    red_flags  = "\n".join(f"  🚨 {f}" for f in legal_data["contract_flags"][:4])
 
     return f"""You are {persona['name']} ({persona['nickname']}), a {persona['personality']} specialist.
 
@@ -192,7 +188,7 @@ LEGAL CONTEXT:
 {legal_ctx or "None provided"}
 
 OUTPUT FORMAT:
-## Legal Analysis: {out_type.replace('_',' ').title()} — {jurisdiction.upper()}
+## Legal Analysis: {out_type.replace('_',' ').title()} - {jurisdiction.upper()}
 
 > ⚠️ {legal_data['disclaimer']}
 
@@ -201,16 +197,16 @@ OUTPUT FORMAT:
 [2-sentence justification with specific legal basis]
 
 ### Key Legal Issues
-[Numbered — each with: issue, relevant law/regulation, implication, recommended action]
+[Numbered - each with: issue, relevant law/regulation, implication, recommended action]
 
 ### Compliance Checklist
-[Each item: REQUIRED / RECOMMENDED / N/A — with brief explanation]
+[Each item: REQUIRED / RECOMMENDED / N/A - with brief explanation]
 
 ### Recommended Clauses / Provisions
-[Specific language for contracts, policies, or notices — ready to use or adapt]
+[Specific language for contracts, policies, or notices - ready to use or adapt]
 
 ### What Needs a Real Lawyer
-[Specific items that require qualified legal counsel — be direct]
+[Specific items that require qualified legal counsel - be direct]
 
 ### Next Action
 [Single most important legal step]

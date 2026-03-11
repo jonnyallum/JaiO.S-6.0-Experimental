@@ -1,5 +1,5 @@
 """
-Process Friction Detector — 19-point @langraph compliant agent node.
+Process Friction Detector - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : process_description (str), process_type (VALID_PROCESS_TYPES), output_type (VALID_OUTPUT_TYPES)
@@ -7,7 +7,7 @@ Node Contract:
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
-    MAX_RETRIES = 3 — retries on TRANSIENT (API overload) only.
+    MAX_RETRIES = 3 - retries on TRANSIENT (API overload) only.
     Permanent failures (empty description, invalid type) raise immediately.
 
 Failure Discrimination:
@@ -16,8 +16,8 @@ Failure Discrimination:
     UNEXPECTED → all other exceptions → re-raised with context
 
 Checkpoint Semantics:
-    PRE  — state snapshot before friction signal detection
-    POST — audit_report + friction_count persisted after successful generation
+    PRE  - state snapshot before friction signal detection
+    POST - audit_report + friction_count persisted after successful generation
 """
 
 from __future__ import annotations
@@ -45,16 +45,16 @@ VALID_OUTPUT_TYPES = {"friction_report", "improvement_plan", "process_map", "aud
 
 # ── Friction Signal Patterns ──────────────────────────────────────────────────
 _FRICTION_PATTERNS = [
-    (r'(manual(ly)?|by hand|someone has to)',           "manual_step",      8),
-    (r'(wait(ing)? for|pending approval|blocked on)',   "approval_blocker", 9),
-    (r'(copy[- ]paste|copy and paste)',                 "manual_transfer",  7),
-    (r'(email(ing)? (the|a) (file|document|report))',   "file_by_email",    6),
-    (r'(duplicate|duplicating|do it again|redo)',        "duplication",      7),
-    (r'(unclear|ambiguous|not sure who|no owner)',      "ownership_gap",    8),
-    (r'(takes (too long|ages|forever|days?))',          "time_sink",        9),
-    (r'(single point of failure|only [A-Za-z]+ knows)', "bus_factor",       10),
-    (r'(no (test|check|review|validation))',            "no_quality_gate",  8),
-    (r'(spreadsheet|excel|google sheet)',               "spreadsheet_ops",  5),
+    (r'(manual(ly)?|by hand|someone has to)',           "manual_step",      8),
+    (r'(wait(ing)? for|pending approval|blocked on)',   "approval_blocker", 9),
+    (r'(copy[- ]paste|copy and paste)',                 "manual_transfer",  7),
+    (r'(email(ing)? (the|a) (file|document|report))',   "file_by_email",    6),
+    (r'(duplicate|duplicating|do it again|redo)',        "duplication",      7),
+    (r'(unclear|ambiguous|not sure who|no owner)',      "ownership_gap",    8),
+    (r'(takes (too long|ages|forever|days?))',          "time_sink",        9),
+    (r'(single point of failure|only [A-Za-z]+ knows)', "bus_factor",       10),
+    (r'(no (test|check|review|validation))',            "no_quality_gate",  8),
+    (r'(spreadsheet|excel|google sheet)',               "spreadsheet_ops",  5),
 ]
 
 _PROCESS_DIMENSIONS = {
@@ -82,7 +82,7 @@ class ProcessAuditorState(TypedDict, total=False):
     bottleneck_score:    int
 
 
-# ── Phase 1 — Friction Detection (pure, no Claude) ────────────────────────────
+# ── Phase 1 - Friction Detection (pure, no Claude) ────────────────────────────
 def _detect_friction_signals(description: str) -> tuple[int, list[tuple], int]:
     """Returns (friction_count, signals[(label, severity, excerpt)], bottleneck_score_0_10)."""
     signals: list[tuple] = []
@@ -100,7 +100,7 @@ def _detect_friction_signals(description: str) -> tuple[int, list[tuple], int]:
 _build_prompt = None  # assigned below
 
 
-# ── Phase 2 — Claude Process Audit ──────────────────────────────────────────────
+# ── Phase 2 - Claude Process Audit ──────────────────────────────────────────────
 def _build_process_prompt(state: ProcessAuditorState, friction_count: int, signals: list, bottleneck_score: int) -> str:
     persona      = get_persona(ROLE)
     description  = state["process_description"]
@@ -108,8 +108,7 @@ def _build_process_prompt(state: ProcessAuditorState, friction_count: int, signa
     output_type  = state.get("output_type", "friction_report")
     dimensions   = _PROCESS_DIMENSIONS.get(process_type, _PROCESS_DIMENSIONS["general"])
 
-    signals_text = "
-".join(
+    signals_text = "\n".join(
         f"  [{sev}/10] {label}: '{excerpt}'" for label, sev, excerpt in signals
     ) if signals else "  None detected by regex."
 
@@ -128,15 +127,15 @@ REGEX PRE-SCAN:
 {signals_text}
 
 PROCESS DESCRIPTION:
-"""
+'''
 {description[:4000]}
-"""
+'''
 
 YOUR TASK:
-1. Identify every friction point — manual steps, approval bottlenecks, duplication, ownership gaps.
+1. Identify every friction point - manual steps, approval bottlenecks, duplication, ownership gaps.
 2. Score each friction point (1–10 severity, 1–10 fix effort).
 3. Rank the top 3 highest-leverage improvements.
-4. Provide a concrete action for each — tool, automation, or process change.
+4. Provide a concrete action for each - tool, automation, or process change.
 5. Map the improved process flow (before vs after).
 
 OUTPUT FORMAT:
@@ -152,9 +151,9 @@ OUTPUT FORMAT:
 [table rows]
 
 ### Top 3 High-Leverage Fixes
-1. **[Fix Name]** — [exact action, tool/automation, expected outcome]
-2. **[Fix Name]** — [exact action, tool/automation, expected outcome]
-3. **[Fix Name]** — [exact action, tool/automation, expected outcome]
+1. **[Fix Name]** - [exact action, tool/automation, expected outcome]
+2. **[Fix Name]** - [exact action, tool/automation, expected outcome]
+3. **[Fix Name]** - [exact action, tool/automation, expected outcome]
 
 ### Before vs After Process Flow
 **Before:** [numbered steps, current state]
@@ -164,7 +163,7 @@ OUTPUT FORMAT:
 [List each step that can be automated with suggested tool]
 
 ### Verdict
-[LOW FRICTION — optimise edges | MODERATE — fix top 3 | HIGH FRICTION — process redesign needed]
+[LOW FRICTION - optimise edges | MODERATE - fix top 3 | HIGH FRICTION - process redesign needed]
 
 BOTTLENECK_SCORE: {bottleneck_score}
 """
