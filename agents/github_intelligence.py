@@ -61,6 +61,8 @@ MAX_RETRIES  = 3
 RETRY_MIN_S  = 3
 RETRY_MAX_S  = 45
 MAX_TOKENS   = 800
+VALID_FOCUS   = {"security", "dependencies", "activity", "contributors", "issues", "general"}
+
 COMMIT_LIMIT = 15
 PR_LIMIT     = 10
 ISSUE_LIMIT  = 10
