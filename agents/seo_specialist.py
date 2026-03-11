@@ -75,6 +75,8 @@ class SEOState(BaseState):
     seo_report: str
 
 
+# ── Phase 1 — signal extraction & issue flagging (pure, no Claude) ─────────────────
+
 def _extract_signals(content: str) -> dict:
     text = content[:CONTENT_CHARS]
     title_m   = re.search(r"<title[^>]*>(.*?)</title>", text, re.I | re.S)
@@ -121,6 +123,7 @@ def _flag_issues(s: dict) -> list:
     return issues
 
 
+# ── Phase 2 — Claude call (TRANSIENT errors retried) ────────────────────────────────
 @retry(stop=stop_after_attempt(MAX_RETRIES),
        wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
        retry=retry_if_exception_type((anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.APITimeoutError)),
