@@ -60,8 +60,8 @@ Path("logs").mkdir(exist_ok=True)
 
 def _headers() -> dict:
     return {
-        "apikey":        settings.supabase_service_role_key,
-        "Authorization": f"Bearer {settings.supabase_service_role_key}",
+        "apikey":        settings.brain_service_role_key,
+        "Authorization": f"Bearer {settings.brain_service_role_key}",
         "Content-Type":  "application/json",
         "Prefer":        "return=representation",
     }
@@ -69,7 +69,7 @@ def _headers() -> dict:
 def _get(table: str, params: dict = None) -> list:
     try:
         r = requests.get(
-            f"{settings.supabase_url}/rest/v1/{table}",
+            f"{settings.brain_url}/rest/v1/{table}",
             headers=_headers(), params=params, timeout=15,
         )
         return r.json() if r.status_code == 200 else []
@@ -80,7 +80,7 @@ def _get(table: str, params: dict = None) -> list:
 def _post(table: str, data: dict) -> Optional[dict]:
     try:
         r = requests.post(
-            f"{settings.supabase_url}/rest/v1/{table}",
+            f"{settings.brain_url}/rest/v1/{table}",
             headers=_headers(), json=data, timeout=15,
         )
         if r.status_code in (200, 201):
@@ -95,7 +95,7 @@ def _patch(table: str, filters: dict, data: dict) -> bool:
     try:
         params = {k: f"eq.{v}" for k, v in filters.items()}
         r = requests.patch(
-            f"{settings.supabase_url}/rest/v1/{table}",
+            f"{settings.brain_url}/rest/v1/{table}",
             headers=_headers(), params=params, json=data, timeout=15,
         )
         return r.status_code in (200, 204)
@@ -211,7 +211,7 @@ def health():
         "version":        VERSION,
         "uptime_seconds": round(uptime),
         "boot_time":      BOOT_TIME.isoformat(),
-        "supabase":       settings.supabase_url,
+        "supabase":       settings.brain_url,
         "anthropic_key":  bool(settings.anthropic_api_key),
     }
 

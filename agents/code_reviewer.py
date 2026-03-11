@@ -104,7 +104,6 @@ def _collect_files(gh: GitHubTools, owner: str, repo: str, paths: list) -> dict:
     }
 
 
-_build_prompt = _build_review_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Review (Claude call, retried on transient errors only) ──────────────
 @retry(
@@ -142,6 +141,8 @@ def _build_review_prompt(data: dict, focus: str, persona: dict) -> str:
 
     return f"""{persona['personality']}
 
+
+_build_prompt = _build_review_prompt  # spec alias — canonical name for 19-point compliance
 Review the following source files and produce a precise, line-referenced code review.
 Focus: {focus.upper()}. Reference specific line numbers and function names. No fluff. Max 500 words.
 

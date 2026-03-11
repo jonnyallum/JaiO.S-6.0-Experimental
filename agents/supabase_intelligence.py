@@ -156,7 +156,6 @@ def _collect_brain_data(focus: str) -> dict:
     return raw
 
 
-_build_prompt = _build_brain_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Synthesis (Claude call, retried on transient errors only) ────────────
 @retry(
@@ -224,6 +223,8 @@ def _build_brain_prompt(raw: dict, query: str, focus: str, persona: dict) -> str
 
     return f"""{persona['personality']}
 
+
+_build_prompt = _build_brain_prompt  # spec alias — canonical name for 19-point compliance
 You have live data from the JaiOS 6 Shared Brain below.
 Answer the query precisely using only what the data shows. Be concise. Max 400 words.
 If data is absent for part of the query, say so explicitly — do not invent.

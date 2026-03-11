@@ -21,7 +21,7 @@ from agents.mcp_builder           import mcp_builder_node,           McpBuilderS
 from agents.gcp_ai_specialist     import gcp_ai_specialist_node,     GcpAiSpecialistState
 from agents.data_parser           import data_parser_node,           DataParserState
 from agents.agent_builder         import agent_builder_node,         AgentBuilderState
-from agents.pipeline_monitor      import pipeline_monitor_node,      PipelineMonitorState
+from agents.pipeline_monitor      import pipeline_monitor_node,      PipelineState
 from agents.process_auditor       import process_auditor_node,       ProcessAuditorState
 from agents.truth_verifier        import truth_verifier_node,        TruthVerifierState
 
@@ -46,7 +46,7 @@ from agents.pricing_strategist     import pricing_strategist_node,     PricingSt
 from agents.product_strategist     import product_strategist_node,     ProductStrategyState
 from agents.sales_conversion       import sales_conversion_node,       SalesConversionState
 from agents.funnel_architect       import funnel_architect_node,       FunnelState
-from agents.ecommerce_strategist   import ecommerce_strategist_node,   EcommerceStrategistState
+from agents.ecommerce_strategist   import ecommerce_strategist_node,   EcommerceState
 from agents.launch_orchestrator    import launch_orchestrator_node,    LaunchState
 from agents.venture_ideator        import venture_ideator_node,        VentureIdeatorState
 from agents.investor_pitch_writer  import investor_pitch_writer_node,  InvestorPitchState
@@ -54,7 +54,7 @@ from agents.investor_pitch_writer  import investor_pitch_writer_node,  InvestorP
 # ── Batch 4: Intelligence & Research ───────────────────────────────────────────────
 from agents.business_intelligence import business_intelligence_node, BIReportState
 from agents.analytics_reporter    import analytics_reporter_node,    AnalyticsState
-from agents.research_analyst      import research_analyst_node,      ResearchAnalystState
+from agents.research_analyst      import research_analyst_node,      ResearchState
 from agents.competitor_monitor    import competitor_monitor_node,    CompetitorIntelState
 from agents.seo_specialist        import seo_specialist_node,        SEOState
 from agents.supabase_intelligence import supabase_intelligence_node, BrainIntelState
@@ -94,7 +94,7 @@ __all__ = [
     "gcp_ai_specialist_node",     "GcpAiSpecialistState",
     "data_parser_node",           "DataParserState",
     "agent_builder_node",         "AgentBuilderState",
-    "pipeline_monitor_node",      "PipelineMonitorState",
+    "pipeline_monitor_node",      "PipelineState",
     "process_auditor_node",       "ProcessAuditorState",
     "truth_verifier_node",        "TruthVerifierState",
     # ── Batch 2: Content & Creative
@@ -117,14 +117,14 @@ __all__ = [
     "product_strategist_node",      "ProductStrategyState",
     "sales_conversion_node",        "SalesConversionState",
     "funnel_architect_node",        "FunnelState",
-    "ecommerce_strategist_node",    "EcommerceStrategistState",
+    "ecommerce_strategist_node",    "EcommerceState",
     "launch_orchestrator_node",     "LaunchState",
     "venture_ideator_node",         "VentureIdeatorState",
     "investor_pitch_writer_node",   "InvestorPitchState",
     # ── Batch 4: Intelligence & Research
     "business_intelligence_node",  "BIReportState",
     "analytics_reporter_node",     "AnalyticsState",
-    "research_analyst_node",       "ResearchAnalystState",
+    "research_analyst_node",       "ResearchState",
     "competitor_monitor_node",     "CompetitorIntelState",
     "seo_specialist_node",         "SEOState",
     "supabase_intelligence_node",  "BrainIntelState",

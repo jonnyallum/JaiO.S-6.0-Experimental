@@ -126,7 +126,6 @@ def _collect_manifests(gh: GitHubTools, owner: str, repo: str) -> dict:
     }
 
 
-_build_prompt = _build_audit_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Audit (Claude call, retried on transient errors only) ───────────────
 @retry(
@@ -170,6 +169,8 @@ def _build_audit_prompt(data: dict, focus: str, persona: dict) -> str:
 
     return f"""{persona['personality']}
 
+
+_build_prompt = _build_audit_prompt  # spec alias — canonical name for 19-point compliance
 Audit the dependencies of this repository and produce a structured report with specific, actionable recommendations.
 Focus area: {focus.upper()}. Be precise — reference package names and versions. No fluff. Max 450 words.
 

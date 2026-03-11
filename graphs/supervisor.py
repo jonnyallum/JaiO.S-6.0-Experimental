@@ -51,10 +51,10 @@ from agents.pr_writer import pr_writer_node, PRState
 from agents.ab_test_designer import ab_test_designer_node, ABTestState
 from agents.investor_pitch_writer import investor_pitch_writer_node, InvestorPitchState
 from agents.brand_voice_guide import brand_voice_guide_node, BrandVoiceState
-from agents.ecommerce_strategist import ecommerce_strategist_node, EcommerceStrategistState
+from agents.ecommerce_strategist import ecommerce_strategist_node, EcommerceState
 from agents.data_parser import data_parser_node, DataParserState
-from agents.research_analyst import research_analyst_node, ResearchAnalystState
-from agents.pipeline_monitor import pipeline_monitor_node, PipelineMonitorState
+from agents.research_analyst import research_analyst_node, ResearchState
+from agents.pipeline_monitor import pipeline_monitor_node, PipelineState
 from agents.customer_success import customer_success_node, CustomerSuccessState
 from agents.truth_verifier import truth_verifier_node, TruthVerifierState
 from agents.content_auditor import content_auditor_node, ContentAuditorState
@@ -97,11 +97,11 @@ ROUTING_RULES: dict[str, list[str]] = {
         "component", "structure", "tech debt",
     ],
     "data_extraction": [
-        "parse", "extract", "schema", "json", "csv", "format",
-        "convert", "transform", "scrape",
+        "parse", "extract data", "json schema", "csv parse",
+        "convert data", "transform data", "scrape", "data pipeline",
     ],
     "quality_validation": [
-        "quality", "validate", "check", "qa", "verify", "pass", "fail", "score",
+        "quality assurance", "validate output", "qa review", "pass criteria", "fail criteria", "quality score", "qc check",
     ],
     "code_reviewer": [
         "review code", "code review", "code quality", "feedback on code",
@@ -170,6 +170,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "process audit", "workflow audit", "sop audit", "process review",
         "operational review", "efficiency audit", "process improvement",
         "workflow optimisation", "workflow optimization", "bottleneck audit",
+        "onboarding process", "friction audit", "audit this process", "audit this workflow",
+        "friction points", "manual steps", "audit the process",
     ],
     "truth_verifier": [
         "fact check", "verify claim", "is this true", "truth check",
@@ -193,9 +195,10 @@ ROUTING_RULES: dict[str, list[str]] = {
         "display ad", "sponsored post copy",
     ],
     "copywriter": [
-        "copy", "write copy", "website copy", "landing page copy", "homepage copy",
+        "copy", "write copy", "headline", "headline copy", "headline variant",
+        "website copy", "landing page copy", "homepage copy",
         "about page", "tagline", "slogan", "brand copy", "product description",
-        "marketing copy",
+        "marketing copy", "write headlines", "ad copy", "conversion copy",
     ],
     "brand_voice_guide": [
         "brand voice", "tone of voice", "brand guidelines", "brand style",
@@ -373,8 +376,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "trademark", "legal risk", "data protection",
     ],
     "fact_checker": [
-        "is this accurate", "check this fact", "verify this", "source this",
-        "citation needed", "double check", "confirm this", "is it true",
+        "fact check", "fact-check", "check the fact", "is this accurate", "check this claim",
+        "verify this claim", "source this", "citation needed", "is it true",
         "evidence for", "back this up",
     ],
     "ab_test_designer": [
@@ -456,9 +459,14 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "data_extraction":
         r = data_extraction_node({
             **base, "agent": role,
-            "source_text": task, "target_schema": "{}", "extracted_data": "",
+            "raw_input":        task,
+            "schema":           {"data": "Extracted data from the input", "summary": "Brief summary"},
+            "extraction_mode":  "auto",
+            "extracted_json":   {},
+            "validation_passed": False,
+            "issues":           [],
         })
-        return {"result": r.get("extracted_data", ""), "error": r.get("error")}
+        return {"result": str(r.get("extracted_json", "")), "error": r.get("error")}
 
     elif role == "quality_validation":
         r = quality_validation_node({
@@ -489,28 +497,28 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "fullstack_architect":
         r = fullstack_architect_node({
             **base, "agent": role,
-            "brief": task, "stack_context": "", "architecture_spec": "",
+            "task": task, "stack_context": "", "architecture_spec": "",
         })
         return {"result": r.get("architecture_spec", ""), "error": r.get("error")}
 
     elif role == "database_architect":
         r = database_architect_node({
             **base, "agent": role,
-            "brief": task, "existing_schema": "", "schema_spec": "",
+            "task": task, "existing_schema": "", "schema_spec": "",
         })
         return {"result": r.get("schema_spec", ""), "error": r.get("error")}
 
     elif role == "supabase_specialist":
         r = supabase_specialist_node({
             **base, "agent": role,
-            "brief": task, "supabase_context": "", "supabase_spec": "",
+            "task": task, "supabase_context": "", "supabase_spec": "",
         })
         return {"result": r.get("supabase_spec", ""), "error": r.get("error")}
 
     elif role == "devops_engineer":
         r = devops_engineer_node({
             **base, "agent": role,
-            "brief": task, "repo_owner": repo_owner, "repo_name": repo_name,
+            "task": task, "repo_owner": repo_owner, "repo_name": repo_name,
             "devops_spec": "",
         })
         return {"result": r.get("devops_spec", ""), "error": r.get("error")}
@@ -518,7 +526,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "deployment_specialist":
         r = deployment_specialist_node({
             **base, "agent": role,
-            "brief": task, "repo_owner": repo_owner, "repo_name": repo_name,
+            "task": task, "repo_owner": repo_owner, "repo_name": repo_name,
             "deployment_plan": "",
         })
         return {"result": r.get("deployment_plan", ""), "error": r.get("error")}
@@ -526,22 +534,23 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "performance_auditor":
         r = performance_auditor_node({
             **base, "agent": role,
-            "url": task if task.startswith("http") else "",
-            "context": task, "focus": "general", "performance_report": "",
+            "task":              task,
+            "url":               task if task.startswith("http") else "",
+            "context":           task, "focus": "general", "performance_report": "",
         })
         return {"result": r.get("performance_report", ""), "error": r.get("error")}
 
     elif role == "mcp_builder":
         r = mcp_builder_node({
             **base, "agent": role,
-            "brief": task, "tools_list": "", "mcp_spec": "",
+            "task": task, "tools_list": "", "mcp_spec": "",
         })
         return {"result": r.get("mcp_spec", ""), "error": r.get("error")}
 
     elif role == "gcp_ai_specialist":
         r = gcp_ai_specialist_node({
             **base, "agent": role,
-            "brief": task, "gcp_context": "", "gcp_spec": "",
+            "task": task, "gcp_context": "", "gcp_spec": "",
         })
         return {"result": r.get("gcp_spec", ""), "error": r.get("error")}
 
@@ -626,11 +635,14 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "copywriter":
         r = copywriter_node({
             **base, "agent": role,
-            "brief": task, "page_type": "general",
-            "brand_voice": "professional", "audience": "",
-            "copy": "",
+            "task":         task,
+            "brand_context": "",
+            "output_type":  "headline_variants",
+            "copy_format":  "direct_response",
+            "copy_output":  "",
+            "headline":     "",
         })
-        return {"result": r.get("copy", ""), "error": r.get("error")}
+        return {"result": r.get("copy_output", ""), "error": r.get("error")}
 
     elif role == "brand_voice_guide":
         r = brand_voice_guide_node({
@@ -644,7 +656,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "creative_director":
         r = creative_director_node({
             **base, "agent": role,
-            "brief": task, "brand_context": "",
+            "task": task, "brand_context": "",
             "campaign_concept": "",
         })
         return {"result": r.get("campaign_concept", ""), "error": r.get("error")}
@@ -670,7 +682,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "ui_designer":
         r = ui_designer_node({
             **base, "agent": role,
-            "brief": task, "design_system": "",
+            "task": task, "design_system": "",
             "platform": "web", "ui_spec": "",
         })
         return {"result": r.get("ui_spec", ""), "error": r.get("error")}
@@ -884,7 +896,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "project_manager":
         r = project_manager_node({
             **base, "agent": role,
-            "project_brief": task, "team_context": "",
+            "task": task, "team_context": "",
             "timeline_hint": "", "project_plan": "",
         })
         return {"result": r.get("project_plan", ""), "error": r.get("error")}
@@ -941,7 +953,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "financial_analyst":
         r = financial_analyst_node({
             **base, "agent": role,
-            "financial_data": task, "focus": "general",
+            "task": task, "focus": "general",
             "period": "current", "financial_report": "",
         })
         return {"result": r.get("financial_report", ""), "error": r.get("error")}
@@ -949,7 +961,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "legal_advisor":
         r = legal_advisor_node({
             **base, "agent": role,
-            "brief": task, "jurisdiction": "UK",
+            "task": task, "jurisdiction": "UK",
             "context": "", "legal_report": "",
         })
         return {"result": r.get("legal_report", ""), "error": r.get("error")}
@@ -992,6 +1004,38 @@ def build_supervisor():
     graph.add_edge("route",   "execute")
     graph.add_edge("execute",  END)
     return graph.compile(checkpointer=MemorySaver())
+
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+_supervisor_graph = None
+
+def run_supervisor(state: dict) -> dict:
+    """
+    Entry point for api/main.py.
+    Lazily builds the supervisor graph and invokes it.
+    state must include: workflow_id, task (or request)
+    """
+    global _supervisor_graph
+    if _supervisor_graph is None:
+        _supervisor_graph = build_supervisor()
+
+    # Normalise 'request' or 'brief' → 'task'
+    task = state.get("task") or state.get("request") or state.get("brief") or ""
+    wf_id = state.get("workflow_id", str(uuid.uuid4()))
+    input_state = {
+        "workflow_id": wf_id,
+        "timestamp":   datetime.now(timezone.utc).isoformat(),
+        "agent":       "orchestrator",
+        "task":        task,
+        "error":       None,
+        "selected_role": "",
+        "result":      "",
+    }
+
+    cfg = {"configurable": {"thread_id": wf_id}}
+    return _supervisor_graph.invoke(input_state, config=cfg)
 
 
 if __name__ == "__main__":
