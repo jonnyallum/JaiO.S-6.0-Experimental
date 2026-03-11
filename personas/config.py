@@ -231,6 +231,11 @@ def get_all_personas() -> dict[str, dict]:
     "pricing_strategist":   ("pricing_strategist_name", "pricing_strategist_nickname", "pricing_strategist_handle", "pricing_strategist_personality"),
     "course_designer":      ("course_designer_name", "course_designer_nickname", "course_designer_handle", "course_designer_personality"),
     "chatbot_designer":     ("chatbot_designer_name", "chatbot_designer_nickname", "chatbot_designer_handle", "chatbot_designer_personality"),
+    "persona_builder":       ("persona_builder_name", "persona_builder_nickname", "persona_builder_handle", "persona_builder_personality"),
+    "pr_writer":             ("pr_writer_name", "pr_writer_nickname", "pr_writer_handle", "pr_writer_personality"),
+    "ab_test_designer":      ("ab_test_designer_name", "ab_test_designer_nickname", "ab_test_designer_handle", "ab_test_designer_personality"),
+    "investor_pitch_writer": ("investor_pitch_writer_name", "investor_pitch_writer_nickname", "investor_pitch_writer_handle", "investor_pitch_writer_personality"),
+    "brand_voice_guide":     ("brand_voice_guide_name", "brand_voice_guide_nickname", "brand_voice_guide_handle", "brand_voice_guide_personality"),
 }
 
     # proposal_writer
@@ -258,3 +263,29 @@ def get_all_personas() -> dict[str, dict]:
     chatbot_designer_nickname: str = Field("")
     chatbot_designer_handle: str = Field("")
     chatbot_designer_personality: str = Field("")
+
+    # persona_builder
+    persona_builder_name: str = Field("")
+    persona_builder_nickname: str = Field("")
+    persona_builder_handle: str = Field("")
+    persona_builder_personality: str = Field("")
+    # pr_writer
+    pr_writer_name: str = Field("")
+    pr_writer_nickname: str = Field("")
+    pr_writer_handle: str = Field("")
+    pr_writer_personality: str = Field("")
+    # ab_test_designer
+    ab_test_designer_name: str = Field("")
+    ab_test_designer_nickname: str = Field("")
+    ab_test_designer_handle: str = Field("")
+    ab_test_designer_personality: str = Field("")
+    # investor_pitch_writer
+    investor_pitch_writer_name: str = Field("")
+    investor_pitch_writer_nickname: str = Field("")
+    investor_pitch_writer_handle: str = Field("")
+    investor_pitch_writer_personality: str = Field("")
+    # brand_voice_guide
+    brand_voice_guide_name: str = Field("")
+    brand_voice_guide_nickname: str = Field("")
+    brand_voice_guide_handle: str = Field("")
+    brand_voice_guide_personality: str = Field("")
