@@ -345,3 +345,29 @@ def get_all_personas() -> dict[str, dict]:
     customer_success_nickname: str = Field("")
     customer_success_handle: str = Field("")
     customer_success_personality: str = Field("")
+    # truth_verifier
+    truth_verifier_name: str = Field("")
+    truth_verifier_nickname: str = Field("")
+    truth_verifier_handle: str = Field("")
+    truth_verifier_personality: str = Field("")
+    # content_auditor
+    content_auditor_name: str = Field("")
+    content_auditor_nickname: str = Field("")
+    content_auditor_handle: str = Field("")
+    content_auditor_personality: str = Field("")
+    # process_auditor
+    process_auditor_name: str = Field("")
+    process_auditor_nickname: str = Field("")
+    process_auditor_handle: str = Field("")
+    process_auditor_personality: str = Field("")
+    # venture_ideator
+    venture_ideator_name: str = Field("")
+    venture_ideator_nickname: str = Field("")
+    venture_ideator_handle: str = Field("")
+    venture_ideator_personality: str = Field("")
+    # voice_synthesiser
+    voice_synthesiser_name: str = Field("")
+    voice_synthesiser_nickname: str = Field("")
+    voice_synthesiser_handle: str = Field("")
+    voice_synthesiser_personality: str = Field("")
+
