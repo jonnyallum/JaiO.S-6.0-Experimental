@@ -236,6 +236,37 @@ def get_all_personas() -> dict[str, dict]:
     "ab_test_designer":      ("ab_test_designer_name", "ab_test_designer_nickname", "ab_test_designer_handle", "ab_test_designer_personality"),
     "investor_pitch_writer": ("investor_pitch_writer_name", "investor_pitch_writer_nickname", "investor_pitch_writer_handle", "investor_pitch_writer_personality"),
     "brand_voice_guide":     ("brand_voice_guide_name", "brand_voice_guide_nickname", "brand_voice_guide_handle", "brand_voice_guide_personality"),
+    "ecommerce_strategist": {
+        "name": os.getenv("ECOMMERCE_STRATEGIST_NAME", ""),
+        "nickname": os.getenv("ECOMMERCE_STRATEGIST_NICKNAME", ""),
+        "handle": os.getenv("ECOMMERCE_STRATEGIST_HANDLE", ""),
+        "personality": os.getenv("ECOMMERCE_STRATEGIST_PERSONALITY", ""),
+    },
+    "data_parser": {
+        "name": os.getenv("DATA_PARSER_NAME", ""),
+        "nickname": os.getenv("DATA_PARSER_NICKNAME", ""),
+        "handle": os.getenv("DATA_PARSER_HANDLE", ""),
+        "personality": os.getenv("DATA_PARSER_PERSONALITY", ""),
+    },
+    "research_analyst": {
+        "name": os.getenv("RESEARCH_ANALYST_NAME", ""),
+        "nickname": os.getenv("RESEARCH_ANALYST_NICKNAME", ""),
+        "handle": os.getenv("RESEARCH_ANALYST_HANDLE", ""),
+        "personality": os.getenv("RESEARCH_ANALYST_PERSONALITY", ""),
+    },
+    "pipeline_monitor": {
+        "name": os.getenv("PIPELINE_MONITOR_NAME", ""),
+        "nickname": os.getenv("PIPELINE_MONITOR_NICKNAME", ""),
+        "handle": os.getenv("PIPELINE_MONITOR_HANDLE", ""),
+        "personality": os.getenv("PIPELINE_MONITOR_PERSONALITY", ""),
+    },
+    "customer_success": {
+        "name": os.getenv("CUSTOMER_SUCCESS_NAME", ""),
+        "nickname": os.getenv("CUSTOMER_SUCCESS_NICKNAME", ""),
+        "handle": os.getenv("CUSTOMER_SUCCESS_HANDLE", ""),
+        "personality": os.getenv("CUSTOMER_SUCCESS_PERSONALITY", ""),
+    },
+
 }
 
     # proposal_writer
@@ -289,3 +320,28 @@ def get_all_personas() -> dict[str, dict]:
     brand_voice_guide_nickname: str = Field("")
     brand_voice_guide_handle: str = Field("")
     brand_voice_guide_personality: str = Field("")
+    # ecommerce_strategist
+    ecommerce_strategist_name: str = Field("")
+    ecommerce_strategist_nickname: str = Field("")
+    ecommerce_strategist_handle: str = Field("")
+    ecommerce_strategist_personality: str = Field("")
+    # data_parser
+    data_parser_name: str = Field("")
+    data_parser_nickname: str = Field("")
+    data_parser_handle: str = Field("")
+    data_parser_personality: str = Field("")
+    # research_analyst
+    research_analyst_name: str = Field("")
+    research_analyst_nickname: str = Field("")
+    research_analyst_handle: str = Field("")
+    research_analyst_personality: str = Field("")
+    # pipeline_monitor
+    pipeline_monitor_name: str = Field("")
+    pipeline_monitor_nickname: str = Field("")
+    pipeline_monitor_handle: str = Field("")
+    pipeline_monitor_personality: str = Field("")
+    # customer_success
+    customer_success_name: str = Field("")
+    customer_success_nickname: str = Field("")
+    customer_success_handle: str = Field("")
+    customer_success_personality: str = Field("")
