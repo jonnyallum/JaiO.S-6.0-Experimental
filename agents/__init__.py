@@ -94,3 +94,10 @@ from agents.pr_writer import pr_writer_node, PRState
 from agents.ab_test_designer import ab_test_designer_node, ABTestState
 from agents.investor_pitch_writer import investor_pitch_writer_node, InvestorPitchState
 from agents.brand_voice_guide import brand_voice_guide_node, BrandVoiceState
+
+# Batch 5 — E-commerce, Data Parsing, Research, Pipeline & Customer Success agents
+from agents.ecommerce_strategist import ecommerce_strategist_node, EcommerceStrategistState
+from agents.data_parser import data_parser_node, DataParserState
+from agents.research_analyst import research_analyst_node, ResearchAnalystState
+from agents.pipeline_monitor import pipeline_monitor_node, PipelineMonitorState
+from agents.customer_success import customer_success_node, CustomerSuccessState
