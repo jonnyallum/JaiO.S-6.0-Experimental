@@ -226,4 +226,35 @@ def get_persona(role: str) -> dict:
 
 def get_all_personas() -> dict[str, dict]:
     """Return all configured personas. Useful for dashboards and sync."""
-    return {role: get_persona(role) for role in _ROLE_MAP}
+    return {role: get_persona(role) for role in _ROLE_MAP    "proposal_writer":      ("proposal_writer_name", "proposal_writer_nickname", "proposal_writer_handle", "proposal_writer_personality"),
+    "product_strategist":   ("product_strategist_name", "product_strategist_nickname", "product_strategist_handle", "product_strategist_personality"),
+    "pricing_strategist":   ("pricing_strategist_name", "pricing_strategist_nickname", "pricing_strategist_handle", "pricing_strategist_personality"),
+    "course_designer":      ("course_designer_name", "course_designer_nickname", "course_designer_handle", "course_designer_personality"),
+    "chatbot_designer":     ("chatbot_designer_name", "chatbot_designer_nickname", "chatbot_designer_handle", "chatbot_designer_personality"),
+}
+
+    # proposal_writer
+    proposal_writer_name: str = Field("")
+    proposal_writer_nickname: str = Field("")
+    proposal_writer_handle: str = Field("")
+    proposal_writer_personality: str = Field("")
+    # product_strategist
+    product_strategist_name: str = Field("")
+    product_strategist_nickname: str = Field("")
+    product_strategist_handle: str = Field("")
+    product_strategist_personality: str = Field("")
+    # pricing_strategist
+    pricing_strategist_name: str = Field("")
+    pricing_strategist_nickname: str = Field("")
+    pricing_strategist_handle: str = Field("")
+    pricing_strategist_personality: str = Field("")
+    # course_designer
+    course_designer_name: str = Field("")
+    course_designer_nickname: str = Field("")
+    course_designer_handle: str = Field("")
+    course_designer_personality: str = Field("")
+    # chatbot_designer
+    chatbot_designer_name: str = Field("")
+    chatbot_designer_nickname: str = Field("")
+    chatbot_designer_handle: str = Field("")
+    chatbot_designer_personality: str = Field("")
