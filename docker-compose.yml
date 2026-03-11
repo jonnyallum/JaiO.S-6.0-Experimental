@@ -1,0 +1,22 @@
+# JaiO.S 6.0 — Docker Compose
+# Usage: docker-compose up -d
+
+version: "3.9"
+
+services:
+  jaios:
+    build: .
+    container_name: jaios
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
