@@ -101,3 +101,10 @@ from agents.data_parser import data_parser_node, DataParserState
 from agents.research_analyst import research_analyst_node, ResearchAnalystState
 from agents.pipeline_monitor import pipeline_monitor_node, PipelineMonitorState
 from agents.customer_success import customer_success_node, CustomerSuccessState
+
+# Batch 6 — Quality, Venture & Voice agents
+from agents.truth_verifier import truth_verifier_node, TruthVerifierState
+from agents.content_auditor import content_auditor_node, ContentAuditorState
+from agents.process_auditor import process_auditor_node, ProcessAuditorState
+from agents.venture_ideator import venture_ideator_node, VentureIdeatorState
+from agents.voice_synthesiser import voice_synthesiser_node, VoiceSynthesiserState
