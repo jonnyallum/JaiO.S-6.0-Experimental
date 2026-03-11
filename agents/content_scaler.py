@@ -73,6 +73,8 @@ class ContentScalerState(BaseState):
     variants: List[str]  # List of copy variants; empty list on failure
 
 
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
+
 def _build_variants_prompt(state: "ContentScalerState", persona: dict) -> str:
     cta_block = (
         f"\nCTA to include: {state['cta']}"
@@ -107,6 +109,9 @@ def _parse_variants(raw: str) -> list[str]:
     return parts
 
 
+_build_prompt = _build_variants_prompt  # spec alias — canonical name for 19-point compliance
+
+# ── Phase 2 — Claude call (TRANSIENT errors retried) ────────────────────────────────
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
