@@ -75,6 +75,8 @@ class AutomationState(BaseState):
     automation_spec: str        # Full spec with nodes, logic, config; empty on failure
 
 
+# ── Phase 1 — prompt construction (pure, no I/O) ───────────────────────────────────
+
 def _build_spec_prompt(state: "AutomationState", persona: dict) -> str:
     tools = state.get("tools_available", "n8n, Resend, Supabase")
     return f"""{persona['personality']}
@@ -125,6 +127,9 @@ Assume the developer will build this directly from your spec. No vague placehold
 [Realistic estimate: simple = 30 min, medium = 2h, complex = 4-8h]"""
 
 
+_build_prompt = _build_spec_prompt  # spec alias — canonical name for 19-point compliance
+
+# ── Phase 2 — Claude call (TRANSIENT errors retried) ────────────────────────────────
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
