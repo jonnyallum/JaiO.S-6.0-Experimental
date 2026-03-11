@@ -61,6 +61,11 @@ from agents.content_auditor import content_auditor_node, ContentAuditorState
 from agents.process_auditor import process_auditor_node, ProcessAuditorState
 from agents.venture_ideator import venture_ideator_node, VentureIdeatorState
 from agents.voice_synthesiser import voice_synthesiser_node, VoiceSynthesiserState
+from agents.fullstack_architect import fullstack_architect_node, FullstackArchitectState
+from agents.database_architect import database_architect_node, DatabaseArchitectState
+from agents.supabase_specialist import supabase_specialist_node, SupabaseSpecialistState
+from agents.devops_engineer import devops_engineer_node, DevOpsEngineerState
+from agents.deployment_specialist import deployment_specialist_node, DeploymentSpecialistState
 from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 
