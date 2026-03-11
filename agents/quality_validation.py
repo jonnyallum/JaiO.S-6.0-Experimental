@@ -61,6 +61,8 @@ MAX_RETRIES    = 3
 RETRY_MIN_S    = 3
 RETRY_MAX_S    = 45
 MAX_TOKENS     = 1000   # Validation feedback — structured, concise output
+VALID_ARTIFACT_TYPES = {"intelligence_report", "security_audit", "code", "plan", "copy", "general"}
+
 ARTIFACT_CHARS = 5000   # Artifact truncation limit
 PASS_THRESHOLD = 7      # Scores >= 7 pass the quality gate
 
@@ -79,6 +81,8 @@ class QualityValidationState(BaseState):
 
 
 # ── Pure helpers ─────────────────────────────────────────────────────────────────
+# ── Phase 1 — score parsing utilities (pure) ───────────────────────────────────────
+
 def _parse_score(feedback: str) -> int:
     """
     Extract the overall score from Claude's structured response. Pure function.
@@ -144,6 +148,8 @@ Score each 1-10:
 ### Verdict
 [One sentence]"""
 
+
+_build_prompt = _build_validation_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Validation (Claude call, retried on transient errors only) ──────────
 @retry(
