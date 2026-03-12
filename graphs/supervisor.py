@@ -85,16 +85,21 @@ log = structlog.get_logger()
 ROUTING_RULES: dict[str, list[str]] = {
     # ── Technical ─────────────────────────────────────────────────────────────
     "github_intelligence": [
-        "github", "repo", "repository", "commit", "pull request", "pr",
-        "issue", "branch", "contributor", "merge", "diff",
+        "github", "repo", "repository", "git commit", "pull request",
+        "github issue", "git branch", "contributor", "git merge", "git diff",
+        "github actions workflow", "code diff", "open pr",
     ],
     "security_audit": [
-        "security", "vulnerability", "audit", "access", "permission",
-        "encrypt", "auth", "token", "secret", "cve", "exposure", "risk",
+        "security audit", "security review", "vulnerability", "security check",
+        "pentest", "penetration test", "access control", "permission model",
+        "encrypt", "auth review", "token security", "secret management",
+        "cve", "exposure risk", "security hardening",
     ],
     "architecture_review": [
-        "architecture", "design", "refactor", "pattern", "stack", "api",
-        "component", "structure", "tech debt",
+        "review architecture", "architecture review", "architecture audit",
+        "system design review", "review the stack", "refactor plan",
+        "architectural decision", "design pattern review", "tech debt",
+        "review this architecture", "architecture assessment",
     ],
     "data_extraction": [
         "parse", "extract data", "json schema", "csv parse",
@@ -119,7 +124,7 @@ ROUTING_RULES: dict[str, list[str]] = {
     "database_architect": [
         "database", "db schema", "postgres", "postgresql", "mysql", "sqlite",
         "table design", "migration", "index", "query optimisation", "query optimization",
-        "normalisation", "normalization", "orm", "prisma", "drizzle",
+        "normalisation", "normalization", "prisma", "drizzle", "typeorm",
     ],
     "supabase_specialist": [
         "supabase schema", "supabase rls", "row level security", "supabase function",
@@ -174,9 +179,10 @@ ROUTING_RULES: dict[str, list[str]] = {
         "friction points", "manual steps", "audit the process",
     ],
     "truth_verifier": [
-        "fact check", "verify claim", "is this true", "truth check",
-        "misinformation", "disinformation", "source check", "claim verification",
-        "cross-reference", "truth verif",
+        "truth verif", "verify this claim", "verify the claim", "verify claim",
+        "is this true", "truth check", "artifact verification", "13-gate",
+        "gate verification", "output verification", "verify artifact",
+        "cross-reference", "source check", "claim verification",
     ],
 
     # ── Content & Creative ────────────────────────────────────────────────────
@@ -221,13 +227,15 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
     "ui_designer": [
         "ui design", "user interface", "wireframe", "mockup", "figma",
-        "design system", "component design", "ux design", "user experience",
+        "component design", "ux design", "user experience", "dashboard design",
+        "design a dashboard", "dashboard component", "design a component",
         "colour scheme", "color scheme", "layout design", "visual design",
+        "design the ui", "design ui", "screen design", "page design",
     ],
     "content_auditor": [
-        "content audit", "audit content", "review content", "content quality",
-        "content gap", "content performance", "content review",
-        "existing content", "content inventory",
+        "content audit", "audit content", "audit this content", "content quality",
+        "audit the content", "content gap", "content depth", "content review",
+        "content performance", "fluff", "thin content", "content issues",
     ],
     "pr_writer": [
         "press release", "pr write", "media release", "news release",
@@ -306,9 +314,10 @@ ROUTING_RULES: dict[str, list[str]] = {
         "investigate", "background research",
     ],
     "competitor_monitor": [
-        "competitor", "rival", "intel", "competitive", "market analysis",
-        "spy", "monitor competitor", "what are competitors", "compare to",
-        "scrape site",
+        "competitor url", "scrape competitor", "analyze competitor site",
+        "monitor competitor", "competitor website", "scrape their site",
+        "analyze their pricing page", "competitor landing page",
+        "intel on competitor", "investigate competitor",
     ],
     "seo_specialist": [
         "seo", "search engine", "on-page", "meta tag", "schema markup",
@@ -332,9 +341,10 @@ ROUTING_RULES: dict[str, list[str]] = {
         "cold email", "email series", "write emails",
     ],
     "project_manager": [
-        "project plan", "project timeline", "milestone", "task list",
-        "sprint", "kanban", "project brief", "project status",
-        "project scope", "resource plan",
+        "project plan", "project timeline", "project milestone", "task breakdown",
+        "project phases", "project scope", "resource plan", "project brief",
+        "sprint planning", "kanban board", "gantt", "delivery plan",
+        "create a project plan", "build a project plan", "project schedule",
     ],
     "customer_success": [
         "customer success", "client health", "churn", "retention strategy",
@@ -376,8 +386,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "trademark", "legal risk", "data protection",
     ],
     "fact_checker": [
-        "fact check", "fact-check", "check the fact", "is this accurate", "check this claim",
-        "verify this claim", "source this", "citation needed", "is it true",
+        "fact check", "fact-check", "fact checking", "check the fact", "is this accurate",
+        "check this claim", "source this", "citation needed", "is it true",
         "evidence for", "back this up",
     ],
     "ab_test_designer": [
@@ -474,7 +484,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "artifact": task, "criteria": "",
             "validation_report": "", "score": 0, "passed": False,
         })
-        return {"result": r.get("validation_report", ""), "error": r.get("error")}
+        return {"result": r.get("quality_feedback", ""), "error": r.get("error")}
 
     elif role == "code_reviewer":
         tokens     = task.split()
@@ -497,60 +507,64 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "fullstack_architect":
         r = fullstack_architect_node({
             **base, "agent": role,
-            "task": task, "stack_context": "", "architecture_spec": "",
+            "task": task, "stack_context": task, "framework": "nextjs",
+            "output_type": "architecture_doc", "architecture_doc": "", "stack_decision": "",
         })
-        return {"result": r.get("architecture_spec", ""), "error": r.get("error")}
+        return {"result": r.get("architecture_doc", ""), "error": r.get("error")}
 
     elif role == "database_architect":
         r = database_architect_node({
             **base, "agent": role,
-            "task": task, "existing_schema": "", "schema_spec": "",
+            "task": task, "db_context": task, "db_engine": "postgresql",
+            "output_type": "schema_design", "db_design": "", "schema_summary": "",
         })
-        return {"result": r.get("schema_spec", ""), "error": r.get("error")}
+        return {"result": r.get("db_design", ""), "error": r.get("error")}
 
     elif role == "supabase_specialist":
         r = supabase_specialist_node({
             **base, "agent": role,
-            "task": task, "supabase_context": "", "supabase_spec": "",
+            "task": task, "project_context": task, "area": "general",
+            "output_type": "migration", "supabase_spec": "", "sql_output": "",
         })
         return {"result": r.get("supabase_spec", ""), "error": r.get("error")}
 
     elif role == "devops_engineer":
         r = devops_engineer_node({
             **base, "agent": role,
-            "task": task, "repo_owner": repo_owner, "repo_name": repo_name,
-            "devops_spec": "",
+            "task": task, "infra_context": task, "platform": "hostinger",
+            "output_type": "general", "devops_plan": "", "config_output": "",
         })
-        return {"result": r.get("devops_spec", ""), "error": r.get("error")}
+        return {"result": r.get("devops_plan", ""), "error": r.get("error")}
 
     elif role == "deployment_specialist":
         r = deployment_specialist_node({
             **base, "agent": role,
-            "task": task, "repo_owner": repo_owner, "repo_name": repo_name,
-            "deployment_plan": "",
+            "task": task, "deploy_context": task, "target": "hostinger_vps",
+            "output_type": "deployment_runbook", "deployment_plan": "", "deploy_commands": "",
         })
         return {"result": r.get("deployment_plan", ""), "error": r.get("error")}
 
     elif role == "performance_auditor":
         r = performance_auditor_node({
             **base, "agent": role,
-            "task":              task,
-            "url":               task if task.startswith("http") else "",
-            "context":           task, "focus": "general", "performance_report": "",
+            "task": task, "perf_context": task, "target_platform": "web",
+            "output_type": "general", "perf_report": "", "score_summary": "",
         })
-        return {"result": r.get("performance_report", ""), "error": r.get("error")}
+        return {"result": r.get("perf_report", ""), "error": r.get("error")}
 
     elif role == "mcp_builder":
         r = mcp_builder_node({
             **base, "agent": role,
-            "task": task, "tools_list": "", "mcp_spec": "",
+            "task": task, "mcp_context": task, "transport": "stdio",
+            "output_type": "server_spec", "mcp_spec": "", "server_code": "",
         })
         return {"result": r.get("mcp_spec", ""), "error": r.get("error")}
 
     elif role == "gcp_ai_specialist":
         r = gcp_ai_specialist_node({
             **base, "agent": role,
-            "task": task, "gcp_context": "", "gcp_spec": "",
+            "task": task, "gcp_context": task, "gcp_service": "vertex_ai",
+            "output_type": "agent_architecture", "gcp_spec": "", "terraform_output": "",
         })
         return {"result": r.get("gcp_spec", ""), "error": r.get("error")}
 
@@ -574,23 +588,28 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "pipeline_monitor":
         r = pipeline_monitor_node({
             **base, "agent": role,
-            "focus": "general", "pipeline_report": "",
+            "log_data": task, "pipeline_name": "general",
+            "pipeline_type": "general", "expected_behaviour": "",
+            "output_type": "diagnosis", "thread_id": "",
+            "signal_summary": "", "diagnosis": "", "alert_level": 0,
+            "action_items": [], "silent_failure_detected": False, "checklist": [],
         })
-        return {"result": r.get("pipeline_report", ""), "error": r.get("error")}
+        return {"result": r.get("signal_summary", ""), "error": r.get("error")}
 
     elif role == "process_auditor":
         r = process_auditor_node({
             **base, "agent": role,
-            "process_description": task, "focus": "general",
-            "process_report": "",
+            "process_description": task, "process_type": "general",
+            "output_type": "friction_report",
+            "audit_report": "", "friction_count": 0, "bottleneck_score": 0,
         })
-        return {"result": r.get("process_report", ""), "error": r.get("error")}
+        return {"result": r.get("audit_report", ""), "error": r.get("error")}
 
     elif role == "truth_verifier":
         r = truth_verifier_node({
             **base, "agent": role,
-            "claim": task, "context": "", "verification_report": "",
-            "verdict": "", "confidence": 0,
+            "artifact": task, "artifact_type": "general", "check_level": "standard_audit",
+            "verification_report": "", "gates_passed": 0, "gates_failed": 0,
         })
         return {"result": r.get("verification_report", ""), "error": r.get("error")}
 
@@ -651,15 +670,16 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "target_audience": "", "examples": "",
             "brand_voice_guide": "",
         })
-        return {"result": r.get("brand_voice_guide", ""), "error": r.get("error")}
+        return {"result": r.get("voice_guide", ""), "error": r.get("error")}
 
     elif role == "creative_director":
         r = creative_director_node({
             **base, "agent": role,
-            "task": task, "brand_context": "",
-            "campaign_concept": "",
+            "task": task, "brand_context": task, "medium": "general",
+            "output_type": "campaign_concept",
+            "creative_brief": "", "direction_notes": "",
         })
-        return {"result": r.get("campaign_concept", ""), "error": r.get("error")}
+        return {"result": r.get("creative_brief", ""), "error": r.get("error")}
 
     elif role == "video_brief_writer":
         r = video_brief_writer_node({
@@ -673,27 +693,28 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "voice_synthesiser":
         r = voice_synthesiser_node({
             **base, "agent": role,
-            "brief": task, "voice_style": "conversational",
-            "duration_seconds": 60, "audience": "",
-            "voice_script": "",
+            "script_brief": task, "voice_use": "narration",
+            "tone_style": "professional", "duration_target_seconds": 60,
+            "production_script": "", "voice_direction": "",
         })
-        return {"result": r.get("voice_script", ""), "error": r.get("error")}
+        return {"result": r.get("production_script", ""), "error": r.get("error")}
 
     elif role == "ui_designer":
         r = ui_designer_node({
             **base, "agent": role,
-            "task": task, "design_system": "",
-            "platform": "web", "ui_spec": "",
+            "task": task, "design_context": task, "component_type": "general",
+            "output_type": "component_spec",
+            "design_spec": "", "component_code": "",
         })
-        return {"result": r.get("ui_spec", ""), "error": r.get("error")}
+        return {"result": r.get("design_spec", ""), "error": r.get("error")}
 
     elif role == "content_auditor":
         r = content_auditor_node({
             **base, "agent": role,
-            "content": task, "focus": "general",
-            "content_audit_report": "",
+            "content": task, "content_type": "general", "audit_focus": "depth",
+            "audit_report": "", "depth_score": 0, "fluff_count": 0,
         })
-        return {"result": r.get("content_audit_report", ""), "error": r.get("error")}
+        return {"result": r.get("audit_report", ""), "error": r.get("error")}
 
     elif role == "pr_writer":
         r = pr_writer_node({
@@ -702,7 +723,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "contact_name": "", "contact_email": "",
             "press_release": "",
         })
-        return {"result": r.get("press_release", ""), "error": r.get("error")}
+        return {"result": r.get("pr_content", ""), "error": r.get("error")}
 
     # ── Business & Strategy agents ────────────────────────────────────────────
 
@@ -747,13 +768,17 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
         return {"result": r.get("pricing_strategy", ""), "error": r.get("error")}
 
     elif role == "product_strategist":
+        import re as _re
+        _pname = task.split(" for ")[0] if " for " in task else task[:50]
+        _pname = _re.sub(r"^(build|create|write|design|make|develop)\s+(a\s+)?", "", _pname, flags=_re.IGNORECASE).strip()
         r = product_strategist_node({
             **base, "agent": role,
-            "product": task, "stage": "growth",
-            "business_context": "", "constraints": "",
-            "product_strategy": "",
+            "task": task, "product_name": _pname or task[:50],
+            "stage": "mvp", "goal": task,
+            "user_pain": "Identified from task context — see full task for detail.",
+            "strategy_output": "", "framework_used": "",
         })
-        return {"result": r.get("product_strategy", ""), "error": r.get("error")}
+        return {"result": r.get("strategy_output", ""), "error": r.get("error")}
 
     elif role == "sales_conversion":
         r = sales_conversion_node({
@@ -783,7 +808,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "brief": task, "platform": "shopify",
             "business_context": "", "ecommerce_strategy": "",
         })
-        return {"result": r.get("ecommerce_strategy", ""), "error": r.get("error")}
+        return {"result": r.get("strategy_output", ""), "error": r.get("error")}
 
     elif role == "launch_orchestrator":
         r = launch_orchestrator_node({
@@ -797,10 +822,14 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "venture_ideator":
         r = venture_ideator_node({
             **base, "agent": role,
-            "brief": task, "industry": "",
-            "constraints": "", "venture_ideas": "",
+            "idea_context":    task,
+            "idea_type":       "general",
+            "market_size":     "niche",
+            "budget_hint":     "lean",
+            "venture_blueprint": "",
+            "viability_score": 0,
         })
-        return {"result": r.get("venture_ideas", ""), "error": r.get("error")}
+        return {"result": r.get("venture_blueprint", ""), "error": r.get("error")}
 
     elif role == "investor_pitch_writer":
         r = investor_pitch_writer_node({
@@ -809,7 +838,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "stage": "seed", "ask": "",
             "pitch": "",
         })
-        return {"result": r.get("pitch", ""), "error": r.get("error")}
+        return {"result": r.get("pitch_content", ""), "error": r.get("error")}
 
     # ── Intelligence & Research agents ────────────────────────────────────────
 
@@ -899,7 +928,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "team_context": "",
             "timeline_hint": "", "project_plan": "",
         })
-        return {"result": r.get("project_plan", ""), "error": r.get("error")}
+        return {"result": r.get("pm_output", ""), "error": r.get("error")}
 
     elif role == "customer_success":
         r = customer_success_node({
@@ -907,7 +936,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "client_name": repo_owner, "context": task,
             "health_score": 0, "cs_report": "",
         })
-        return {"result": r.get("cs_report", ""), "error": r.get("error")}
+        return {"result": r.get("cs_output", ""), "error": r.get("error")}
 
     elif role == "knowledge_base_writer":
         r = knowledge_base_writer_node({
@@ -915,7 +944,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "topic": task, "audience": "end users",
             "format": "help_article", "kb_article": "",
         })
-        return {"result": r.get("kb_article", ""), "error": r.get("error")}
+        return {"result": r.get("document", ""), "error": r.get("error")}
 
     elif role == "case_study_writer":
         r = case_study_writer_node({
@@ -932,7 +961,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "depth": "intermediate", "format": "online_course",
             "course_outline": "",
         })
-        return {"result": r.get("course_outline", ""), "error": r.get("error")}
+        return {"result": r.get("curriculum", ""), "error": r.get("error")}
 
     elif role == "chatbot_designer":
         r = chatbot_designer_node({
@@ -940,7 +969,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "brief": task, "platform": "website",
             "tone": "friendly", "chatbot_flow": "",
         })
-        return {"result": r.get("chatbot_flow", ""), "error": r.get("error")}
+        return {"result": r.get("chatbot_design", ""), "error": r.get("error")}
 
     elif role == "persona_builder":
         r = persona_builder_node({
@@ -964,7 +993,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "jurisdiction": "UK",
             "context": "", "legal_report": "",
         })
-        return {"result": r.get("legal_report", ""), "error": r.get("error")}
+        return {"result": r.get("legal_advice", ""), "error": r.get("error")}
 
     elif role == "fact_checker":
         r = fact_checker_node({
@@ -980,7 +1009,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "hypothesis": task, "element": "general",
             "audience": "", "ab_test_plan": "",
         })
-        return {"result": r.get("ab_test_plan", ""), "error": r.get("error")}
+        return {"result": r.get("test_design", ""), "error": r.get("error")}
 
     elif role == "pr_writer":
         r = pr_writer_node({
@@ -989,7 +1018,7 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
             "contact_name": "", "contact_email": "",
             "press_release": "",
         })
-        return {"result": r.get("press_release", ""), "error": r.get("error")}
+        return {"result": r.get("pr_content", ""), "error": r.get("error")}
 
     else:
         return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}

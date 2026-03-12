@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Load .env before anything else — agents rely on os.environ for API keys
+from dotenv import load_dotenv
+load_dotenv()
 """
 JaiO.S 6.0 — API Entry Point
 
@@ -49,6 +52,22 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger("api")
+
+# ── structlog → Python logging bridge ─────────────────────────────────────────
+# Route structlog through Python stdlib logging so it uses our FileHandler
+import structlog
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.ConsoleRenderer(),
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
 
 VERSION   = "6.0.0"
 BOOT_TIME = datetime.now(timezone.utc)
