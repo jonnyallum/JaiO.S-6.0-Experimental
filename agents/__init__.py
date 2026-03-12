@@ -142,4 +142,30 @@ __all__ = [
     "financial_analyst_node",     "FinancialAnalystState",
     "legal_advisor_node",         "LegalAdvisorState",
     "ab_test_designer_node",      "ABTestState",
+    # ── Batch 6: awesome-llm-apps inspired ──
+    "ux_researcher_node",
+    "senior_developer_node",
+    "system_architect_node",
+    "investment_analyst_node",
+    "recruitment_specialist_node",
+    "sales_intelligence_node",
+    "legal_analyst_node",
+    "due_diligence_analyst_node",
+    "deep_researcher_node",
+    "product_launch_strategist_node",
+    "financial_planner_node",
 ]
+
+# ── New agents (awesome-llm-apps inspired) ──
+from agents.ui_designer import ui_designer_node
+from agents.ux_researcher import ux_researcher_node
+from agents.senior_developer import senior_developer_node
+from agents.system_architect import system_architect_node
+from agents.investment_analyst import investment_analyst_node
+from agents.recruitment_specialist import recruitment_specialist_node
+from agents.sales_intelligence import sales_intelligence_node
+from agents.legal_analyst import legal_analyst_node
+from agents.due_diligence_analyst import due_diligence_analyst_node
+from agents.deep_researcher import deep_researcher_node
+from agents.product_launch_strategist import product_launch_strategist_node
+from agents.financial_planner import financial_planner_node

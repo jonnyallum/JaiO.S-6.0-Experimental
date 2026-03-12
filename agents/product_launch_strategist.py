@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Product Launch Strategist - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: launch_output (str), timeline (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,37 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "product_launch_strategist"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_LAUNCH_PHASES = {
+    "pre_launch":  "Build waitlist, seed content, establish positioning, beta testing",
+    "soft_launch": "Limited release, gather feedback, fix critical issues, case studies",
+    "hard_launch": "Full PR push, paid acquisition, partnerships, events",
+    "post_launch": "Retention focus, upsell, community building, iterate on feedback",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_PRICING_MODELS = {
+    "freemium":      "Free tier for adoption, paid for value. Works for PLG.",
+    "subscription":  "Monthly/annual. Annual discount 15-20%. Reduce churn.",
+    "usage_based":   "Pay per use. Aligns cost with value. Complex to predict.",
+    "tiered":        "Good/Better/Best. Anchor on middle tier. 3 tiers max.",
+    "enterprise":    "Custom pricing. Annual contracts. POC required.",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class ProductLaunchStrategistState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    launch_output:      str
+    timeline:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +73,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Product launch strategy specialist — go-to-market planning, launch sequencing, demand generation, pricing strategy, channel selection
 
 TASK:
 {task}
@@ -87,22 +82,25 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Product Launch Strategy
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Positioning
+[Who it's for, what problem it solves, why now, why us]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Launch Timeline
+[Week-by-week plan across pre-launch, soft, hard, post-launch]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Channel Strategy
+[Primary and secondary channels with expected CAC and volume]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Pricing Recommendation
+[Model, tiers, anchoring strategy, competitive comparison]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Success Metrics
+[KPIs for each phase with targets and measurement plan]
+
+### Risk Mitigation
+[What could go wrong and contingency plans]
 """
 
 
@@ -120,7 +118,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def product_launch_strategist_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +141,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "launch_output": output, "timeline": "", "error": None}

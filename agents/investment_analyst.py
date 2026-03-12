@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Investment Analyst - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: analysis_output (str), recommendation (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,40 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "investment_analyst"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_ANALYSIS_FRAMEWORKS = {
+    "fundamental":  "Revenue, margins, growth rate, TAM, competitive moat, management quality",
+    "technical":    "Price action, volume, support/resistance, momentum indicators",
+    "dcf":          "Discount future cash flows. Terminal value. WACC sensitivity.",
+    "comps":        "Compare multiples: P/E, EV/EBITDA, P/S against peer group",
+    "risk":         "Volatility, drawdown, Sharpe ratio, correlation, tail risk",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
-}
+_DUE_DILIGENCE_CHECKLIST = [
+    "Market size and growth trajectory",
+    "Competitive landscape and defensibility",
+    "Revenue model sustainability",
+    "Unit economics (CAC, LTV, payback period)",
+    "Team capability and track record",
+    "Regulatory and legal risks",
+    "Technology moat or switching costs",
+]
 
 
-class UiDesignerState(TypedDict, total=False):
+class InvestmentAnalystState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    analysis_output:      str
+    recommendation:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +76,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Investment analysis specialist — market research, financial modeling, risk assessment, portfolio strategy, due diligence
 
 TASK:
 {task}
@@ -87,22 +85,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Investment Analysis
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Market Overview
+[Market size, growth drivers, competitive landscape]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Financial Analysis
+[Key metrics, valuation, growth projections]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Risk Assessment
+[Key risks ranked by probability and impact]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Recommendation
+[Buy/Hold/Sell with price target and thesis]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Monitoring Triggers
+[What would change the thesis — bull and bear scenarios]
 """
 
 
@@ -120,7 +118,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def investment_analyst_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +141,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "analysis_output": output, "recommendation": "", "error": None}

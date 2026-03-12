@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Deep Researcher - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: research_output (str), sources (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,37 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "deep_researcher"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 4000
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_RESEARCH_METHODS = {
+    "systematic":   "Define question → search strategy → inclusion criteria → synthesis",
+    "comparative":  "Multiple sources → cross-reference → consensus + divergence",
+    "adversarial":  "Steel-man opposing views. Attack your own thesis first.",
+    "temporal":     "Track how understanding evolved. Latest ≠ best.",
+    "quantitative": "Numbers > opinions. Primary data > secondary. Sample size matters.",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_EVIDENCE_GRADES = {
+    "A": "Multiple high-quality sources agree. Strong confidence.",
+    "B": "Good evidence with minor gaps. Moderate confidence.",
+    "C": "Limited or conflicting evidence. Low confidence.",
+    "D": "Single source or speculation. Very low confidence.",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class DeepResearcherState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    research_output:      str
+    sources:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +73,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Deep research specialist — multi-source synthesis, academic rigor, structured argumentation, evidence grading, comprehensive literature review
 
 TASK:
 {task}
@@ -87,22 +82,25 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Deep Research Report
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Research Question
+[Precisely stated question with scope boundaries]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Methodology
+[Sources consulted, search strategy, inclusion/exclusion criteria]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Findings
+[Evidence-graded findings (A/B/C/D) with citations]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Analysis
+[Synthesis, patterns, contradictions, knowledge gaps]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Conclusions
+[Answering the research question with confidence level]
+
+### Limitations
+[What this research cannot answer and why]
 """
 
 
@@ -120,7 +118,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def deep_researcher_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +141,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "research_output": output, "sources": "", "error": None}

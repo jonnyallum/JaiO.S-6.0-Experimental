@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Financial Planner - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: financial_output (str), projections (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,37 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "financial_planner"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_FINANCIAL_MODELS = {
+    "dcf":         "Discount future cash flows. Use conservative growth rates.",
+    "three_stmt":  "Income Statement → Balance Sheet → Cash Flow. Always connected.",
+    "unit_econ":   "CAC, LTV, payback period, gross margin per unit.",
+    "scenario":    "Base, bull, bear. Assign probabilities. Expected value = weighted avg.",
+    "sensitivity": "One variable at a time. Show which inputs matter most.",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_COST_CATEGORIES = {
+    "fixed":     "Rent, salaries, subscriptions — doesn't change with volume",
+    "variable":  "COGS, API costs, commissions — scales with revenue",
+    "semi_var":  "Hosting, support staff — step function, not linear",
+    "one_time":  "Setup costs, migrations, legal — budget separately",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class FinancialPlannerState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    financial_output:      str
+    projections:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +73,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Financial planning and analysis specialist — budgeting, forecasting, cash flow modeling, scenario planning, cost optimization
 
 TASK:
 {task}
@@ -87,22 +82,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Financial Analysis
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Current State
+[Revenue, costs, margins, burn rate, runway]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Projections (12 months)
+[Monthly: revenue, costs, cash flow, key assumptions]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Scenario Analysis
+[Base/Bull/Bear with probability weights]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Cost Optimization
+[Top 5 cost reduction opportunities with estimated savings]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Recommendations
+[Specific actions with financial impact and timeline]
 """
 
 
@@ -120,7 +115,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def financial_planner_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +138,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "financial_output": output, "projections": "", "error": None}

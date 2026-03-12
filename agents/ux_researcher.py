@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Ux Researcher - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: research_output (str), recommendations (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,37 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "ux_researcher"
 MAX_RETRIES = 3
 MAX_TOKENS  = 3000
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_HEURISTICS = {
+    "visibility":       "System status always visible. User never guesses what happened.",
+    "match":            "System speaks user language. No internal jargon.",
+    "control":          "Undo always available. User never trapped.",
+    "consistency":      "Same action = same result. Patterns reused, not reinvented.",
+    "error_prevention": "Prevent errors > fix errors. Confirm destructive actions.",
+    "recognition":      "Show options, don't make users remember. Autocomplete > free text.",
+    "flexibility":      "Shortcuts for experts. Defaults for novices.",
+    "aesthetics":       "Remove until it breaks. Every element earns its space.",
+    "error_recovery":   "Plain language errors. Suggest fix. Never blame user.",
+    "help":             "Contextual help > documentation. Progressive disclosure.",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
-}
+_JOURNEY_STAGES = ["Awareness", "Consideration", "Decision", "Onboarding", "Usage", "Retention", "Advocacy"]
 
 
-class UiDesignerState(TypedDict, total=False):
+class UxResearcherState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    research_output:      str
+    recommendations:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +73,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: UX research and usability specialist — user journey mapping, heuristic evaluation, usability testing plans, interaction design critique
 
 TASK:
 {task}
@@ -87,22 +82,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## UX Research Analysis
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### User Journey Map
+[Stage-by-stage analysis: touchpoints, emotions, pain points, opportunities]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Heuristic Evaluation
+[Score each of Nielsen's 10 heuristics 1-5, with specific findings]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Usability Issues (Priority Ranked)
+[Severity 1-4, issue description, affected user segment, recommended fix]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Recommendations
+[Specific, actionable improvements with expected impact]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Research Plan
+[What to test next, methodology, metrics to track]
 """
 
 
@@ -120,7 +115,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def ux_researcher_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +138,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "research_output": output, "recommendations": "", "error": None}

@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Sales Intelligence - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: intel_output (str), action_plan (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,38 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "sales_intelligence"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_SALES_FRAMEWORKS = {
+    "bant":       "Budget, Authority, Need, Timeline — qualify before pitching",
+    "meddic":     "Metrics, Economic buyer, Decision criteria/process, Identify pain, Champion",
+    "spin":       "Situation, Problem, Implication, Need-payoff — discovery sequence",
+    "challenger": "Teach, Tailor, Take Control — lead with insight, not questions",
+    "sandler":    "Pain → Budget → Decision — upfront contracts, no free consulting",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_OBJECTION_PATTERNS = {
+    "price":     "Reframe to ROI. Cost of inaction > cost of solution.",
+    "timing":    "What changes in 6 months? Usually nothing. Cost of delay = X.",
+    "competitor":"Don't trash-talk. Ask what criteria matter most. Win on YOUR strengths.",
+    "authority": "Coach the champion. Give them the internal pitch deck.",
+    "need":      "Go back to discovery. If no pain, no sale. Walk away.",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class SalesIntelligenceState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    intel_output:      str
+    action_plan:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +74,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Sales intelligence and pipeline specialist — prospect research, outreach strategy, objection handling, deal qualification, pipeline analysis
 
 TASK:
 {task}
@@ -87,22 +83,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Sales Intelligence Report
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Prospect Profile
+[Company, decision makers, budget signals, pain indicators]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Qualification Assessment
+[BANT/MEDDIC scoring with evidence]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Outreach Strategy
+[Multi-channel sequence: email, LinkedIn, phone, timing]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Objection Preparation
+[Likely objections and response frameworks]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Action Plan
+[Next 5 specific actions with owners and deadlines]
 """
 
 
@@ -120,7 +116,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def sales_intelligence_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +139,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "intel_output": output, "action_plan": "", "error": None}

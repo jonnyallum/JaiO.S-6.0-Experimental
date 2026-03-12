@@ -35,11 +35,21 @@ from typing import Optional
 from contextlib import asynccontextmanager
 
 import requests
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from config.settings import settings
+# ── API Key Auth ──────────────────────────────────────────────────────────────
+_API_KEY = os.environ.get("JAIOS_API_KEY", "")
+
+def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")):
+    """Reject POST /run if no valid API key provided."""
+    if not _API_KEY:
+        return  # No key configured = open access (dev mode)
+    if x_api_key != _API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
 from graphs.supervisor import run_supervisor
 
 # ── Logging ────────────────────────────────────────────────────────────────────
@@ -236,7 +246,7 @@ def health():
 
 
 @app.post("/run")
-def run_job(req: RunRequest, background_tasks: BackgroundTasks):
+def run_job(req: RunRequest, background_tasks: BackgroundTasks, _key=Depends(verify_api_key)):
     """Submit a job. sync=True blocks until complete; sync=False runs in background."""
     try:
         job_id = _submit_job(req.brief, req.submitted_by)

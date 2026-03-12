@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Legal Analyst - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: legal_output (str), risk_flags (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,37 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "legal_analyst"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_LEGAL_AREAS = {
+    "contract":    "Terms, obligations, liability caps, termination, IP assignment, non-compete",
+    "compliance":  "GDPR, CCPA, SOC2, PCI-DSS, industry-specific regulations",
+    "ip":          "Patents, trademarks, copyrights, trade secrets, licensing",
+    "employment":  "At-will, non-compete, equity, classification, termination risk",
+    "corporate":   "Formation, governance, cap table, shareholder agreements",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_RISK_SEVERITY = {
+    "critical": "Immediate legal exposure. Stop and fix before proceeding.",
+    "high":     "Significant risk. Address within 30 days.",
+    "medium":   "Manageable risk. Schedule for next review cycle.",
+    "low":      "Minor concern. Note and monitor.",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class LegalAnalystState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    legal_output:      str
+    risk_flags:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +73,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Legal analysis specialist — contract review, compliance assessment, risk identification, regulatory research, IP strategy
 
 TASK:
 {task}
@@ -87,22 +82,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Legal Analysis
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Summary
+[Plain-English summary of the legal situation]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Key Findings
+[Clause-by-clause or issue-by-issue analysis]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Risk Assessment
+[Each risk: severity, probability, impact, mitigation]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Recommendations
+[Specific actions: clauses to negotiate, compliance steps, filings needed]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Disclaimer
+[This is AI-assisted analysis, not legal advice. Consult qualified counsel.]
 """
 
 
@@ -120,7 +115,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def legal_analyst_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +138,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "legal_output": output, "risk_flags": "", "error": None}

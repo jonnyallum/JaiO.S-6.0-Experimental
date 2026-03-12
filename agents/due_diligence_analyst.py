@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Due Diligence Analyst - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: dd_output (str), risk_score (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,32 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "due_diligence_analyst"
 MAX_RETRIES = 3
-MAX_TOKENS  = 3000
+MAX_TOKENS  = 2400
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
-}
-
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_DD_FRAMEWORK = {
+    "market":     "TAM/SAM/SOM, growth rate, market timing, secular trends",
+    "product":    "Product-market fit evidence, retention, NPS, usage metrics",
+    "team":       "Founder experience, key hires, board composition, advisor quality",
+    "financials": "Revenue, burn rate, runway, unit economics, path to profitability",
+    "legal":      "Cap table, IP ownership, litigation, regulatory exposure",
+    "technology": "Tech stack, scalability, security posture, technical debt",
+    "competition":"Direct/indirect competitors, differentiation, switching costs",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class DueDiligenceAnalystState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    dd_output:      str
+    risk_score:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +68,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Due diligence specialist — company evaluation, market validation, risk scoring, investment memo preparation
 
 TASK:
 {task}
@@ -87,22 +77,28 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Due Diligence Report
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Executive Summary
+[One-paragraph verdict with confidence level]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Market Analysis
+[TAM, growth, timing, competitive dynamics]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Product & Technology
+[Product-market fit evidence, tech assessment]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Team Assessment
+[Founders, key hires, gaps, culture signals]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Financial Analysis
+[Revenue, burn, unit economics, projections]
+
+### Risk Matrix
+[Each risk scored: probability (1-5) x impact (1-5)]
+
+### Recommendation
+[Invest/Pass with conditions and key milestones]
 """
 
 
@@ -120,7 +116,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def due_diligence_analyst_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +139,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "dd_output": output, "risk_score": "", "error": None}

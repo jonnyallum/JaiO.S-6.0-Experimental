@@ -1,9 +1,9 @@
 """
-Ui Designer - 19-point @langraph compliant agent node.
+Senior Developer - 19-point @langraph compliant agent node.
 
 Node Contract:
     Inputs : task (str), context (str)
-    Outputs: design_output (str), components (str)
+    Outputs: dev_output (str), implementation_plan (str)
     Side-FX: CallMetrics persisted to DB
 
 Loop Policy:
@@ -33,42 +33,41 @@ from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
 
-ROLE        = "ui_designer"
+ROLE        = "senior_developer"
 MAX_RETRIES = 3
 MAX_TOKENS  = 3000
 
 
 
-_DESIGN_PRINCIPLES = {
-    "hierarchy":     "Size > Color > Position > Shape — in that order",
-    "spacing":       "8px grid system. Breathing room > density. Always.",
-    "typography":    "2 fonts max. 1.5 line-height body. 1.2 headings.",
-    "color":         "60-30-10 rule. Primary 60%, secondary 30%, accent 10%.",
-    "contrast":      "WCAG AA minimum: 4.5:1 text, 3:1 large text/UI.",
-    "responsiveness":"Mobile-first. Breakpoints: 640, 768, 1024, 1280.",
-    "animation":     "150-300ms transitions. Ease-out for enter, ease-in for exit.",
+_CODE_PRINCIPLES = {
+    "solid":         "Single Responsibility, Open/Closed, Liskov, Interface Seg, Dependency Inv",
+    "dry":           "Don't Repeat Yourself - but don't over-abstract prematurely",
+    "kiss":          "Keep It Simple. Clever code is technical debt.",
+    "yagni":         "You Aren't Gonna Need It. Build what's needed now.",
+    "testing":       "Test behavior not implementation. Edge cases first.",
+    "naming":        "Long descriptive names > short cryptic ones. Code reads 10x more than writes.",
+    "error_handling":"Fail fast, fail loud. Never swallow exceptions silently.",
+    "perf":          "Measure first, optimise second. Premature optimisation is evil.",
 }
 
-_COMPONENT_PATTERNS = {
-    "button":    "Label + icon optional. Min 44px touch target. Never rely on color alone.",
-    "card":      "Image + title + description + CTA. Max 3 cards per row.",
-    "form":      "Label above input. Error below. Never placeholder-only labels.",
-    "modal":     "Title + body + actions. Always escapable. Focus trap required.",
-    "nav":       "Max 7 items. Active state obvious. Mobile: hamburger or bottom nav.",
-    "table":     "Sortable headers. Zebra striping optional. Sticky header on scroll.",
-    "toast":     "Auto-dismiss 5s. Actionable toasts persist. Stack from bottom-right.",
+_TECH_STACK = {
+    "frontend":   "Next.js 15+, React 19, TypeScript strict, Tailwind v4",
+    "backend":    "Python 3.12+, FastAPI, Supabase, PostgreSQL",
+    "testing":    "Pytest, Playwright, Vitest, React Testing Library",
+    "deployment": "Vercel (frontend), GCP VM (backend), GitHub Actions CI/CD",
+    "tooling":    "ESLint, Prettier, Ruff, MyPy, pre-commit hooks",
 }
 
 
-class UiDesignerState(TypedDict, total=False):
+class SeniorDeveloperState(TypedDict, total=False):
     workflow_id:   str
     timestamp:     str
     agent:         str
     error:         str | None
     task:          str
     context:       str
-    design_output:      str
-    components:      str
+    dev_output:      str
+    implementation_plan:      str
 
 
 def _build_prompt(state: dict) -> str:
@@ -78,7 +77,7 @@ def _build_prompt(state: dict) -> str:
 
     return f"""You are a {persona['personality']} specialist.
 
-ROLE: UI visual design specialist — component design, design systems, visual hierarchy, responsive layouts, accessibility-first design
+ROLE: Senior full-stack development specialist — code architecture, code review, implementation planning, technical debt analysis, refactoring strategy
 
 TASK:
 {task}
@@ -87,22 +86,22 @@ CONTEXT:
 {ctx or "None provided"}
 
 OUTPUT FORMAT:
-## UI Design: Component Specification
+## Development Analysis
 
-### Visual Hierarchy
-[Layout decisions, spacing, typography choices]
+### Architecture Assessment
+[Current state, patterns used, technical debt identified]
 
-### Component Specifications
-[For each component: dimensions, states, interactions, responsive behavior]
+### Implementation Plan
+[Step-by-step with file paths, functions, dependencies]
 
-### Design Tokens
-[Colors, spacing, typography, shadows, borders as CSS variables]
+### Code Review
+[Issues found, severity, suggested fixes with code snippets]
 
-### Accessibility Notes
-[WCAG compliance, keyboard nav, screen reader considerations]
+### Testing Strategy
+[Unit tests, integration tests, edge cases to cover]
 
-### Implementation Notes
-[Tailwind classes, Framer Motion animations, responsive breakpoints]
+### Performance & Security
+[Bottlenecks, vulnerabilities, optimization opportunities]
 """
 
 
@@ -120,7 +119,7 @@ def _generate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) ->
     return response.content[0].text
 
 
-def ui_designer_node(state: dict) -> dict:
+def senior_developer_node(state: dict) -> dict:
     thread_id = state.get("workflow_id", "local")
     task      = state.get("task", "").strip()
 
@@ -143,4 +142,4 @@ def ui_designer_node(state: dict) -> dict:
 
     checkpoint("POST", thread_id, ROLE, {"output_len": len(output)})
 
-    return {**state, "agent": ROLE, "design_output": output, "components": "", "error": None}
+    return {**state, "agent": ROLE, "dev_output": output, "implementation_plan": "", "error": None}

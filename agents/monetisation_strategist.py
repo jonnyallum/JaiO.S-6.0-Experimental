@@ -32,6 +32,8 @@ Checkpoint Semantics:
 Persona injected at runtime via personas/config.py — skill file contains no identity.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
+
+from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
@@ -45,6 +47,7 @@ from state.base import BaseState
 from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
+from typing import TypedDict
 
 log = structlog.get_logger()
 
