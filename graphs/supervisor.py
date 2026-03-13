@@ -513,6 +513,8 @@ ROUTING_RULES: dict[str, list[str]] = {
     "feedback_collector": ["feedback", "nps", "csat", "survey", "user feedback", "satisfaction"],
     "cost_tracker": ["cost tracking", "token usage", "api costs", "budget", "spend", "cost optimisation"],
     "error_recovery_agent": ["error recovery", "diagnose error", "stack trace", "error handling", "debug failure", "incident"],
+    "document_qa": ["document qa", "rag", "document analysis", "search documents", "answer from docs", "knowledge base query", "document question", "file analysis", "pdf analysis", "text search"],
+    "vision_analyst": ["image analysis", "vision", "screenshot analysis", "visual audit", "image qa", "describe image", "extract text from image", "ocr", "ui audit", "visual review", "image", "screenshot"],
 }
 
 # ── Pipeline templates: multi-agent sequences for common workflows ──
@@ -544,16 +546,7 @@ PIPELINE_TEMPLATES = {
     "betting_full_card": ["betting_systems", "football_tactical", "horse_racing", "summariser"],
     "f1_race_preview": ["formula1_analyst", "research_analyst", "summariser"],
     "task_orchestration": ["workflow_planner", "project_manager", "summariser"],
-    "document_qa": [
-        "document qa", "rag", "document analysis", "search documents",
-        "answer from docs", "knowledge base query", "document question",
-        "file analysis", "pdf analysis", "text search",
-    ],
-    "vision_analyst": [
-        "image analysis", "vision", "screenshot analysis", "visual audit",
-        "image qa", "describe image", "extract text from image", "ocr",
-        "ui audit", "visual review", "image", "screenshot",
-    ],
+
 }
 
 
