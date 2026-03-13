@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- case_study_writer — JaiOS 6 Skill Node
+ AGENT : case_study_writer
+ SKILL : Case Study Writer — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -32,9 +33,12 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import re
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -43,8 +47,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "case_study_writer"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -97,7 +104,7 @@ _METRIC_PATTERNS = [
 ]
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class CaseStudyState(TypedDict):
+class CaseStudyState(BaseState):
     # Inputs
     client_name: str   # client / company name
     problem:     str   # the challenge faced

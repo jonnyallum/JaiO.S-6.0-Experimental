@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- agent_builder — JaiOS 6 Skill Node
+ AGENT : agent_builder
+ SKILL : Agent Builder — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -37,9 +38,12 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import re
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -48,8 +52,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "agent_builder"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -92,7 +99,7 @@ _LANGRAPH_SPEC: dict[str, str] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class AgentBuilderState(TypedDict):
+class AgentBuilderState(BaseState):
     # Inputs
     agent_role:          str   # snake_case role identifier
     agent_purpose:       str   # one-sentence capability description

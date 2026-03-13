@@ -1,4 +1,8 @@
 """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AGENT : truth_verifier
+SKILL : Truth Verifier
+
 Truth Verifier - 19-point @langraph compliant agent node.
 
 Node Contract:
@@ -22,19 +26,25 @@ Checkpoint Semantics:
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import re
 from typing import TypedDict, Any
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from tools.supabase_tools import SupabaseStateLogger  # checkpoint alias
 from langgraph.graph import StateGraph, END
 
 # ── Constants ─────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "truth_verifier"
 MAX_RETRIES = 3
 MAX_TOKENS  = 2400
@@ -69,7 +79,7 @@ _DEPTH_SETTINGS = {
 }
 
 # ── State ─────────────────────────────────────────────────────────────────────
-class TruthVerifierState(TypedDict, total=False):
+class TruthVerifierState(BaseState):
     workflow_id:         str
     timestamp:           str
     agent:               str

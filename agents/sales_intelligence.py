@@ -1,4 +1,8 @@
 """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AGENT : sales_intelligence
+SKILL : Sales Intelligence
+
 Sales Intelligence - 19-point @langraph compliant agent node.
 
 Node Contract:
@@ -22,17 +26,23 @@ Checkpoint Semantics:
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import re
 from typing import TypedDict
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from tools.supabase_tools import SupabaseStateLogger  # checkpoint alias
 from langgraph.graph import StateGraph, END
+
+log = structlog.get_logger()
 
 ROLE        = "sales_intelligence"
 MAX_RETRIES = 3
@@ -57,7 +67,7 @@ _OBJECTION_PATTERNS = {
 }
 
 
-class SalesIntelligenceState(TypedDict, total=False):
+class SalesIntelligenceState(BaseState):
     workflow_id:   str
     timestamp:     str
     agent:         str

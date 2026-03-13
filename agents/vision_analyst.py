@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- vision_analyst — JaiOS 6 Skill Node (Multi-Modal)
+ AGENT : vision_analyst
+ SKILL : Vision Analyst — JaiOS 6 Skill Node (Multi-Modal)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  Input keys  : task (str), image_url (str — URL or base64 data URI),
@@ -15,11 +16,14 @@
  UNEXPECTED — any other exception
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 from __future__ import annotations
+
+from state.base import BaseState
 import base64
 import urllib.request
 from typing import TypedDict
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from langgraph.graph import StateGraph, END
@@ -27,6 +31,9 @@ from langgraph.graph import StateGraph, END
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from tools.supabase_tools import SupabaseStateLogger  # checkpoint alias
+
+log = structlog.get_logger()
 
 ROLE = "vision_analyst"
 MAX_RETRIES = 3
@@ -40,7 +47,7 @@ ANALYSIS_PROMPTS = {
 }
 
 
-class VisionState(TypedDict):
+class VisionState(BaseState):
     workflow_id: str
     timestamp: str
     agent: str

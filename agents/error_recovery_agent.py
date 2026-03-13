@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- error_recovery_agent — JaiOS 6 Skill Node
+ AGENT : error_recovery_agent
+ SKILL : Error Recovery Agent — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -14,7 +15,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -23,13 +27,16 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
+
+log = structlog.get_logger()
 
 ROLE = "error_recovery_agent"
 MAX_RETRIES = 3
 MAX_TOKENS = 2000
 
 
-class ErrorRecoveryAgentState(TypedDict):
+class ErrorRecoveryAgentState(BaseState):
     task: str
     context: str
     thread_id: str

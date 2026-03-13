@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- pr_writer — JaiOS 6 Skill Node
+ AGENT : pr_writer
+ SKILL : Pr Writer — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -34,7 +35,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -43,8 +47,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "pr_writer"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -111,7 +118,7 @@ _FORMAT_SPECS: dict[str, dict] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class PRState(TypedDict):
+class PRState(BaseState):
     # Inputs
     company_name:  str   # company issuing the content
     news:          str   # what happened / what to communicate

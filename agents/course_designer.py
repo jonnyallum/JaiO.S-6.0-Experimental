@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- course_designer — JaiOS 6 Skill Node
+ AGENT : course_designer
+ SKILL : Course Designer — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -35,7 +36,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -44,8 +48,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "course_designer"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -121,7 +128,7 @@ _LEVEL_NOTES: dict[str, str] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class CourseState(TypedDict):
+class CourseState(BaseState):
     # Inputs
     course_title:    str   # name of the course
     target_student:  str   # who this course is for

@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- pipeline_monitor — JaiOS 6 Skill Node
+ AGENT : pipeline_monitor
+ SKILL : Pipeline Monitor — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -34,9 +35,12 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import re
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -45,8 +49,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "pipeline_monitor"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -92,7 +99,7 @@ _MONITOR_CHECKLIST: dict[str, list[str]] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class PipelineState(TypedDict):
+class PipelineState(BaseState):
     # Inputs
     pipeline_name:        str   # name of the pipeline or service
     pipeline_type:        str   # type of pipeline

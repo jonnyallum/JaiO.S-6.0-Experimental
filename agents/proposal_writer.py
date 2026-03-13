@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- proposal_writer — JaiOS 6 Skill Node
+ AGENT : proposal_writer
+ SKILL : Proposal Writer — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -35,7 +36,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -44,8 +48,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "proposal_writer"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -114,7 +121,7 @@ _SECTION_MAP: dict[str, list[str]] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class ProposalState(TypedDict):
+class ProposalState(BaseState):
     # Inputs
     client_name:       str   # prospect company/person name
     client_problem:    str   # their pain point or goal

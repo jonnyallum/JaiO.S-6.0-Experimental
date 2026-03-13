@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- analytics_reporter — JaiOS 6 Skill Node
+ AGENT : analytics_reporter
+ SKILL : Analytics Reporter — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -31,11 +32,14 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import json
 import re
 from typing import Any, Optional
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -44,8 +48,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "analytics_reporter"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -58,7 +65,7 @@ VALID_FOCUS   = {"traffic", "conversion", "revenue", "engagement", "retention", 
 VALID_PERIODS = {"7d", "30d", "90d", "ytd", "custom"}
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class AnalyticsState(TypedDict):
+class AnalyticsState(BaseState):
     # Inputs
     raw_data:  Any     # dict or JSON string of metric data
     focus:     str     # analysis focus area

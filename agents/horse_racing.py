@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- horse_racing — JaiOS 6 Skill Node
+ AGENT : horse_racing
+ SKILL : Horse Racing — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -14,7 +15,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -23,13 +27,16 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
+
+log = structlog.get_logger()
 
 ROLE = "horse_racing"
 MAX_RETRIES = 3
 MAX_TOKENS = 2000
 
 
-class HorseRacingState(TypedDict):
+class HorseRacingState(BaseState):
     task: str
     context: str
     thread_id: str

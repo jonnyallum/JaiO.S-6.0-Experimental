@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- launch_orchestrator — JaiOS 6 Skill Node
+ AGENT : launch_orchestrator
+ SKILL : Launch Orchestrator — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -32,10 +33,13 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 from datetime import date, datetime
 from typing import Any
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -44,8 +48,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "launch_orchestrator"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -115,7 +122,7 @@ _PHASE_MAP: dict[str, list[tuple[int, str]]] = {
 }
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class LaunchState(TypedDict):
+class LaunchState(BaseState):
     # Inputs
     product_name: str   # name of product/feature/event being launched
     launch_type:  str   # type of launch

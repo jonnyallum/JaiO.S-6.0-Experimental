@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- ecommerce_strategist — JaiOS 6 Skill Node
+ AGENT : ecommerce_strategist
+ SKILL : Ecommerce Strategist — JaiOS 6 Skill Node
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  ─────────────
@@ -35,7 +36,10 @@
 
 from __future__ import annotations
 
+from state.base import BaseState
+
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from langgraph.graph import StateGraph, END
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -44,8 +48,11 @@ from typing_extensions import TypedDict
 from checkpoints import checkpoint
 from metrics import CallMetrics
 from personas.config import get_persona
+from tools.supabase_tools import SupabaseStateLogger
 
 # ── Identity ──────────────────────────────────────────────────────────────────
+log = structlog.get_logger()
+
 ROLE = "ecommerce_strategist"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
@@ -123,7 +130,7 @@ for _n in ["toys_games", "automotive", "health_wellness", "pet_supplies", "offic
 
 
 # ── State ──────────────────────────────────────────────────────────────────────
-class EcommerceState(TypedDict):
+class EcommerceState(BaseState):
     # Inputs
     product_name:     str    # product or product category
     niche:            str    # product niche

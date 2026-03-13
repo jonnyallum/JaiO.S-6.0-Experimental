@@ -1,5 +1,6 @@
 """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- document_qa — JaiOS 6 Skill Node (RAG Agent)
+ AGENT : document_qa
+ SKILL : Document Qa — JaiOS 6 Skill Node (RAG Agent)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Node Contract
  Input keys  : question (str), documents (str — raw text or file contents),
@@ -16,10 +17,13 @@
  UNEXPECTED — any other exception
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 from __future__ import annotations
+
+from state.base import BaseState
 import re
 from typing import TypedDict
 
 import anthropic
+import structlog
 from anthropic import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from langgraph.graph import StateGraph, END
@@ -27,6 +31,9 @@ from langgraph.graph import StateGraph, END
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from tools.supabase_tools import SupabaseStateLogger  # checkpoint alias
+
+log = structlog.get_logger()
 
 ROLE = "document_qa"
 MAX_RETRIES = 3
@@ -35,7 +42,7 @@ CHUNK_SIZE = 1000
 TOP_K = 5
 
 
-class DocumentQAState(TypedDict):
+class DocumentQAState(BaseState):
     workflow_id: str
     timestamp: str
     agent: str
