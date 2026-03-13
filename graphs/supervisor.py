@@ -58,6 +58,27 @@ from agents.ecommerce_strategist import ecommerce_strategist_node, EcommerceStat
 from agents.data_parser import data_parser_node, DataParserState
 from graphs.intent_extractor import extract_intent, AGENT_SCHEMAS
 from agents.research_analyst import research_analyst_node, ResearchState
+from agents.api_integration_agent import api_integration_agent_node, ApiIntegrationAgentState
+from agents.betting_systems import betting_systems_node, BettingSystemsState
+from agents.code_executor import code_executor_node, CodeExecutorState
+from agents.cost_tracker import cost_tracker_node, CostTrackerState
+from agents.darts_analyst import darts_analyst_node, DartsAnalystState
+from agents.error_recovery_agent import error_recovery_agent_node, ErrorRecoveryAgentState
+from agents.eval_judge import eval_judge_node, EvalJudgeState
+from agents.feedback_collector import feedback_collector_node, FeedbackCollectorState
+from agents.football_tactical import football_tactical_node, FootballTacticalState
+from agents.formula1_analyst import formula1_analyst_node, Formula1AnalystState
+from agents.horse_racing import horse_racing_node, HorseRacingState
+from agents.human_gate import human_gate_node, HumanGateState
+from agents.image_prompt_engineer import image_prompt_engineer_node, ImagePromptEngineerState
+from agents.motogp_analyst import motogp_analyst_node, MotogpAnalystState
+from agents.onboarding_agent import onboarding_agent_node, OnboardingAgentState
+from agents.rag_retriever import rag_retriever_node, RagRetrieverState
+from agents.risk_analyst import risk_analyst_node, RiskAnalystState
+from agents.roulette_math import roulette_math_node, RouletteMathState
+from agents.summariser import summariser_node, SummariserState
+from agents.translator import translator_node, TranslatorState
+from agents.workflow_planner import workflow_planner_node, WorkflowPlannerState
 from agents.pipeline_monitor import pipeline_monitor_node, PipelineState
 from agents.customer_success import customer_success_node, CustomerSuccessState
 from agents.truth_verifier import truth_verifier_node, TruthVerifierState
@@ -1366,8 +1387,139 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "financial_plan": "",
         })
         return {"result": r.get("financial_plan", ""), "error": r.get("error")}
+    elif role == "api_integration_agent":
+        r = api_integration_agent_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "betting_systems":
+        r = betting_systems_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "code_executor":
+        r = code_executor_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "cost_tracker":
+        r = cost_tracker_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "darts_analyst":
+        r = darts_analyst_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "error_recovery_agent":
+        r = error_recovery_agent_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "eval_judge":
+        r = eval_judge_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "feedback_collector":
+        r = feedback_collector_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "football_tactical":
+        r = football_tactical_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "formula1_analyst":
+        r = formula1_analyst_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "horse_racing":
+        r = horse_racing_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "human_gate":
+        r = human_gate_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "image_prompt_engineer":
+        r = image_prompt_engineer_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "motogp_analyst":
+        r = motogp_analyst_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "onboarding_agent":
+        r = onboarding_agent_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "rag_retriever":
+        r = rag_retriever_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "risk_analyst":
+        r = risk_analyst_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "roulette_math":
+        r = roulette_math_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "summariser":
+        r = summariser_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "translator":
+        r = translator_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
+    elif role == "workflow_planner":
+        r = workflow_planner_node({
+            "brief": brief, "persona": persona,
+            "client_context": state.get("client_context", ""),
+        })
+        return {"output": r.get("output", ""), "status": "done", "error": None}
     else:
-        return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}
+        # Fallback to research_analyst for unknown roles
+        try:
+            r = research_analyst_node({"brief": brief, "persona": persona, "client_context": state.get("client_context", "")})
+            return {"output": r.get("output", ""), "status": "done", "error": None}
+        except Exception as e:
+            return {"result": f"Fallback failed: {e}", "error": str(e)}
 
 
 

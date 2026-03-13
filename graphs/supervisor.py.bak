@@ -474,8 +474,93 @@ ROUTING_RULES: dict[str, list[str]] = {
     "motogp_analyst": ["motogp", "moto gp", "telemetry", "rossi", "marquez"],
     "betting_systems": ["betting", "odds", "bookmaker", "accumulator", "value bet", "stake"],
     "roulette_math": ["roulette", "casino", "probability", "house edge", "martingale"],
+
+    # ── awesome-llm-apps + new capability agents (Loop 2) ──
+    "eval_judge": ["evaluate", "judge", "score output", "quality check", "grade", "rating", "rubric"],
+    "code_executor": ["execute code", "run code", "validate code", "debug code", "code review", "sandbox"],
+    "rag_retriever": ["retrieve", "vector search", "knowledge base", "semantic search", "rag", "embeddings"],
+    "human_gate": ["approval", "human review", "sign off", "manual check", "gate", "checkpoint"],
+    "workflow_planner": ["plan workflow", "decompose task", "task planning", "step by step plan", "workflow design"],
+    "summariser": ["summarise", "summarize", "summary", "tldr", "condense", "digest", "recap"],
+    "translator": ["translate", "translation", "language", "multilingual", "localise", "localize"],
+    "image_prompt_engineer": ["image prompt", "dall-e", "midjourney", "stable diffusion", "image generation", "visual prompt"],
+    "api_integration_agent": ["api integration", "rest api", "graphql", "webhook design", "api design", "endpoint"],
+    "risk_analyst": ["risk assessment", "risk analysis", "risk score", "risk matrix", "mitigation", "risk register"],
+    "onboarding_agent": ["onboard", "onboarding", "new client", "client setup", "welcome pack", "kickoff"],
+    "feedback_collector": ["feedback", "nps", "csat", "survey", "user feedback", "satisfaction"],
+    "cost_tracker": ["cost tracking", "token usage", "api costs", "budget", "spend", "cost optimisation"],
+    "error_recovery_agent": ["error recovery", "diagnose error", "stack trace", "error handling", "debug failure", "incident"],
 }
 
+# ── Pipeline templates: multi-agent sequences for common workflows ──
+PIPELINE_TEMPLATES = {
+    "technical_audit": ["security_audit", "architecture_review", "code_reviewer", "quality_validation"],
+    "client_onboarding": ["research_analyst", "proposal_writer", "project_manager"],
+    "product_launch": ["product_strategist", "launch_orchestrator", "copywriter", "social_post_generator"],
+    "seo_campaign": ["research_analyst", "seo_specialist", "copywriter", "content_scaler"],
+    "investor_ready": ["research_analyst", "financial_analyst", "investor_pitch_writer"],
+    "ecommerce_launch": ["ecommerce_strategist", "copywriter", "seo_specialist", "email_architect"],
+    "brand_refresh": ["research_analyst", "brand_voice_guide", "copywriter", "creative_director"],
+    "legal_review": ["legal_advisor", "fact_checker", "truth_verifier"],
+    "devops_pipeline": ["fullstack_architect", "devops_engineer", "deployment_specialist", "security_audit"],
+    "data_deep_dive": ["data_extraction", "data_parser", "business_intelligence", "analytics_reporter"],
+    "course_creation": ["research_analyst", "course_designer", "copywriter", "video_brief_writer"],
+    "sales_blitz": ["research_analyst", "sales_conversion", "email_architect", "ad_copy_writer"],
+    "automation_setup": ["automation_architect", "fullstack_architect", "deployment_specialist"],
+    "venture_exploration": ["venture_ideator", "research_analyst", "monetisation_strategist", "pricing_strategist"],
+    "competitor_intel": ["competitor_monitor", "research_analyst", "business_intelligence"],
+
+    # ── Loop 2 pipelines (awesome-llm-apps patterns) ──
+    "quality_assured_content": ["research_analyst", "copywriter", "eval_judge"],
+    "risk_assessment": ["research_analyst", "risk_analyst", "summariser"],
+    "client_onboarding": ["onboarding_agent", "project_manager", "proposal_writer"],
+    "error_diagnosis": ["error_recovery_agent", "code_executor", "summariser"],
+    "multilingual_content": ["copywriter", "translator", "eval_judge"],
+    "visual_content_brief": ["creative_director", "image_prompt_engineer", "copywriter"],
+    "api_design": ["system_architect", "api_integration_agent", "code_executor"],
+    "betting_full_card": ["betting_systems", "football_tactical", "horse_racing", "summariser"],
+    "f1_race_preview": ["formula1_analyst", "research_analyst", "summariser"],
+    "task_orchestration": ["workflow_planner", "project_manager", "summariser"],
+}
+
+
+
+
+
+# ── Multi-Agent Pipeline Routes ──────────────────────────────────────────────
+PIPELINE_ROUTES: dict[str, list[str]] = {
+    "content_campaign": ["research_analyst", "copywriter", "social_post_generator"],
+    "blog_and_social": ["copywriter", "social_post_generator"],
+    "product_launch_full": ["research_analyst", "product_strategist", "launch_orchestrator", "social_post_generator"],
+    "security_review_full": ["security_audit", "code_reviewer", "architecture_review"],
+    "client_proposal_full": ["research_analyst", "proposal_writer", "pricing_strategist"],
+    "brand_content_pack": ["brand_voice_guide", "copywriter", "social_post_generator", "email_architect"],
+    "competitive_launch": ["competitor_monitor", "product_strategist", "launch_orchestrator"],
+    "due_diligence_full": ["research_analyst", "financial_analyst", "legal_advisor", "due_diligence_analyst"],
+}
+
+PIPELINE_KEYWORDS: dict[str, list[str]] = {
+    "content_campaign": ["blog post and social", "blog and twitter", "blog and linkedin", "content campaign", "blog post and tweet", "write a blog", "blog plus social"],
+    "blog_and_social": ["blog and social media", "blog post with tweets", "article and social"],
+    "product_launch_full": ["full launch plan", "go-to-market with research", "launch with competitive analysis"],
+    "security_review_full": ["full security review", "comprehensive security audit", "security and code review"],
+    "client_proposal_full": ["client proposal with pricing", "full proposal", "proposal and pricing"],
+    "brand_content_pack": ["brand content package", "full brand content", "brand voice and content"],
+    "competitive_launch": ["competitive launch", "launch with competitor analysis"],
+    "due_diligence_full": ["full due diligence", "comprehensive due diligence", "investment due diligence"],
+}
+
+
+def detect_pipeline(task: str) -> Optional[list[str]]:
+    """Check if task requires multi-agent pipeline execution."""
+    task_lower = task.lower()
+    for pipeline_name, keywords in PIPELINE_KEYWORDS.items():
+        for kw in keywords:
+            if kw in task_lower:
+                pipeline = PIPELINE_ROUTES[pipeline_name]
+                log.info("pipeline.detected", pipeline=pipeline_name, agents=pipeline)
+                return pipeline
+    return None
 
 class SupervisorState(BaseState):
     task: str
@@ -483,6 +568,7 @@ class SupervisorState(BaseState):
     repo_name: Optional[str]
     selected_role: str
     result: str
+    pipeline: Optional[list[str]]
 
 
 def _classify_task_keywords(task: str) -> tuple[str, int]:
@@ -517,6 +603,7 @@ def _classify_task_llm(task: str) -> tuple[str, float]:
                 "role": "user",
                 "content": f"Task: {task}\n\nAvailable roles:\n{role_summary}\n\nWhich role handles this best?"
             }],
+
         )
         import json
         text = response.content[0].text.strip()
@@ -574,13 +661,20 @@ def _classify_task(task: str) -> str:
 
 
 def route_node(state: SupervisorState) -> dict:
-    """Classify the task and select the best skill."""
-    selected = _classify_task(state["task"])
-    log.info("supervisor.routing", selected=selected, task_preview=state["task"][:80])
-    return {"selected_role": selected}
+    """Classify task -> single role OR multi-agent pipeline."""
+    task = state.get("task", "") or ""
+    # 1. Check for multi-agent pipeline FIRST
+    pipeline = detect_pipeline(task)
+    if pipeline:
+        log.info("route.pipeline", task=task[:80], pipeline=pipeline)
+        return {"selected_role": "pipeline:" + ",".join(pipeline), "pipeline": pipeline}
+    # 2. Fall back to existing _classify_task routing
+    selected = _classify_task(task)
+    log.info("supervisor.routing", selected=selected, task_preview=task[:80])
+    return {"selected_role": selected, "pipeline": None}
 
 
-def execute_node(state: SupervisorState) -> dict:  # noqa: C901
+def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     """Dispatch to the selected skill node."""
     role        = state["selected_role"]
     workflow_id = state.get("workflow_id") or str(uuid.uuid4())
@@ -1276,11 +1370,83 @@ def execute_node(state: SupervisorState) -> dict:  # noqa: C901
         return {"result": f"Role '{role}' is not wired into the supervisor.", "error": None}
 
 
+
+def execute_pipeline(state: SupervisorState) -> dict:
+    """Execute a pipeline of agents sequentially, passing accumulated results."""
+    pipeline = state.get("pipeline")
+    task = state.get("task", "")
+
+    # Single-agent execution (backwards compatible)
+    if not pipeline:
+        return execute_single_agent(state)
+
+    # Multi-agent pipeline execution
+    accumulated_results = []
+    final_error = None
+
+    for i, role in enumerate(pipeline):
+        step_num = i + 1
+        total_steps = len(pipeline)
+        log.info("pipeline.step", step=step_num, total=total_steps, role=role)
+
+        if accumulated_results:
+            context_parts = []
+            for r in accumulated_results:
+                context_parts.append(f"--- Output from {r['role']} (step {r['step']}/{total_steps}) ---\n{r['result']}")
+            context_prefix = "\n\n".join(context_parts)
+            enriched_task = (
+                f"PIPELINE EXECUTION - Step {step_num}/{total_steps} - Role: {role}\n\n"
+                f"ORIGINAL BRIEF:\n{task}\n\n"
+                f"PRIOR AGENT OUTPUTS (use as context, build on them, do NOT repeat):\n{context_prefix}\n\n"
+                f"YOUR TASK: As the {role}, produce your specific contribution. Focus on YOUR speciality."
+            )
+        else:
+            enriched_task = (
+                f"PIPELINE EXECUTION - Step {step_num}/{total_steps} - Role: {role}\n\n"
+                f"BRIEF:\n{task}\n\n"
+                f"YOUR TASK: As the {role}, produce your specific contribution. "
+                f"You are the first agent in a {total_steps}-agent pipeline."
+            )
+
+        agent_state = {**state, "task": enriched_task, "selected_role": role, "pipeline": None}
+        try:
+            result = execute_single_agent(agent_state)
+            agent_output = result.get("result", "")
+            accumulated_results.append({
+                "role": role, "step": step_num,
+                "result": agent_output, "error": result.get("error"),
+            })
+            if result.get("error"):
+                log.warning("pipeline.step_error", step=step_num, role=role, error=result["error"])
+        except Exception as e:
+            log.error("pipeline.step_exception", step=step_num, role=role, error=str(e))
+            accumulated_results.append({
+                "role": role, "step": step_num,
+                "result": f"[Agent {role} failed: {str(e)}]", "error": str(e),
+            })
+
+    separator = "=" * 60
+    combined_parts = []
+    for r in accumulated_results:
+        combined_parts.append(f"{separator}\n## {r['role'].upper()} (Step {r['step']}/{len(pipeline)})\n{separator}\n{r['result']}")
+    combined = "\n\n".join(combined_parts)
+
+    try:
+        notifier = TelegramNotifier()
+        roles_str = " -> ".join(pipeline)
+        err_count = sum(1 for r in accumulated_results if r["error"])
+        notifier.send(f"Pipeline complete: {roles_str}\nSteps: {len(pipeline)} | Errors: {err_count}")
+    except Exception:
+        pass
+
+    return {"result": combined, "error": final_error}
+
+
 def build_supervisor():
     """Build and compile the supervisor graph."""
     graph = StateGraph(SupervisorState)
     graph.add_node("route",   route_node)
-    graph.add_node("execute", execute_node, retry_policy=RetryPolicy(max_attempts=3, initial_interval=1.0))
+    graph.add_node("execute", execute_pipeline, retry_policy=RetryPolicy(max_attempts=3, initial_interval=1.0))
     graph.add_edge(START,     "route")
     graph.add_edge("route",   "execute")
     graph.add_edge("execute",  END)
@@ -1328,6 +1494,8 @@ def run_supervisor(state: dict) -> dict:
         "error":       None,
         "selected_role": "",
         "result":      "",
+        "client_id":   state.get("client_id", ""),
+        "project_id":  state.get("project_id", ""),
     }
 
     cfg = {"configurable": {"thread_id": wf_id}}
