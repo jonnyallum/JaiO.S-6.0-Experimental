@@ -136,6 +136,8 @@ def _patch(table: str, filters: dict, data: dict) -> bool:
 # ── Job execution ─────────────────────────────────────────────────────────────
 
 def _execute_job(job_id: str, brief: str) -> dict:
+    client_id: str = ""
+    project_id: str = ""
     """Run a job through the LangGraph supervisor. Writes state to Supabase."""
     log.info(f"JOB START {job_id} | {brief[:80]}")
     start = time.time()
@@ -220,7 +222,7 @@ async def lifespan(application: FastAPI):
 
 app = FastAPI(
     title="JaiO.S 6.0",
-    description="AI agency operating system — 61-agent LangGraph stack",
+    description="AI agency operating system — 93-agent LangGraph stack",
     version=VERSION,
     lifespan=lifespan,
 )
@@ -311,10 +313,73 @@ def root():
             "POST /run":       "Submit a job",
             "GET  /job/{id}": "Check job status + output",
             "GET  /jobs":     "List recent jobs",
-            "GET  /agents":   "List all 61 agents",
+            "GET  /agents":   "List all 93 agents",
             "GET  /health":   "Liveness check",
         },
     }
+
+
+
+
+# ── Observability & DX endpoints (Ralph Loop 3) ──────────────────────────────
+
+@app.get("/metrics")
+def metrics():
+    """Agent call metrics from logs — lightweight observability."""
+    import glob
+    log_files = glob.glob("logs/*.log")
+    total_jobs = 0
+    completed = 0
+    failed = 0
+    for lf in log_files:
+        try:
+            with open(lf, "r") as f:
+                for line in f:
+                    if "JOB START" in line:
+                        total_jobs += 1
+                    elif "JOB DONE" in line:
+                        completed += 1
+                    elif "JOB FAILED" in line:
+                        failed += 1
+        except Exception:
+            pass
+    uptime = (datetime.now(timezone.utc) - BOOT_TIME).total_seconds()
+    return {
+        "uptime_seconds": round(uptime),
+        "total_jobs": total_jobs,
+        "completed": completed,
+        "failed": failed,
+        "success_rate": round(completed / max(total_jobs, 1) * 100, 1),
+        "agents_loaded": len([f for f in os.listdir("agents") if f.endswith(".py") and f != "__init__.py"]),
+    }
+
+
+@app.get("/pipelines")
+def list_pipelines():
+    """List all available pipeline templates."""
+    from graphs.supervisor import PIPELINE_TEMPLATES
+    return {
+        "count": len(PIPELINE_TEMPLATES),
+        "pipelines": {k: v for k, v in PIPELINE_TEMPLATES.items()},
+    }
+
+
+@app.get("/catalog")
+def agent_catalog():
+    """Full agent catalog with routing keywords."""
+    from graphs.supervisor import ROUTING_RULES
+    agents_dir = Path("agents")
+    agent_files = sorted([f.stem for f in agents_dir.glob("*.py") if f.stem != "__init__"])
+    catalog = []
+    for role in agent_files:
+        keywords = ROUTING_RULES.get(role, [])
+        catalog.append({
+            "role": role,
+            "routable": bool(keywords),
+            "keywords": keywords[:5],
+            "has_readme": (agents_dir / f"{role}.md").exists(),
+        })
+    return {"count": len(catalog), "agents": catalog}
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

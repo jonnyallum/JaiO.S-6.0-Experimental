@@ -9,3 +9,5 @@ class BaseState(TypedDict):
     timestamp: str         # ISO-8601 start time
     agent: str             # Active agent handle (e.g. "hugo")
     error: Optional[str]   # Set on failure; None on success
+    client_id: Optional[str]   # Client/org this task belongs to
+    project_id: Optional[str]  # Project within the client
