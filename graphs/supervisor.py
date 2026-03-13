@@ -48,6 +48,8 @@ from agents.proposal_writer import proposal_writer_node, ProposalState
 from agents.product_strategist import product_strategist_node, ProductStrategyState
 from agents.pricing_strategist import pricing_strategist_node, PricingState
 from agents.course_designer import course_designer_node, CourseState
+from agents.document_qa import DocumentQAState, document_qa_node
+from agents.vision_analyst import VisionState, vision_analyst_node
 from agents.chatbot_designer import chatbot_designer_node, ChatbotState
 from agents.persona_builder import persona_builder_node, PersonaState
 from agents.pr_writer import pr_writer_node, PRState
@@ -542,6 +544,16 @@ PIPELINE_TEMPLATES = {
     "betting_full_card": ["betting_systems", "football_tactical", "horse_racing", "summariser"],
     "f1_race_preview": ["formula1_analyst", "research_analyst", "summariser"],
     "task_orchestration": ["workflow_planner", "project_manager", "summariser"],
+    "document_qa": [
+        "document qa", "rag", "document analysis", "search documents",
+        "answer from docs", "knowledge base query", "document question",
+        "file analysis", "pdf analysis", "text search",
+    ],
+    "vision_analyst": [
+        "image analysis", "vision", "screenshot analysis", "visual audit",
+        "image qa", "describe image", "extract text from image", "ocr",
+        "ui audit", "visual review", "image", "screenshot",
+    ],
 }
 
 
@@ -854,6 +866,24 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
         })
         result = r.get("skill_file") or r.get("node_file") or ""
         return {"result": result, "error": r.get("error")}
+
+    elif role == "document_qa":
+        r = document_qa_node({
+            **base, "agent": role,
+            "question": task, "documents": state.get("documents", task),
+            "chunk_size": 1000, "top_k": 5,
+            "answer": "", "sources": "", "confidence": 0,
+        })
+        return {"result": r.get("answer", ""), "error": r.get("error")}
+
+    elif role == "vision_analyst":
+        r = vision_analyst_node({
+            **base, "agent": role,
+            "task": task, "image_url": state.get("image_url", ""),
+            "analysis_type": state.get("analysis_type", "describe"),
+            "analysis": "", "findings": "", "confidence": 0,
+        })
+        return {"result": r.get("analysis", ""), "error": r.get("error")}
 
     elif role == "pipeline_monitor":
         r = pipeline_monitor_node({

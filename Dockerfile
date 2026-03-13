@@ -1,31 +1,22 @@
-# JaiO.S 6.0 — Production Dockerfile
-# Builds a lean Python 3.12 image for GCP VM deployment
-
-FROM python:3.12-slim
-
-# System deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install Python deps first (layer cache)
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl && rm -rf /var/lib/apt/lists/*
+
+# Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source
+# App code
 COPY . .
 
-# Create logs dir
-RUN mkdir -p logs
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8765/health || exit 1
 
-# Expose API port
-EXPOSE 8000
+EXPOSE 8765
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Run
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8765"]
