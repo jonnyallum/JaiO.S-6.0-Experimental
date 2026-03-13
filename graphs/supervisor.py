@@ -1006,11 +1006,32 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
         # Ralph Loop 4: Intent extraction — NL to structured fields
         fields = extract_intent(task, state.get("brief", ""), role)
         log.info("intent_extractor.launch", extracted=fields)
+        # Normalise channels — map natural language to VALID_CHANNELS
+        _VALID = {"social", "email", "paid", "pr", "seo", "community", "all"}
+        _CH_MAP = {
+            "linkedin": "social", "twitter": "social", "x": "social",
+            "instagram": "social", "facebook": "social", "tiktok": "social",
+            "product hunt": "community", "reddit": "community", "discord": "community",
+            "direct outreach": "email", "cold email": "email", "newsletter": "email",
+            "google ads": "paid", "paid ads": "paid", "ppc": "paid",
+            "press": "pr", "pr": "pr", "media": "pr",
+            "seo": "seo", "content": "seo",
+        }
+        raw_channels = fields.get("channels", "all").lower()
+        resolved = set()
+        for raw, mapped in _CH_MAP.items():
+            if raw in raw_channels:
+                resolved.add(mapped)
+        for ch in raw_channels.split(","):
+            ch = ch.strip()
+            if ch in _VALID:
+                resolved.add(ch)
+        channels_str = ",".join(resolved) if resolved else "all"
         r = launch_orchestrator_node({
             **base, "agent": role,
             "product_name":  fields.get("product_name", task[:80]),
             "launch_type":   fields.get("launch_type", "saas_product"),
-            "channels":      fields.get("channels", "all"),
+            "channels":      channels_str,
             "launch_date":   fields.get("launch_date", ""),
             "audience":      fields.get("audience", ""),
             "launch_plan":   "",
@@ -1033,9 +1054,14 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "investor_pitch_writer":
         r = investor_pitch_writer_node({
             **base, "agent": role,
-            "company": repo_owner, "brief": task,
-            "stage": "seed", "ask": "",
-            "pitch": "",
+            "company_name":   repo_owner or "Antigravity Agency",
+            "one_liner":      task[:120],
+            "problem":        task,
+            "solution":       task,
+            "traction":       "Early clients, growing MRR",
+            "ask":            "250000",
+            "funding_stage":  "seed",
+            "pitch_content":  "",
         })
         return {"result": r.get("pitch_content", ""), "error": r.get("error")}
 
