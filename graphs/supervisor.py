@@ -170,7 +170,8 @@ ROUTING_RULES: dict[str, list[str]] = {
     "agent_builder": [
         "build agent", "create agent", "new agent", "agent spec",
         "agent design", "agent skill", "skill node", "langgraph agent",
-        "agent file", "write agent",
+        "agent file", "write agent", "build a spec for a", "spec for an agent",
+        "build an agent", "design an agent", "agent blueprint",
     ],
     "pipeline_monitor": [
         "monitor pipeline", "pipeline status", "workflow status", "agent health",
@@ -851,11 +852,14 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "brand_voice_guide":
         r = brand_voice_guide_node({
             **base, "agent": role,
-            "brand_name": repo_owner, "brand_context": task,
-            "target_audience": "", "examples": "",
+            "brand_name": repo_owner or "Brand",
+            "brand_context": task,
+            "target_audience": "target customers",
+            "tone_keywords":   "professional, clear, engaging",
+            "examples":        "",
             "brand_voice_guide": "",
         })
-        return {"result": r.get("voice_guide", ""), "error": r.get("error")}
+        return {"result": r.get("brand_voice_guide", ""), "error": r.get("error")}
 
     elif role == "creative_director":
         r = creative_director_node({
@@ -990,8 +994,11 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "ecommerce_strategist":
         r = ecommerce_strategist_node({
             **base, "agent": role,
-            "brief": task, "platform": "shopify",
-            "business_context": "", "ecommerce_strategy": "",
+            "product_name":     task,
+            "brief":            task,
+            "platform":         "shopify",
+            "business_context": "",
+            "ecommerce_strategy": "", "strategy_output": "",
         })
         return {"result": r.get("strategy_output", ""), "error": r.get("error")}
 
@@ -1125,8 +1132,11 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "customer_success":
         r = customer_success_node({
             **base, "agent": role,
-            "client_name": repo_owner, "context": task,
-            "health_score": 0, "cs_report": "",
+            "customer_name": repo_owner or "Customer",
+            "input_text":    task,
+            "context":       task,
+            "health_score":  0,
+            "cs_report":     "", "cs_output": "",
         })
         return {"result": r.get("cs_output", ""), "error": r.get("error")}
 
@@ -1141,33 +1151,50 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "case_study_writer":
         r = case_study_writer_node({
             **base, "agent": role,
-            "client_name": repo_owner, "brief": task,
-            "results": "", "case_study": "",
+            "client_name":   repo_owner or "Client",
+            "problem":       task,
+            "solution":      task,
+            "results":       "",
+            "case_study":    "",
         })
         return {"result": r.get("case_study", ""), "error": r.get("error")}
 
     elif role == "course_designer":
         r = course_designer_node({
             **base, "agent": role,
-            "topic": task, "audience": "general",
-            "depth": "intermediate", "format": "online_course",
-            "course_outline": "",
+            "course_title":   task,
+            "topic":          task,
+            "transformation": f"Master the core skills needed for {task}",
+            "target_student": "motivated learners with basic background knowledge",
+            "audience":       "general",
+            "depth":          "intermediate",
+            "format":         "online_course",
+            "course_outline": "", "curriculum": "",
         })
         return {"result": r.get("curriculum", ""), "error": r.get("error")}
 
     elif role == "chatbot_designer":
         r = chatbot_designer_node({
             **base, "agent": role,
-            "brief": task, "platform": "website",
-            "tone": "friendly", "chatbot_flow": "",
+            "bot_name":    "Assistant",
+            "bot_purpose": task,
+            "audience":    "customers",
+            "platform":    "website",
+            "tone":        "friendly",
+            "chatbot_flow": "",
+            "chatbot_design": "",
         })
         return {"result": r.get("chatbot_design", ""), "error": r.get("error")}
 
     elif role == "persona_builder":
         r = persona_builder_node({
             **base, "agent": role,
-            "brief": task, "business_context": "",
-            "num_personas": 2, "personas": "",
+            "product_name":        task,
+            "product_description": task,
+            "brief":               task,
+            "business_context":    "",
+            "num_personas":        2,
+            "personas":            "",
         })
         return {"result": r.get("personas", ""), "error": r.get("error")}
 
@@ -1198,8 +1225,16 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "ab_test_designer":
         r = ab_test_designer_node({
             **base, "agent": role,
-            "hypothesis": task, "element": "general",
-            "audience": "", "ab_test_plan": "",
+            "page_or_element":  task,
+            "hypothesis":       f"We believe changing {task} will improve conversion",
+            "baseline_cvr":     0.03,
+            "mde":              0.20,
+            "daily_visitors":   1000,
+            "test_type":        "ab",
+            "output_type":      "full_design",
+            "test_design":      "", "sample_size": 0,
+            "runtime_days":     0, "target_cvr":   0.0,
+            "test_guidance":    "",
         })
         return {"result": r.get("test_design", ""), "error": r.get("error")}
 
