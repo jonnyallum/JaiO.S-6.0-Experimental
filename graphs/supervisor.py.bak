@@ -7,16 +7,13 @@ Pattern: START → route → execute_skill → END
 Persona for the orchestrator is resolved via personas/config.py (role: orchestrator).
 All routing logic is role-based — no persona names hardcoded.
 """
-import os
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
 import structlog
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import RetryPolicy
 
 from agents.github_intelligence import GitHubIntelState, github_intelligence_node
 from agents.security_audit import SecurityAuditState, security_audit_node
@@ -466,13 +463,6 @@ ROUTING_RULES: dict[str, list[str]] = {
         "financial projection", "expense tracking", "revenue forecast",
         "financial model", "break even", "profit margin", "financial planning",
     ],
-    "horse_racing": ["horse", "racing", "cheltenham", "ascot", "jockey", "handicap", "form guide", "going"],
-    "football_tactical": ["football", "premier league", "tactical", "match analysis", "xg", "lineup"],
-    "formula1_analyst": ["formula 1", "f1", "grand prix", "pitstop", "qualifying", "grid"],
-    "darts_analyst": ["darts", "pdc", "checkout", "180", "nine darter", "averages"],
-    "motogp_analyst": ["motogp", "moto gp", "telemetry", "rossi", "marquez"],
-    "betting_systems": ["betting", "odds", "bookmaker", "accumulator", "value bet", "stake"],
-    "roulette_math": ["roulette", "casino", "probability", "house edge", "martingale"],
 }
 
 
@@ -484,8 +474,8 @@ class SupervisorState(BaseState):
     result: str
 
 
-def _classify_task_keywords(task: str) -> tuple[str, int]:
-    """Fast keyword-based classification. Returns (role, score)."""
+def _classify_task(task: str) -> str:
+    """Classify task to role by keyword scoring. Defaults to github_intelligence."""
     task_lower = task.lower()
     scores = {role: 0 for role in ROUTING_RULES}
     for role, keywords in ROUTING_RULES.items():
@@ -493,83 +483,7 @@ def _classify_task_keywords(task: str) -> tuple[str, int]:
             if kw in task_lower:
                 scores[role] += 1
     best = max(scores, key=lambda r: scores[r])
-    return (best, scores[best]) if scores[best] > 0 else ("general_assistant", 0)
-
-
-def _classify_task_llm(task: str) -> tuple[str, float]:
-    """Use Claude Haiku to classify task with confidence score."""
-    try:
-        from anthropic import Anthropic
-        client = Anthropic()
-
-        # Build compact role list (name: top 3 keywords)
-        role_summary = "\n".join(
-            f"  {role}: {', '.join(kws[:4])}"
-            for role, kws in ROUTING_RULES.items()
-        )
-
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=150,
-            system="You are a task router for an AI agency. Given a task, select the single best agent role. Respond ONLY with valid JSON: {\"role\": \"role_name\", \"confidence\": 0.0-1.0}",
-            messages=[{
-                "role": "user",
-                "content": f"Task: {task}\n\nAvailable roles:\n{role_summary}\n\nWhich role handles this best?"
-            }],
-        )
-        import json
-        text = response.content[0].text.strip()
-        # Handle potential markdown wrapping
-        if text.startswith("```"):
-            text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-        parsed = json.loads(text)
-        role = parsed.get("role", "general_assistant")
-        conf = float(parsed.get("confidence", 0.5))
-        # Validate role exists
-        if role in ROUTING_RULES:
-            return (role, conf)
-        # Fuzzy match — check if LLM returned a close name
-        for r in ROUTING_RULES:
-            if r in role or role in r:
-                return (r, conf * 0.9)
-        return ("general_assistant", 0.3)
-    except Exception as e:
-        log.warning("llm_router.failed", error=str(e))
-        return ("general_assistant", 0.0)
-
-
-def _classify_task(task: str) -> str:
-    """
-    Hybrid router: try LLM first, fall back to keywords.
-    Strategy:
-      1. Run keyword matcher (instant, free)
-      2. If keyword confidence >= 2 matches, use it (clear signal)
-      3. Otherwise, run LLM router (Haiku, ~$0.0001/call)
-      4. If LLM confidence >= 0.6, use LLM result
-      5. Otherwise, use keyword result or default to general_assistant
-    """
-    # Step 1: Fast keyword pass
-    kw_role, kw_score = _classify_task_keywords(task)
-
-    # Step 2: High keyword confidence = skip LLM
-    if kw_score >= 2:
-        log.info("router.keyword_match", role=kw_role, score=kw_score, method="keyword")
-        return kw_role
-
-    # Step 3: LLM classification
-    llm_role, llm_conf = _classify_task_llm(task)
-    log.info("router.llm_result", role=llm_role, confidence=llm_conf,
-             kw_role=kw_role, kw_score=kw_score, method="hybrid")
-
-    # Step 4: Use LLM if confident
-    if llm_conf >= 0.6:
-        return llm_role
-
-    # Step 5: Fallback chain
-    if kw_score >= 1:
-        return kw_role
-
-    return llm_role if llm_conf > 0 else "general_assistant"
+    return best if scores[best] > 0 else "github_intelligence"
 
 
 def route_node(state: SupervisorState) -> dict:
@@ -1272,25 +1186,10 @@ def build_supervisor():
     """Build and compile the supervisor graph."""
     graph = StateGraph(SupervisorState)
     graph.add_node("route",   route_node)
-    graph.add_node("execute", execute_node, retry_policy=RetryPolicy(max_attempts=3, initial_interval=1.0))
+    graph.add_node("execute", execute_node)
     graph.add_edge(START,     "route")
     graph.add_edge("route",   "execute")
     graph.add_edge("execute",  END)
-    # Try PostgresSaver (persistent), fallback to MemorySaver (RAM)
-    db_url = os.environ.get("BRAIN_CONNECTION_STRING", "")
-    if db_url:
-        try:
-            # Use session-mode pooler (port 5432) for prepared statements
-            session_url = db_url.replace(":6543/", ":5432/")
-            if "sslmode" not in session_url:
-                session_url += "?sslmode=require"
-            checkpointer = PostgresSaver.from_conn_string(session_url)
-            checkpointer.setup()
-            log.info("supervisor.checkpointer", type="PostgresSaver", db="supabase")
-            return graph.compile(checkpointer=checkpointer)
-        except Exception as e:
-            log.warning("supervisor.postgres_fallback", error=str(e))
-    log.info("supervisor.checkpointer", type="MemorySaver", reason="no_db_url_or_error")
     return graph.compile(checkpointer=MemorySaver())
 
 
