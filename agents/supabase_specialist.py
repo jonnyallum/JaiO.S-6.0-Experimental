@@ -58,6 +58,7 @@ _RLS_TEMPLATES = {
 
 _EDGE_FUNCTION_TEMPLATE = """import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+from langgraph.graph import StateGraph, END
 
 serve(async (req: Request) => {
   const supabase = createClient(
@@ -250,3 +251,14 @@ def supabase_specialist_node(state: SupabaseSpecialistState) -> SupabaseSpeciali
         "sql_output":    sql_output,
         "error":         None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(SupabaseSpecialistState)
+    g.add_node("supabase_specialist", supabase_specialist_node)
+    g.set_entry_point("supabase_specialist")
+    g.add_edge("supabase_specialist", END)
+    return g.compile()

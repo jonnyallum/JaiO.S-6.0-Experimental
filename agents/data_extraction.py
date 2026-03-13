@@ -58,6 +58,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -292,3 +293,14 @@ def data_extraction_node(state: DataExtractionState) -> dict:
 # ── Backwards-compatibility aliases ──────────────────────────────────────────────
 parser_node = data_extraction_node
 ParserState = DataExtractionState
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(DataExtractionState)
+    g.add_node("data_extraction", data_extraction_node)
+    g.set_entry_point("data_extraction")
+    g.add_edge("data_extraction", END)
+    return g.compile()

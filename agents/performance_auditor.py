@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "performance_auditor"
 MAX_RETRIES = 3
@@ -264,3 +265,14 @@ def performance_auditor_node(state: PerformanceAuditorState) -> PerformanceAudit
     checkpoint("POST", thread_id, ROLE, {"output_type": out_type, "platform": platform})
 
     return {**state, "agent": ROLE, "perf_report": report, "score_summary": score_summary, "error": None}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(PerformanceAuditorState)
+    g.add_node("performance_auditor", performance_auditor_node)
+    g.set_entry_point("performance_auditor")
+    g.add_edge("performance_auditor", END)
+    return g.compile()

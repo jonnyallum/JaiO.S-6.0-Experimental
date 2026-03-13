@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 ROLE = "truth_verifier"
@@ -250,3 +251,14 @@ def truth_verifier_node(state: TruthVerifierState) -> TruthVerifierState:
         "confidence":          confidence,
         "error":               None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(TruthVerifierState)
+    g.add_node("truth_verifier", truth_verifier_node)
+    g.set_entry_point("truth_verifier")
+    g.add_edge("truth_verifier", END)
+    return g.compile()

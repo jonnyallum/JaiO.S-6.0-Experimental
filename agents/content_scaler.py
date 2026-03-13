@@ -47,6 +47,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -208,3 +209,14 @@ def content_scaler_node(state: ContentScalerState) -> dict:
         log.exception(f"{ROLE}.unexpected", error=msg)
         notifier.agent_error(ROLE, topic[:80], msg)
         return {"variants": [], "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(ContentScalerState)
+    g.add_node("content_scaler", content_scaler_node)
+    g.set_entry_point("content_scaler")
+    g.add_edge("content_scaler", END)
+    return g.compile()

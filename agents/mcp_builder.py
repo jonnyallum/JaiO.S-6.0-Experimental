@@ -68,6 +68,7 @@ const transport = new StdioServerTransport();
 await server.connect(transport);""",
     "sse": """import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+from langgraph.graph import StateGraph, END
 // SSE transport - use with Express or Hono for HTTP server""",
     "general": "// Transport TBD based on deployment context",
 }
@@ -283,3 +284,14 @@ def mcp_builder_node(state: McpBuilderState) -> McpBuilderState:
     checkpoint("POST", thread_id, ROLE, {"output_type": out_type, "transport": transport})
 
     return {**state, "agent": ROLE, "mcp_spec": spec, "server_code": server_code, "error": None}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(McpBuilderState)
+    g.add_node("mcp_builder", mcp_builder_node)
+    g.set_entry_point("mcp_builder")
+    g.add_edge("mcp_builder", END)
+    return g.compile()

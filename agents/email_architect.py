@@ -54,6 +54,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -299,3 +300,14 @@ def email_architect_node(state: EmailSequenceState) -> dict:
         notifier.agent_error(ROLE, goal, msg)
         return {"email_sequence": "", "email_count": 0, "error": msg,
                 "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(EmailSequenceState)
+    g.add_node("email_architect", email_architect_node)
+    g.set_entry_point("email_architect")
+    g.add_edge("email_architect", END)
+    return g.compile()

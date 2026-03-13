@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "creative_director"
 MAX_RETRIES = 3
@@ -271,3 +272,14 @@ def creative_director_node(state: CreativeDirectorState) -> CreativeDirectorStat
     checkpoint("POST", thread_id, ROLE, {"output_type": out_type, "medium": medium})
 
     return {**state, "agent": ROLE, "creative_brief": brief, "direction_notes": direction_notes, "error": None}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(CreativeDirectorState)
+    g.add_node("creative_director", creative_director_node)
+    g.set_entry_point("creative_director")
+    g.add_edge("creative_director", END)
+    return g.compile()

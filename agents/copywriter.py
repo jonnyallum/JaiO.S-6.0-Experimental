@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "copywriter"
 MAX_RETRIES = 3
@@ -235,3 +236,14 @@ def copywriter_node(state: CopywriterState) -> CopywriterState:
     checkpoint("POST", thread_id, ROLE, {"output_type": out_type, "copy_format": copy_format})
 
     return {**state, "agent": ROLE, "copy_output": output, "headline": headline, "error": None}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(CopywriterState)
+    g.add_node("copywriter", copywriter_node)
+    g.set_entry_point("copywriter")
+    g.add_edge("copywriter", END)
+    return g.compile()

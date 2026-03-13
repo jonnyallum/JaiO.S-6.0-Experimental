@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "content_auditor"
 MAX_RETRIES = 3
@@ -233,3 +234,14 @@ def content_auditor_node(state: ContentAuditorState) -> ContentAuditorState:
         "fluff_count":  fluff_count,
         "error":        None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(ContentAuditorState)
+    g.add_node("content_auditor", content_auditor_node)
+    g.set_entry_point("content_auditor")
+    g.add_edge("content_auditor", END)
+    return g.compile()

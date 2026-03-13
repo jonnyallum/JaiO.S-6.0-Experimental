@@ -55,6 +55,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -277,3 +278,14 @@ def github_intelligence_node(state: GitHubIntelState) -> dict:
 # ── Backwards-compatibility aliases ──────────────────────────────────────────────
 hugh_node = github_intelligence_node
 HugoState = GitHubIntelState
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(GitHubIntelState)
+    g.add_node("github_intelligence", github_intelligence_node)
+    g.set_entry_point("github_intelligence")
+    g.add_edge("github_intelligence", END)
+    return g.compile()

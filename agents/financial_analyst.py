@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "financial_analyst"
 MAX_RETRIES = 3
@@ -254,3 +255,14 @@ def financial_analyst_node(state: FinancialAnalystState) -> FinancialAnalystStat
     checkpoint("POST", thread_id, ROLE, {"output_type": out_type, "analysis_type": analysis_type})
 
     return {**state, "agent": ROLE, "financial_report": report, "key_metrics": key_metrics, "error": None}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(FinancialAnalystState)
+    g.add_node("financial_analyst", financial_analyst_node)
+    g.set_entry_point("financial_analyst")
+    g.add_edge("financial_analyst", END)
+    return g.compile()

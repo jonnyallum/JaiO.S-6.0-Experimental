@@ -54,6 +54,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -314,3 +315,14 @@ def dependency_audit_node(state: DependencyAuditState) -> dict:
         notifier.agent_error(ROLE, repo_slug, msg)
         return {"dependency_report": "", "error": msg,
                 "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(DependencyAuditState)
+    g.add_node("dependency_audit", dependency_audit_node)
+    g.set_entry_point("dependency_audit")
+    g.add_edge("dependency_audit", END)
+    return g.compile()

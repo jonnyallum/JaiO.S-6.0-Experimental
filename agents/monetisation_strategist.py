@@ -48,6 +48,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -213,3 +214,14 @@ def monetisation_strategist_node(state: MonetisationState) -> dict:
         log.exception(f"{ROLE}.unexpected", error=msg)
         notifier.agent_error(ROLE, client_name, msg)
         return {"strategy": "", "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(MonetisationState)
+    g.add_node("monetisation_strategist", monetisation_strategist_node)
+    g.set_entry_point("monetisation_strategist")
+    g.add_edge("monetisation_strategist", END)
+    return g.compile()

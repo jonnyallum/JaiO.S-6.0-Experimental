@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "devops_engineer"
 MAX_RETRIES = 3
@@ -276,3 +277,14 @@ def devops_engineer_node(state: DevOpsEngineerState) -> DevOpsEngineerState:
         "config_output": config_output,
         "error":         None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(DevOpsEngineerState)
+    g.add_node("devops_engineer", devops_engineer_node)
+    g.set_entry_point("devops_engineer")
+    g.add_edge("devops_engineer", END)
+    return g.compile()

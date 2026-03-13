@@ -52,6 +52,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -277,3 +278,14 @@ def security_audit_node(state: SecurityAuditState) -> dict:
 # ── Backwards-compatibility aliases ──────────────────────────────────────────────
 sam_node = security_audit_node
 SamState = SecurityAuditState
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(SecurityAuditState)
+    g.add_node("security_audit", security_audit_node)
+    g.set_entry_point("security_audit")
+    g.add_edge("security_audit", END)
+    return g.compile()

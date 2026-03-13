@@ -52,6 +52,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -339,3 +340,14 @@ def funnel_architect_node(state: FunnelState) -> dict:
         log.exception(f"{ROLE}.unexpected", failure_mode="unexpected", error=msg)
         notifier.agent_error(ROLE, stage, msg)
         return {"funnel_spec": "", "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(FunnelState)
+    g.add_node("funnel_architect", funnel_architect_node)
+    g.set_entry_point("funnel_architect")
+    g.add_edge("funnel_architect", END)
+    return g.compile()

@@ -52,6 +52,7 @@ from tools.notification_tools import TelegramNotifier
 from tools.supabase_tools import SupabaseStateLogger
 from tools.telemetry import CallMetrics
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 log = structlog.get_logger()
 
@@ -239,3 +240,14 @@ def seo_specialist_node(state: SEOState) -> dict:
         msg = f"Unexpected error in {ROLE}: {exc}"; log.exception(f"{ROLE}.unexpected", error=msg)
         notifier.agent_error(ROLE, url, msg)
         return {"seo_report": "", "error": msg, "workflow_id": thread_id, "agent": ROLE}
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(SEOState)
+    g.add_node("seo_specialist", seo_specialist_node)
+    g.set_entry_point("seo_specialist")
+    g.add_edge("seo_specialist", END)
+    return g.compile()

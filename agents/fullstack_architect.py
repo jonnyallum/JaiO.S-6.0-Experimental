@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "fullstack_architect"
 MAX_RETRIES = 3
@@ -265,3 +266,14 @@ def fullstack_architect_node(state: FullstackArchitectState) -> FullstackArchite
         "stack_decision":   stack_decision,
         "error":            None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(FullstackArchitectState)
+    g.add_node("fullstack_architect", fullstack_architect_node)
+    g.set_entry_point("fullstack_architect")
+    g.add_edge("fullstack_architect", END)
+    return g.compile()

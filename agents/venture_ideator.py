@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "venture_ideator"
 MAX_RETRIES = 3
@@ -312,3 +313,14 @@ def venture_ideator_node(state: VentureIdeatorState) -> VentureIdeatorState:
         "viability_score":   viability_score,
         "error":             None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(VentureIdeatorState)
+    g.add_node("venture_ideator", venture_ideator_node)
+    g.set_entry_point("venture_ideator")
+    g.add_edge("venture_ideator", END)
+    return g.compile()

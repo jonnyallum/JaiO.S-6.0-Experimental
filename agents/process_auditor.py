@@ -32,6 +32,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from personas.config import get_persona
 from utils.metrics import CallMetrics
 from utils.checkpoints import checkpoint
+from langgraph.graph import StateGraph, END
 
 ROLE        = "process_auditor"
 MAX_RETRIES = 3
@@ -238,3 +239,14 @@ def process_auditor_node(state: ProcessAuditorState) -> ProcessAuditorState:
         "bottleneck_score": bottleneck_score,
         "error":            None,
     }
+
+
+# ── LangGraph wrapper ────────────────────────────────────────────────────────
+
+def build_graph():
+    """Compile this agent as a standalone LangGraph StateGraph."""
+    g = StateGraph(ProcessAuditorState)
+    g.add_node("process_auditor", process_auditor_node)
+    g.set_entry_point("process_auditor")
+    g.add_edge("process_auditor", END)
+    return g.compile()
