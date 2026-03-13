@@ -1389,135 +1389,114 @@ def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
         return {"result": r.get("financial_plan", ""), "error": r.get("error")}
     elif role == "api_integration_agent":
         r = api_integration_agent_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "betting_systems":
         r = betting_systems_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "code_executor":
         r = code_executor_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "cost_tracker":
         r = cost_tracker_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "darts_analyst":
         r = darts_analyst_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "error_recovery_agent":
         r = error_recovery_agent_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "eval_judge":
         r = eval_judge_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "feedback_collector":
         r = feedback_collector_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "football_tactical":
         r = football_tactical_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "formula1_analyst":
         r = formula1_analyst_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "horse_racing":
         r = horse_racing_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "human_gate":
         r = human_gate_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "image_prompt_engineer":
         r = image_prompt_engineer_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "motogp_analyst":
         r = motogp_analyst_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "onboarding_agent":
         r = onboarding_agent_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "rag_retriever":
         r = rag_retriever_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "risk_analyst":
         r = risk_analyst_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "roulette_math":
         r = roulette_math_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "summariser":
         r = summariser_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "translator":
         r = translator_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     elif role == "workflow_planner":
         r = workflow_planner_node({
-            "brief": brief, "persona": persona,
-            "client_context": state.get("client_context", ""),
+            **base, "agent": role, "task": task,
         })
-        return {"output": r.get("output", ""), "status": "done", "error": None}
+        return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
     else:
         # Fallback to research_analyst for unknown roles
         try:
-            r = research_analyst_node({"brief": brief, "persona": persona, "client_context": state.get("client_context", "")})
-            return {"output": r.get("output", ""), "status": "done", "error": None}
+            r = research_analyst_node({**base, "agent": "research_analyst", "task": task, "research_scope": "comprehensive", "research_report": ""})
+            return {"result": r.get("output", r.get("result", "")), "error": r.get("error")}
         except Exception as e:
             return {"result": f"Fallback failed: {e}", "error": str(e)}
 
