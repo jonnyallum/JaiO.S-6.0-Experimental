@@ -122,34 +122,14 @@ log = structlog.get_logger()
 # ── Keyword routing table ─────────────────────────────────────────────────────────
 ROUTING_RULES: dict[str, list[str]] = {
     # ── Technical ─────────────────────────────────────────────────────────────
-    "github_intelligence": [
-        "github", "repo", "repository", "git commit", "pull request",
-        "github issue", "git branch", "contributor", "git merge", "git diff",
-        "github actions workflow", "code diff", "open pr",
-    ],
-    "security_audit": [
-        "security audit", "security review", "vulnerability", "security check",
-        "pentest", "penetration test", "access control", "permission model",
-        "encrypt", "auth review", "token security", "secret management",
-        "cve", "exposure risk", "security hardening",
-    ],
-    "architecture_review": [
-        "review architecture", "architecture review", "architecture audit",
-        "system design review", "review the stack", "refactor plan",
-        "architectural decision", "design pattern review", "tech debt",
-        "review this architecture", "architecture assessment",
-    ],
-    "data_extraction": [
-        "parse", "extract data", "json schema", "csv parse",
-        "convert data", "transform data", "scrape", "data pipeline",
-    ],
+    "github_intelligence": ["github", "repo", "repository", "git commit", "pull request", "github issue", "git branch", "contributor", "git merge", "git diff", "github actions workflow", "code diff", "open pr", "commits", "branch", "repo audit", "github repo"],
+    "security_audit": ["security audit", "security review", "vulnerability", "security check", "pentest", "penetration test", "access control", "permission model", "encrypt", "auth review", "token security", "secret management", "cve", "exposure risk", "security hardening", "owasp", "security scan"],
+    "architecture_review": ["review architecture", "architecture review", "architecture audit", "system design review", "review the stack", "refactor plan", "architectural decision", "design pattern review", "tech debt", "review this architecture", "architecture assessment", "scalability", "infra review", "architecture bottleneck", "scalability review", "infra design", "review our", "infrastructure design", "recommend improvements", "review our infrastructure"],
+    "data_extraction": ["parse", "extract data", "json schema", "csv parse", "convert data", "transform data", "scrape", "data pipeline", "schema extract", "api response", "extract structured"],
     "quality_validation": [
         "quality assurance", "validate output", "qa review", "pass criteria", "fail criteria", "quality score", "qc check",
     ],
-    "code_reviewer": [
-        "review code", "code review", "code quality", "feedback on code",
-        "lint", "smell", "file review",
-    ],
+    "code_reviewer": ["review code", "code review", "code quality", "feedback on code", "lint", "smell", "file review", "pull request", "pr review"],
     "dependency_audit": [
         "dependency", "dependencies", "package", "requirements", "npm",
         "pip", "outdated", "licence", "license", "lockfile",
@@ -169,16 +149,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "supabase edge", "supabase storage", "supabase auth", "supabase realtime",
         "supabase table", "supabase policy",
     ],
-    "devops_engineer": [
-        "devops", "ci/cd", "github actions", "docker", "container", "kubernetes",
-        "k8s", "pipeline", "deploy pipeline", "build pipeline", "infra", "infrastructure",
-        "terraform", "ansible", "bash script",
-    ],
-    "deployment_specialist": [
-        "deploy", "deployment", "gcp deploy", "cloud run", "app engine",
-        "vercel", "netlify", "fly.io", "railway", "server setup",
-        "production deploy", "release", "rollout",
-    ],
+    "devops_engineer": ["devops", "ci/cd", "github actions", "docker", "container", "kubernetes", "k8s", "pipeline", "deploy pipeline", "build pipeline", "infra", "infrastructure", "terraform", "ansible", "bash script", "nginx", "reverse proxy", "ci/cd pipeline", "server config"],
+    "deployment_specialist": ["deploy", "deployment", "gcp deploy", "cloud run", "app engine", "vercel", "netlify", "fly.io", "railway", "server setup", "production deploy", "release", "rollout", "ship", "staging", "deploy to", "ship the", "staging env"],
     "performance_auditor": [
         "performance", "slow", "latency", "lighthouse", "core web vitals",
         "page speed", "load time", "bottleneck", "profil", "optimise speed",
@@ -194,11 +166,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "gcp vm", "compute engine", "cloud storage", "gcs",
         "cloud function", "pub/sub", "gcp setup",
     ],
-    "data_parser": [
-        "data parsing", "raw data", "parse data", "structure data",
-        "unstructured data", "clean data", "normalise data", "normalize data",
-        "tabular data", "data pipeline", "etl",
-    ],
+    "data_parser": ["data parsing", "raw data", "parse data", "structure data", "unstructured data", "clean data", "normalise data", "normalize data", "tabular data", "data pipeline", "etl", "csv", "json payload", "normalize", "parse file", "decode", "parse this", "csv file", "normalize the", "decode this"],
     "agent_builder": [
         "build agent", "create agent", "new agent", "agent spec",
         "agent design", "agent skill", "skill node", "langgraph agent",
@@ -209,19 +177,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "system health", "orchestration status", "task queue", "job status",
         "pipeline alert", "pipeline report",
     ],
-    "process_auditor": [
-        "process audit", "workflow audit", "sop audit", "process review",
-        "operational review", "efficiency audit", "process improvement",
-        "workflow optimisation", "workflow optimization", "bottleneck audit",
-        "onboarding process", "friction audit", "audit this process", "audit this workflow",
-        "friction points", "manual steps", "audit the process",
-    ],
-    "truth_verifier": [
-        "truth verif", "verify this claim", "verify the claim", "verify claim",
-        "is this true", "truth check", "artifact verification", "13-gate",
-        "gate verification", "output verification", "verify artifact",
-        "cross-reference", "source check", "claim verification",
-    ],
+    "process_auditor": ["process audit", "workflow audit", "sop audit", "process review", "operational review", "efficiency audit", "process improvement", "workflow optimisation", "workflow optimization", "bottleneck audit", "onboarding process", "friction audit", "audit this process", "audit this workflow", "friction points", "manual steps", "audit the process", "friction point", "continuous improvement"],
+    "truth_verifier": ["truth verif", "verify this claim", "verify the claim", "verify claim", "is this true", "truth check", "artifact verification", "13-gate", "gate verification", "output verification", "verify artifact", "cross-reference", "source check", "claim verification", "fact-check", "fact check", "verify accuracy", "truth verification", "accuracy of", "verify the", "verify the accuracy", "accuracy of this"],
 
     # ── Content & Creative ────────────────────────────────────────────────────
     "social_post_generator": [
@@ -238,22 +195,13 @@ ROUTING_RULES: dict[str, list[str]] = {
         "paid ad", "ppc copy", "ad headline", "ad creative copy",
         "display ad", "sponsored post copy",
     ],
-    "copywriter": [
-        "copy", "write copy", "headline", "headline copy", "headline variant",
-        "website copy", "landing page copy", "homepage copy",
-        "about page", "tagline", "slogan", "brand copy", "product description",
-        "marketing copy", "write headlines", "ad copy", "conversion copy",
-    ],
+    "copywriter": ["copy", "write copy", "headline", "headline copy", "headline variant", "website copy", "landing page copy", "homepage copy", "about page", "tagline", "slogan", "brand copy", "product description", "marketing copy", "write headlines", "ad copy", "conversion copy", "email copy", "write compelling", "draft the", "copy for", "draft the email", "email sequence", "product launch campaign"],
     "brand_voice_guide": [
         "brand voice", "tone of voice", "brand guidelines", "brand style",
         "writing guidelines", "communication style", "brand language",
         "brand personality", "content guidelines",
     ],
-    "creative_director": [
-        "creative direction", "creative brief", "creative strategy",
-        "campaign concept", "creative campaign", "art direction",
-        "creative vision", "visual concept", "creative review",
-    ],
+    "creative_director": ["creative direction", "creative brief", "creative strategy", "campaign concept", "creative campaign", "art direction", "creative vision", "visual concept", "creative review", "visual storytelling", "creative concept", "storytelling"],
     "video_brief_writer": [
         "video brief", "tiktok", "reels", "youtube short", "short-form video",
         "hook script", "video script", "film brief", "b-roll", "video content",
@@ -263,13 +211,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "voice over", "voiceover", "audio script", "podcast script",
         "spoken content", "narration script",
     ],
-    "ui_designer": [
-        "ui design", "user interface", "wireframe", "mockup", "figma",
-        "component design", "ux design", "user experience", "dashboard design",
-        "design a dashboard", "dashboard component", "design a component",
-        "colour scheme", "color scheme", "layout design", "visual design",
-        "design the ui", "design ui", "screen design", "page design",
-    ],
+    "ui_designer": ["ui design", "user interface", "wireframe", "mockup", "figma", "component design", "ux design", "user experience", "dashboard design", "design a dashboard", "dashboard component", "design a component", "colour scheme", "color scheme", "layout design", "visual design", "design the ui", "design ui", "screen design", "page design", "pixel-perfect", "ui mockup", "design system", "visual hierarchy", "pixel perfect"],
     "content_auditor": [
         "content audit", "audit content", "audit this content", "content quality",
         "audit the content", "content gap", "content depth", "content review",
@@ -300,11 +242,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "value-based pricing", "cost-plus", "competitor pricing",
         "price increase", "pricing page", "how much to charge",
     ],
-    "product_strategist": [
-        "product strategy", "product roadmap", "product vision",
-        "feature prioritisation", "feature prioritization", "mvp",
-        "product market fit", "user story", "product brief", "product spec",
-    ],
+    "product_strategist": ["product strategy", "product roadmap", "product vision", "feature prioritisation", "feature prioritization", "mvp", "product market fit", "user story", "product brief", "product spec", "innovation sprint", "q3", "q4", "product strat", "define the product", "based on user feedback", "strategy for q"],
     "sales_conversion": [
         "prospect", "close", "objection", "deal", "pipeline", "crm",
         "follow up", "pitch", "negotiate", "sales call", "cold",
@@ -319,11 +257,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "product listing", "basket", "checkout", "cart abandonment",
         "product page", "shop strategy",
     ],
-    "launch_orchestrator": [
-        "launch", "go to market", "gtm", "product launch", "campaign launch",
-        "release plan", "launch plan", "launch strategy", "ship",
-        "launch checklist", "launch timeline",
-    ],
+    "launch_orchestrator": ["launch", "go to market", "gtm", "product launch", "campaign launch", "release plan", "launch plan", "launch strategy", "ship", "launch checklist", "launch timeline", "launch day", "go-to-market", "launch sequence", "launch orchestrat", "orchestrate", "all channels"],
     "venture_ideator": [
         "startup idea", "business idea", "venture idea", "new business",
         "side project", "opportunity", "market gap", "business concept",
@@ -336,21 +270,13 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
 
     # ── Intelligence & Research ───────────────────────────────────────────────
-    "business_intelligence": [
-        "kpi", "metric", "dashboard", "bi report", "analytics report",
-        "forecast", "trend", "performance report", "revenue report",
-        "data analysis", "business report",
-    ],
+    "business_intelligence": ["kpi", "metric", "dashboard", "bi report", "analytics report", "forecast", "trend", "performance report", "revenue report", "data analysis", "business report", "kpi dashboard", "reporting framework", "executive report", "business review", "reporting", "executive", "decision-making", "executive decision", "build a reporting"],
     "analytics_reporter": [
         "analytics", "traffic data", "conversion data", "engagement data",
         "retention data", "google analytics", "raw metrics", "metric report",
         "data report", "weekly report", "monthly report",
     ],
-    "research_analyst": [
-        "research", "market research", "competitive analysis", "due diligence",
-        "academic", "trend analysis", "fact finding", "deep research",
-        "investigate", "background research",
-    ],
+    "research_analyst": ["research", "market research", "competitive analysis", "due diligence", "academic", "trend analysis", "fact finding", "deep research", "investigate", "background research", "market trends", "competitive landscape", "deep dive", "market analysis"],
     "competitor_monitor": [
         "competitor url", "scrape competitor", "analyze competitor site",
         "monitor competitor", "competitor website", "scrape their site",
@@ -373,22 +299,9 @@ ROUTING_RULES: dict[str, list[str]] = {
         "zapier", "make.com", "integration build", "email sequence automation",
         "automate task",
     ],
-    "email_architect": [
-        "email sequence", "email campaign", "nurture sequence", "drip",
-        "follow-up email", "onboarding email", "re-engagement",
-        "cold email", "email series", "write emails",
-    ],
-    "project_manager": [
-        "project plan", "project timeline", "project milestone", "task breakdown",
-        "project phases", "project scope", "resource plan", "project brief",
-        "sprint planning", "kanban board", "gantt", "delivery plan",
-        "create a project plan", "build a project plan", "project schedule",
-    ],
-    "customer_success": [
-        "customer success", "client health", "churn", "retention strategy",
-        "onboarding client", "client check-in", "nps", "client feedback",
-        "customer satisfaction", "account management",
-    ],
+    "email_architect": ["email sequence", "email campaign", "nurture sequence", "drip", "follow-up email", "onboarding email", "re-engagement", "cold email", "email series", "write emails", "email template", "resend", "email notification", "email notif", "email automat", "welcome email", "notifications with n8n", "automated email", "email with"],
+    "project_manager": ["project plan", "project timeline", "project milestone", "task breakdown", "project phases", "project scope", "resource plan", "project brief", "sprint planning", "kanban board", "gantt", "delivery plan", "create a project plan", "build a project plan", "project schedule", "milestones", "coordinate", "timeline", "project management"],
+    "customer_success": ["customer success", "client health", "churn", "retention strategy", "onboarding client", "client check-in", "nps", "client feedback", "customer satisfaction", "account management", "support ticket", "customer support", "billing issue", "client success", "beta users", "customer issue", "feedback loop"],
     "knowledge_base_writer": [
         "knowledge base", "help doc", "faq", "documentation", "how-to guide",
         "support article", "user guide", "wiki", "write docs", "internal doc",
@@ -444,11 +357,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "code implementation", "write code", "implement feature", "coding",
         "debug code", "fix bug", "software development",
     ],
-    "system_architect": [
-        "system architecture", "infrastructure design", "microservices",
-        "service mesh", "load balancing", "scalability", "system design",
-        "distributed system", "high availability", "fault tolerance",
-    ],
+    "system_architect": ["system architecture", "infrastructure design", "microservices", "service mesh", "load balancing", "scalability", "system design", "distributed system", "high availability", "fault tolerance", "microservice", "platform design", "distributed", "design a", "real-time", "data pipeline", "best system", "best architecture"],
     "investment_analyst": [
         "investment analysis", "stock analysis", "portfolio", "market research",
         "financial modeling", "valuation", "equity research", "investment thesis",
@@ -469,51 +378,34 @@ ROUTING_RULES: dict[str, list[str]] = {
         "regulatory", "legal due diligence", "terms of service", "privacy policy",
         "legal opinion", "contract clause",
     ],
-    "due_diligence_analyst": [
-        "due diligence", "company evaluation", "market validation",
-        "risk scoring", "business assessment", "company research",
-        "acquisition analysis", "dd report", "target evaluation",
-    ],
-    "deep_researcher": [
-        "deep research", "literature review", "academic research",
-        "systematic review", "evidence synthesis", "research paper",
-        "meta-analysis", "comprehensive research", "in-depth research",
-        "thorough research", "research report",
-    ],
-    "product_launch_strategist": [
-        "product launch", "go to market", "gtm strategy", "launch plan",
-        "launch sequence", "product release", "market entry",
-        "launch checklist", "product rollout",
-    ],
-    "financial_planner": [
-        "financial plan", "budget", "forecast", "cash flow",
-        "financial projection", "expense tracking", "revenue forecast",
-        "financial model", "break even", "profit margin", "financial planning",
-    ],
+    "due_diligence_analyst": ["due diligence", "company evaluation", "market validation", "risk scoring", "business assessment", "company research", "acquisition analysis", "dd report", "target evaluation", "acquisition target", "company analysis", "due-diligence", "acquisition", "financial health", "before partnership"],
+    "deep_researcher": ["deep research", "literature review", "academic research", "systematic review", "evidence synthesis", "research paper", "meta-analysis", "comprehensive research", "in-depth research", "thorough research", "research report", "scholarly", "academic", "thorough", "quantum", "emerging technology"],
+    "product_launch_strategist": ["product launch", "go to market", "gtm strategy", "launch plan", "launch sequence", "product release", "market entry", "launch checklist", "product rollout", "product launch strategy", "launch strategy", "pre-launch", "post-launch", "launch strateg"],
+    "financial_planner": ["financial plan", "budget", "forecast", "cash flow", "financial projection", "expense tracking", "revenue forecast", "financial model", "break even", "profit margin", "financial planning", "financial forecast", "budget plan", "budget allocation", "budget alloc", "12 months"],
     "horse_racing": ["horse", "racing", "cheltenham", "ascot", "jockey", "handicap", "form guide", "going"],
     "football_tactical": ["football", "premier league", "tactical", "match analysis", "xg", "lineup"],
     "formula1_analyst": ["formula 1", "f1", "grand prix", "pitstop", "qualifying", "grid"],
     "darts_analyst": ["darts", "pdc", "checkout", "180", "nine darter", "averages"],
     "motogp_analyst": ["motogp", "moto gp", "telemetry", "rossi", "marquez"],
-    "betting_systems": ["betting", "odds", "bookmaker", "accumulator", "value bet", "stake"],
+    "betting_systems": ["betting", "odds", "bookmaker", "accumulator", "value bet", "stake", "multi-market", "betting coordination", "sports market", "betting system"],
     "roulette_math": ["roulette", "casino", "probability", "house edge", "martingale"],
 
     # ── awesome-llm-apps + new capability agents (Loop 2) ──
-    "eval_judge": ["evaluate", "judge", "score output", "quality check", "grade", "rating", "rubric"],
+    "eval_judge": ["evaluate", "judge", "score output", "quality check", "grade", "rating", "rubric", "evaluate quality", "judge output", "quality rubric", "grade response", "judge whether"],
     "code_executor": ["execute code", "run code", "validate code", "debug code", "code review", "sandbox"],
     "rag_retriever": ["retrieve", "vector search", "knowledge base", "semantic search", "rag", "embeddings"],
     "human_gate": ["approval", "human review", "sign off", "manual check", "gate", "checkpoint"],
-    "workflow_planner": ["plan workflow", "decompose task", "task planning", "step by step plan", "workflow design"],
-    "summariser": ["summarise", "summarize", "summary", "tldr", "condense", "digest", "recap"],
-    "translator": ["translate", "translation", "language", "multilingual", "localise", "localize"],
+    "workflow_planner": ["plan workflow", "decompose task", "task planning", "step by step plan", "workflow design", "workflow plan", "task sequence", "workflow map", "process flow", "map out", "production pipeline"],
+    "summariser": ["summarise", "summarize", "summary", "tldr", "condense", "digest", "recap", "key findings", "summarize the", "summarise the"],
+    "translator": ["translate", "translation", "language", "multilingual", "localise", "localize", "spanish", "french", "german", "translate this", "into spanish", "into french", "into german", "convert our product"],
     "image_prompt_engineer": ["image prompt", "dall-e", "midjourney", "stable diffusion", "image generation", "visual prompt"],
     "api_integration_agent": ["api integration", "rest api", "graphql", "webhook design", "api design", "endpoint"],
-    "risk_analyst": ["risk assessment", "risk analysis", "risk score", "risk matrix", "mitigation", "risk register"],
+    "risk_analyst": ["risk assessment", "risk analysis", "risk score", "risk matrix", "mitigation", "risk register", "vendor risk", "risk associat", "vendor partner", "risk matri", "score the risk", "risks associated", "partnership risk"],
     "onboarding_agent": ["onboard", "onboarding", "new client", "client setup", "welcome pack", "kickoff"],
     "feedback_collector": ["feedback", "nps", "csat", "survey", "user feedback", "satisfaction"],
     "cost_tracker": ["cost tracking", "token usage", "api costs", "budget", "spend", "cost optimisation"],
-    "error_recovery_agent": ["error recovery", "diagnose error", "stack trace", "error handling", "debug failure", "incident"],
-    "document_qa": ["document qa", "rag", "document analysis", "search documents", "answer from docs", "knowledge base query", "document question", "file analysis", "pdf analysis", "text search"],
+    "error_recovery_agent": ["error recovery", "diagnose error", "stack trace", "error handling", "debug failure", "incident", "postmortem", "production error", "recover error", "diagnose this"],
+    "document_qa": ["document qa", "rag", "document analysis", "search documents", "answer from docs", "knowledge base query", "document question", "file analysis", "pdf analysis", "text search", "answer from document", "internal documentation", "query document", "from our", "document search", "internal doc", "search our knowledge", "answer this question from", "from our internal"],
     "vision_analyst": ["image analysis", "vision", "screenshot analysis", "visual audit", "image qa", "describe image", "extract text from image", "ocr", "ui audit", "visual review", "image", "screenshot"],
 }
 
