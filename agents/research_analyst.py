@@ -301,3 +301,11 @@ def build_graph() -> StateGraph:
     g.set_entry_point("research_analyst")
     g.add_edge("research_analyst", END)
     return g.compile()
+
+
+# ── Standard entry point ─────────────────────────────────────
+async def run(state: dict) -> dict:
+    """JaiOS 6.0 standard entry point — builds graph and invokes."""
+    graph = build_graph().compile()
+    result = await graph.ainvoke(state)
+    return result

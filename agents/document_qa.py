@@ -163,3 +163,9 @@ def build_document_qa_graph():
 def document_qa_node(state: dict) -> dict:
     graph = build_document_qa_graph()
     return graph.invoke(state)
+
+
+# ── Standard entry point ─────────────────────────────────────
+async def run(state: dict) -> dict:
+    """JaiOS 6.0 standard entry point — delegates to node function."""
+    return _document_qa_node(state)

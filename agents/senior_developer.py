@@ -165,3 +165,11 @@ def build_graph():
     g.set_entry_point("senior_developer")
     g.add_edge("senior_developer", END)
     return g.compile()
+
+
+# ── Standard entry point ─────────────────────────────────────
+async def run(state: dict) -> dict:
+    """JaiOS 6.0 standard entry point — builds graph and invokes."""
+    graph = build_graph().compile()
+    result = await graph.ainvoke(state)
+    return result

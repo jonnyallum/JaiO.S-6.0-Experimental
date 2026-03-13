@@ -143,3 +143,9 @@ def build_vision_graph():
 def vision_analyst_node(state: dict) -> dict:
     graph = build_vision_graph()
     return graph.invoke(state)
+
+
+# ── Standard entry point ─────────────────────────────────────
+async def run(state: dict) -> dict:
+    """JaiOS 6.0 standard entry point — delegates to node function."""
+    return _vision_node(state)
