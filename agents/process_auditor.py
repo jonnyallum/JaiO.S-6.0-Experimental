@@ -205,6 +205,8 @@ def _audit_process(client: anthropic.Anthropic, prompt: str, metrics: CallMetric
     metrics.log()
     metrics.persist()
     return response.content[0].text
+_generate = _audit_process  # spec alias
+
 
 
 def process_auditor_node(state: ProcessAuditorState) -> ProcessAuditorState:

@@ -215,6 +215,12 @@ Blameless postmortem: timeline, contributing factors, what went well, what didn'
 Priority: silent failures are more dangerous than loud ones — a pipeline that silently produces wrong output is worse than one that crashes."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -230,6 +236,8 @@ def _diagnose(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") 
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _diagnose  # spec alias
+
 
 
 def _extract_action_items(diagnosis: str) -> list[str]:
@@ -322,7 +330,9 @@ def pipeline_monitor_node(state: PipelineState) -> PipelineState:
         "signal_summary":          signal_summary,
         "silent_failure_detected": silent_failure_detected,
         "checklist":               checklist,
-        "error":                   "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

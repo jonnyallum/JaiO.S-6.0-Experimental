@@ -209,6 +209,8 @@ def _verify(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) -> s
     metrics.log()
     metrics.persist()
     return response.content[0].text
+_generate = _verify  # spec alias
+
 
 
 # ── Node Entry Point ──────────────────────────────────────────────────────────

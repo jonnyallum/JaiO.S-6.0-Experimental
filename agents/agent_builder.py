@@ -235,6 +235,12 @@ IDENTITY RULES (CRITICAL):
 OUTPUT: The complete Python file content only. No markdown, no explanations."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -250,6 +256,8 @@ def _generate_agent(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _generate_agent  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -330,7 +338,9 @@ def agent_builder_node(state: AgentBuilderState) -> AgentBuilderState:
         "agent_code":     agent_code,
         "agent_filename": f"{agent_role}.py",
         "spec_checklist": spec_checklist,
-        "error":          "" if pass_count == total else f"WARN: {total - pass_count} spec points missing — review spec_checklist",
+        "agent": ROLE,
+
+        "error": None if pass_count == total else f"WARN: {total - pass_count} spec points missing — review spec_checklist",
     }
 
 

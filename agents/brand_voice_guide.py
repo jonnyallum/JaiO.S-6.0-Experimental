@@ -219,6 +219,12 @@ Then explain what makes the third version correct.
 Every example must use {brand_name}'s actual industry and audience — no generic examples."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -234,6 +240,8 @@ def _write_guide(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _write_guide  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -308,7 +316,9 @@ def brand_voice_guide_node(state: BrandVoiceState) -> BrandVoiceState:
         "voice_guide":     voice_guide,
         "voice_spectrum":  voice_spectrum,
         "parsed_keywords": parsed_keywords,
-        "error":           "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

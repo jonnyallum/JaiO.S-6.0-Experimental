@@ -213,6 +213,12 @@ Build a comprehensive GTM launch plan with:
 Be specific. No generic advice. Every action must be executable."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -228,6 +234,8 @@ def _plan_launch(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _plan_launch  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -303,7 +311,9 @@ def launch_orchestrator_node(state: LaunchState) -> LaunchState:
         "timeline":         timeline,
         "t_minus_days":     t_minus_days,
         "active_channels":  active_channels,
-        "error":            "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

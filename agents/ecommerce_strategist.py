@@ -279,6 +279,12 @@ FOR LISTING_OPTIMISATION:
 No generic e-commerce advice. Every recommendation must be specific to {product_name} in the {niche} niche."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -294,6 +300,8 @@ def _generate_strategy(client: anthropic.Anthropic, prompt: str, metrics: "CallM
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _generate_strategy  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -361,7 +369,9 @@ def ecommerce_strategist_node(state: EcommerceState) -> EcommerceState:
         "strategy_output": strategy_output,
         "margin_data":     margin_data,
         "niche_intel":     niche_intel,
-        "error":           "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

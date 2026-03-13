@@ -193,6 +193,12 @@ Rules:
 - All dates in format: DD Month YYYY"""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -208,6 +214,8 @@ def _write_pr(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics") 
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _write_pr  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -277,7 +285,9 @@ def pr_writer_node(state: PRState) -> PRState:
         "pr_content":  pr_content,
         "word_count":  word_count,
         "format_spec": format_spec,
-        "error":       "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

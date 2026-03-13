@@ -67,6 +67,12 @@ def _chunk_text(text: str, size: int = CHUNK_SIZE) -> list[str]:
     return chunks
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=2, max=30),
@@ -121,6 +127,8 @@ Provide:
         "sources": f"{len(relevant)} chunks from {len(chunks)} total",
         "confidence": 7,
     }
+_generate = _rag_query  # spec alias
+
 
 
 def _document_qa_node(state: DocumentQAState) -> dict:
@@ -143,7 +151,8 @@ def _document_qa_node(state: DocumentQAState) -> dict:
         result = _rag_query(question, documents, chunk_size, top_k, persona)
         metrics.record_success()
         checkpoint("POST", state["workflow_id"], ROLE, {"answer_len": len(result["answer"])})
-        return {**result, "error": None}
+        return {**result, "agent": ROLE,
+ "error": None}
     except APIStatusError as e:
         metrics.record_failure(str(e))
         return {"answer": "", "sources": "", "confidence": 0, "error": f"TRANSIENT: {e.status_code}"}

@@ -259,6 +259,8 @@ def _generate_script(client: anthropic.Anthropic, prompt: str, metrics: CallMetr
     metrics.log()
     metrics.persist()
     return response.content[0].text
+_generate = _generate_script  # spec alias
+
 
 
 def voice_synthesiser_node(state: VoiceSynthesiserState) -> VoiceSynthesiserState:

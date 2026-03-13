@@ -39,6 +39,7 @@ from typing import Optional
 
 import anthropic
 import structlog
+from anthropic import APIStatusError
 from github import GithubException
 from tenacity import (
     retry,
@@ -126,6 +127,8 @@ def _synthesise(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics"
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _synthesise  # spec alias
+
 
 
 def _build_prompt(data: dict, query: str, persona: dict) -> str:

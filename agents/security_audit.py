@@ -114,6 +114,12 @@ def _collect_security_files(gh: GitHubTools, owner: str, repo: str) -> dict:
 
 
 # ── Phase 2: Risk scoring (Claude call, retried on transient errors only) ────────
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
@@ -132,6 +138,8 @@ def _score_risk(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics"
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _score_risk  # spec alias
+
 
 
 def _build_prompt(repo_slug: str, data: dict, persona: dict) -> str:

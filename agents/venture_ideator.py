@@ -278,6 +278,8 @@ def _ideate(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) -> s
     metrics.log()
     metrics.persist()
     return response.content[0].text
+_generate = _ideate  # spec alias
+
 
 
 def venture_ideator_node(state: VentureIdeatorState) -> VentureIdeatorState:

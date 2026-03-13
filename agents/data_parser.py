@@ -244,6 +244,12 @@ Deliver:
 Be precise. No approximations. Every field must have an explicit mapping decision."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -259,6 +265,8 @@ def _parse_data(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics"
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _parse_data  # spec alias
+
 
 
 def _extract_exceptions(parsed_output: str) -> list[str]:
@@ -341,7 +349,9 @@ def data_parser_node(state: DataParserState) -> DataParserState:
         "exception_log":  exception_log,
         "detected_format": detected_format,
         "field_count":    field_count,
-        "error":          "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

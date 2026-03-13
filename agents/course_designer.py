@@ -237,6 +237,12 @@ Rules:
 - Titles must be outcome-based, not topic-based (e.g. "Build Your First Landing Page" not "Landing Pages")"""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -252,6 +258,8 @@ def _write_curriculum(client: anthropic.Anthropic, prompt: str, metrics: "CallMe
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _write_curriculum  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -326,7 +334,9 @@ def course_designer_node(state: CourseState) -> CourseState:
         "format_spec":   fmt_spec,
         "level_note":    level_note,
         "estimated_hours": estimated_hours,
-        "error":         "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

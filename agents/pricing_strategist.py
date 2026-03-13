@@ -236,6 +236,12 @@ FOR GENERAL:
 Be specific with numbers. No ranges as final answers — commit to recommended price points."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -251,6 +257,8 @@ def _design_pricing(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _design_pricing  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -321,7 +329,9 @@ def pricing_strategist_node(state: PricingState) -> PricingState:
         "pricing_strategy":  pricing_strategy,
         "recommended_tiers": [],   # structured parsing of tiers is a downstream task
         "model_principles":  principles,
-        "error":             "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

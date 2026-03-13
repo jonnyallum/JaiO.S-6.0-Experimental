@@ -206,6 +206,12 @@ Rules:
 - End with a signature block: [AGENCY NAME] | [CONTACT EMAIL] | [PHONE]"""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -221,6 +227,8 @@ def _write_proposal(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _write_proposal  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -292,7 +300,9 @@ def proposal_writer_node(state: ProposalState) -> ProposalState:
         "proposal":          proposal,
         "proposal_sections": sections,
         "sections":          sections,
-        "error":             "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

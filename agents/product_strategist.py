@@ -179,6 +179,12 @@ Ruthless prioritisation over exhaustive lists. Every item must earn its place.
 No filler. No "TBD". Every output must be usable in a real planning session."""
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -194,6 +200,8 @@ def _generate_strategy(client: anthropic.Anthropic, prompt: str, metrics: "CallM
     )
     metrics.record(response)
     return response.content[0].text
+_generate = _generate_strategy  # spec alias
+
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -256,7 +264,9 @@ def product_strategist_node(state: ProductStrategyState) -> ProductStrategyState
         **state,
         "strategy_output": strategy_output,
         "framework_used":  framework,
-        "error":           "",
+        "agent": ROLE,
+
+        "error": None,
     }
 
 

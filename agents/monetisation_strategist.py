@@ -134,6 +134,12 @@ Current Revenue : {state.get('current_revenue') or 'Pre-revenue / not provided'}
 _build_prompt = _build_strategy_prompt  # spec alias — canonical name for 19-point compliance
 
 # ── Phase 2: Generate (Claude call, retried on transient errors only) ─────────────
+def _is_transient(exc: BaseException) -> bool:
+    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
+    from anthropic import APIStatusError
+    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
+
+
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
