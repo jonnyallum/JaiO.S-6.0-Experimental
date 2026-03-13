@@ -364,6 +364,62 @@ def list_pipelines():
     }
 
 
+
+# ── Pipeline Execution ────────────────────────────────────────────────────────
+
+class PipelineRequest(BaseModel):
+    pipeline: str = ""
+    brief: str = ""
+    task: str = ""
+    custom_steps: list[str] | None = None
+    eval_output: bool = True
+    client_id: str = ""
+    project_id: str = ""
+    sync: bool = True
+
+@app.post("/pipeline")
+def run_pipeline_endpoint(req: PipelineRequest, _key=Depends(verify_api_key)):
+    """Execute a multi-agent pipeline. Returns results synchronously by default."""
+    from graphs.supervisor import run_pipeline_supervisor
+    task = req.task or req.brief
+    if not task and not req.custom_steps:
+        raise HTTPException(400, "Must provide task/brief and pipeline name or custom_steps")
+
+    start = time.time()
+    try:
+        result = run_pipeline_supervisor({
+            "pipeline": req.pipeline,
+            "task": task,
+            "custom_steps": req.custom_steps,
+            "eval_output": req.eval_output,
+            "client_id": req.client_id,
+            "project_id": req.project_id,
+        })
+        elapsed = round(time.time() - start, 1)
+        return {
+            "status": "complete",
+            "elapsed": elapsed,
+            "pipeline": result.get("pipeline"),
+            "steps_count": len(result.get("steps", [])),
+            "steps": result.get("steps", []),
+            "final_result": result.get("final_result", "")[:5000],
+            "eval": result.get("eval"),
+            "error": result.get("error"),
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e), "elapsed": round(time.time() - start, 1)}
+
+
+@app.post("/eval")
+def eval_endpoint(req: dict, _key=Depends(verify_api_key)):
+    """Evaluate an output against a task using LLM-as-judge."""
+    from graphs.eval_gate import evaluate_output
+    return evaluate_output(
+        task=req.get("task", ""),
+        output=req.get("output", ""),
+        agent_role=req.get("agent_role", ""),
+    )
+
 @app.get("/catalog")
 def agent_catalog():
     """Full agent catalog with routing keywords."""

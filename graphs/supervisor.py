@@ -1633,6 +1633,23 @@ def run_supervisor(state: dict) -> dict:
     return _supervisor_graph.invoke(input_state, config=cfg)
 
 
+
+def run_pipeline_supervisor(state: dict) -> dict:
+    """
+    Entry point for pipeline execution from api/main.py.
+    state must include: pipeline (str), task (str)
+    Optional: custom_steps (list[str]), eval_output (bool), client_id, project_id
+    """
+    from graphs.pipeline_engine import run_pipeline
+    return run_pipeline(
+        pipeline_name=state.get("pipeline", ""),
+        task=state.get("task", state.get("brief", "")),
+        client_id=state.get("client_id", ""),
+        project_id=state.get("project_id", ""),
+        eval_output=state.get("eval_output", True),
+        custom_steps=state.get("custom_steps"),
+    )
+
 if __name__ == "__main__":
     import sys
 
