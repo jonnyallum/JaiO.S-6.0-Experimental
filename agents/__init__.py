@@ -154,6 +154,30 @@ __all__ = [
     "deep_researcher_node",
     "product_launch_strategist_node",
     "financial_planner_node",
+    # ── Batch 7: Utility & Betting Ecosystem ──
+    "api_integration_agent_node", "ApiIntegrationAgentState",
+    "betting_systems_node",       "BettingSystemsState",
+    "code_executor_node",         "CodeExecutorState",
+    "cost_tracker_node",          "CostTrackerState",
+    "darts_analyst_node",         "DartsAnalystState",
+    "document_qa_node",           "DocumentQAState",
+    "error_recovery_agent_node",  "ErrorRecoveryAgentState",
+    "eval_judge_node",            "EvalJudgeState",
+    "feedback_collector_node",    "FeedbackCollectorState",
+    "football_tactical_node",     "FootballTacticalState",
+    "formula1_analyst_node",      "Formula1AnalystState",
+    "horse_racing_node",          "HorseRacingState",
+    "human_gate_node",            "HumanGateState",
+    "image_prompt_engineer_node", "ImagePromptEngineerState",
+    "motogp_analyst_node",        "MotogpAnalystState",
+    "onboarding_agent_node",      "OnboardingAgentState",
+    "rag_retriever_node",         "RagRetrieverState",
+    "risk_analyst_node",          "RiskAnalystState",
+    "roulette_math_node",         "RouletteMathState",
+    "summariser_node",            "SummariserState",
+    "translator_node",            "TranslatorState",
+    "vision_analyst_node",        "VisionState",
+    "workflow_planner_node",      "WorkflowPlannerState",
 ]
 
 # ── New agents (awesome-llm-apps inspired) ──
@@ -169,3 +193,28 @@ from agents.due_diligence_analyst import due_diligence_analyst_node
 from agents.deep_researcher import deep_researcher_node
 from agents.product_launch_strategist import product_launch_strategist_node
 from agents.financial_planner import financial_planner_node
+
+# ── Batch 7: Utility & Betting Ecosystem ────────────────────────────────────
+from agents.api_integration_agent import api_integration_agent_node, ApiIntegrationAgentState
+from agents.betting_systems        import betting_systems_node,        BettingSystemsState
+from agents.code_executor          import code_executor_node,          CodeExecutorState
+from agents.cost_tracker           import cost_tracker_node,           CostTrackerState
+from agents.darts_analyst          import darts_analyst_node,          DartsAnalystState
+from agents.document_qa            import document_qa_node,            DocumentQAState
+from agents.error_recovery_agent   import error_recovery_agent_node,   ErrorRecoveryAgentState
+from agents.eval_judge             import eval_judge_node,             EvalJudgeState
+from agents.feedback_collector     import feedback_collector_node,     FeedbackCollectorState
+from agents.football_tactical      import football_tactical_node,      FootballTacticalState
+from agents.formula1_analyst       import formula1_analyst_node,       Formula1AnalystState
+from agents.horse_racing           import horse_racing_node,           HorseRacingState
+from agents.human_gate             import human_gate_node,             HumanGateState
+from agents.image_prompt_engineer  import image_prompt_engineer_node,  ImagePromptEngineerState
+from agents.motogp_analyst         import motogp_analyst_node,         MotogpAnalystState
+from agents.onboarding_agent       import onboarding_agent_node,       OnboardingAgentState
+from agents.rag_retriever          import rag_retriever_node,          RagRetrieverState
+from agents.risk_analyst           import risk_analyst_node,           RiskAnalystState
+from agents.roulette_math          import roulette_math_node,          RouletteMathState
+from agents.summariser             import summariser_node,             SummariserState
+from agents.translator             import translator_node,             TranslatorState
+from agents.vision_analyst         import vision_analyst_node,         VisionState
+from agents.workflow_planner       import workflow_planner_node,       WorkflowPlannerState
