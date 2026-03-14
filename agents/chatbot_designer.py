@@ -247,12 +247,6 @@ FOR FAILURE_HANDLING:
 Write specifically for {platform.replace('_', ' ')}. Respect the platform constraints above."""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -268,8 +262,6 @@ def _design_chatbot(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _design_chatbot  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -350,9 +342,7 @@ def chatbot_designer_node(state: ChatbotState) -> ChatbotState:
         "intent_count":   intent_count,
         "platform_spec":  platform_spec,
         "intent_list":    intent_list,
-        "agent": ROLE,
-
-        "error": None,
+        "error":          "",
     }
 
 

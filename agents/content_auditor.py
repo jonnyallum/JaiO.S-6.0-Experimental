@@ -195,8 +195,6 @@ def _audit(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics) -> st
     metrics.log()
     metrics.persist()
     return response.content[0].text
-_generate = _audit  # spec alias
-
 
 
 def _extract_depth_score(report: str) -> int:

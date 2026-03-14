@@ -73,12 +73,6 @@ def _resolve_image(image_url: str) -> dict:
         return {"type": "image", "source": {"type": "url", "url": image_url}}
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=2, max=30),
@@ -108,8 +102,6 @@ def _vision_query(task: str, image_url: str, analysis_type: str, persona: dict) 
 
     text = resp.content[0].text
     return {"analysis": text, "findings": text[:500], "confidence": 8}
-_generate = _vision_query  # spec alias
-
 
 
 def _vision_node(state: VisionState) -> dict:
@@ -131,8 +123,7 @@ def _vision_node(state: VisionState) -> dict:
         result = _vision_query(task, image_url, analysis_type, persona)
         metrics.record_success()
         checkpoint("POST", state["workflow_id"], ROLE, {"analysis_len": len(result["analysis"])})
-        return {**result, "agent": ROLE,
- "error": None}
+        return {**result, "error": None}
     except APIStatusError as e:
         metrics.record_failure(str(e))
         return {"analysis": "", "findings": "", "confidence": 0, "error": f"TRANSIENT: {e.status_code}"}

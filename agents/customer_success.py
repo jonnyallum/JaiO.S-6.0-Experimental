@@ -245,12 +245,6 @@ FOR UPSELL_OPPORTUNITY:
 Always use {customer_name}'s name. Never use generic templates."""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -266,8 +260,6 @@ def _generate_cs_output(client: anthropic.Anthropic, prompt: str, metrics: "Call
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _generate_cs_output  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -339,9 +331,7 @@ def customer_success_node(state: CustomerSuccessState) -> CustomerSuccessState:
         "urgency_score": urgency_score,
         "churn_risk":    churn_risk,
         "sla_data":      sla_data,
-        "agent": ROLE,
-
-        "error": None,
+        "error":         "",
     }
 
 

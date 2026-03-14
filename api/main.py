@@ -1,3 +1,4 @@
+import json
 #!/usr/bin/env python3
 # Load .env before anything else — agents rely on os.environ for API keys
 from dotenv import load_dotenv
@@ -37,6 +38,7 @@ from contextlib import asynccontextmanager
 import requests
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from config.settings import settings
@@ -227,6 +229,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class RunRequest(BaseModel):
     brief:        str
@@ -304,17 +314,169 @@ def list_agents():
     return {"count": len(nodes), "agents": nodes}
 
 
+# ── Memory Spine Endpoints ────────────────────────────────────────────────────
+
+@app.get("/memory/health")
+def memory_health():
+    """System-wide memory health: stats, per-agent breakdown, decay status."""
+    try:
+        from memory.store import MemoryStore
+        from memory.decay_engine import get_decay_report
+
+        store = MemoryStore()
+        stats = store.get_stats()
+        decay_report = get_decay_report()
+
+        return {
+            "status": "ok",
+            "system": stats,
+            "per_agent": decay_report["agents"],
+            "agent_count": decay_report["agent_count"],
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.get("/memory/agent/{agent_id}")
+def memory_agent_detail(agent_id: str, k: int = 10, memory_type: str = None):
+    """Get memories for a specific agent with optional type filter."""
+    try:
+        from memory.store import MemoryStore
+        store = MemoryStore()
+
+        stats = store.get_stats(agent_id=agent_id)
+        memories = store.get_agent_memories(
+            agent_id=agent_id,
+            memory_type=memory_type,
+            limit=k,
+        )
+
+        return {
+            "agent_id": agent_id,
+            "stats": stats,
+            "memories": [
+                {
+                    "id": str(m.id),
+                    "content": m.content[:500],
+                    "memory_type": m.memory_type,
+                    "importance": m.importance,
+                    "decay_factor": m.decay_factor,
+                    "access_count": m.access_count,
+                    "tags": m.tags,
+                    "created_at": m.created_at.isoformat() if m.created_at else None,
+                    "last_accessed_at": m.last_accessed_at.isoformat() if m.last_accessed_at else None,
+                }
+                for m in memories
+            ],
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.post("/memory/decay")
+def trigger_decay(_key=Depends(verify_api_key)):
+    """Trigger a memory decay cycle. Returns decay report."""
+    try:
+        from memory.decay_engine import run_decay_cycle
+        report = run_decay_cycle()
+        return {"status": "ok", **report}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+class ShareMemoryRequest(BaseModel):
+    content: str
+    source_agent: str
+    target_agents: list[str] = []  # empty = broadcast to all
+    importance: float = 0.7
+    tags: list[str] = []
+
+
+@app.post("/memory/share")
+def share_memory(req: ShareMemoryRequest, _key=Depends(verify_api_key)):
+    """Create a shared memory accessible by multiple agents."""
+    try:
+        from memory.store import MemoryStore
+        store = MemoryStore()
+
+        # Store as shared memory with source agent
+        memory_id = store.store_memory(
+            agent_id=req.source_agent,
+            content=f"[SHARED by {req.source_agent}] {req.content}",
+            memory_type="shared",
+            importance=req.importance,
+            tags=["shared", req.source_agent, *req.tags],
+            metadata={
+                "shared_by": req.source_agent,
+                "target_agents": req.target_agents or ["all"],
+                "shared_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+        return {
+            "status": "ok",
+            "memory_id": str(memory_id),
+            "shared_by": req.source_agent,
+            "targets": req.target_agents or ["all"],
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.get("/memory/search")
+def memory_search(q: str, agent_id: str = None, k: int = 5, threshold: float = 0.5):
+    """Semantic search across the Memory Spine."""
+    try:
+        from memory.store import MemoryStore
+        store = MemoryStore()
+
+        result = store.search_similar(
+            query=q,
+            agent_id=agent_id,
+            k=k,
+            threshold=threshold,
+        )
+
+        return {
+            "query": q,
+            "results": [
+                {
+                    "id": str(m.id),
+                    "agent_id": m.agent_id,
+                    "content": m.content[:500],
+                    "memory_type": m.memory_type,
+                    "similarity": round(m.similarity, 3) if m.similarity else None,
+                    "importance": m.importance,
+                    "tags": m.tags,
+                }
+                for m in result.memories
+            ],
+            "count": len(result.memories),
+            "elapsed_ms": result.elapsed_ms,
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 @app.get("/")
 def root():
     return {
         "name":    "JaiO.S 6.0",
         "version": VERSION,
         "endpoints": {
-            "POST /run":       "Submit a job",
-            "GET  /job/{id}": "Check job status + output",
-            "GET  /jobs":     "List recent jobs",
-            "GET  /agents":   "List all 93 agents",
-            "GET  /health":   "Liveness check",
+            "POST /run":              "Submit a job",
+            "GET  /job/{id}":         "Check job status + output",
+            "GET  /jobs":             "List recent jobs",
+            "GET  /agents":           "List all 93 agents",
+            "GET  /health":           "Liveness check",
+            "GET  /memory/health":    "Memory Spine health dashboard",
+            "GET  /memory/agent/{id}":"Agent memory detail",
+            "GET  /memory/search":    "Semantic memory search",
+            "POST /memory/decay":     "Trigger decay cycle",
+            "POST /memory/share":     "Create shared memory",
+            "GET  /pipelines":        "List pipeline templates",
+            "POST /pipeline":         "Execute a pipeline",
+            "GET  /catalog":          "Full agent catalog",
         },
     }
 
@@ -378,36 +540,73 @@ class PipelineRequest(BaseModel):
     sync: bool = True
 
 @app.post("/pipeline")
-def run_pipeline_endpoint(req: PipelineRequest, _key=Depends(verify_api_key)):
-    """Execute a multi-agent pipeline. Returns results synchronously by default."""
+def run_pipeline_endpoint(req: PipelineRequest, background_tasks: BackgroundTasks, _key=Depends(verify_api_key)):
+    """Execute a multi-agent pipeline. sync=True blocks; sync=False returns job_id for polling."""
     from graphs.supervisor import run_pipeline_supervisor
     task = req.task or req.brief
     if not task and not req.custom_steps:
         raise HTTPException(400, "Must provide task/brief and pipeline name or custom_steps")
 
-    start = time.time()
-    try:
-        result = run_pipeline_supervisor({
-            "pipeline": req.pipeline,
-            "task": task,
-            "custom_steps": req.custom_steps,
-            "eval_output": req.eval_output,
-            "client_id": req.client_id,
-            "project_id": req.project_id,
-        })
-        elapsed = round(time.time() - start, 1)
-        return {
-            "status": "complete",
-            "elapsed": elapsed,
-            "pipeline": result.get("pipeline"),
-            "steps_count": len(result.get("steps", [])),
-            "steps": result.get("steps", []),
-            "final_result": result.get("final_result", "")[:5000],
-            "eval": result.get("eval"),
-            "error": result.get("error"),
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e), "elapsed": round(time.time() - start, 1)}
+    def _run_pipeline_job(job_id: str):
+        start = time.time()
+        from datetime import datetime, timezone as _tz
+        try:
+            result = run_pipeline_supervisor({
+                "pipeline": req.pipeline,
+                "task": task,
+                "custom_steps": req.custom_steps,
+                "eval_output": req.eval_output,
+                "client_id": req.client_id,
+                "project_id": req.project_id,
+            })
+            elapsed = round(time.time() - start, 1)
+            _patch("jobs", {"id": job_id}, {
+                "status":       "complete",
+                "completed_at": datetime.now(_tz.utc).isoformat(),
+                "elapsed_seconds": elapsed,
+                "output": json.dumps({
+                    "pipeline":    result.get("pipeline"),
+                    "steps":       result.get("steps", []),
+                    "steps_count": len(result.get("steps", [])),
+                    "final_result": result.get("final_result", ""),
+                    "eval":        result.get("eval"),
+                    "error":       result.get("error"),
+                    "elapsed":     elapsed,
+                }),
+                "error": result.get("error"),
+            })
+        except Exception as e:
+            _patch("jobs", {"id": job_id}, {"status": "failed", "error": str(e)})
+
+    if req.sync:
+        # Inline execution for short chains
+        job_id = str(uuid.uuid4())
+        _jobs[job_id] = {"id": job_id, "status": "running", "output": None, "error": None}
+        _run_pipeline_job(job_id)
+        job = _jobs[job_id]
+        out = json.loads(job.get("output") or "{}")
+        return {"status": job["status"], "job_id": job_id, **out}
+
+    # Async: create job with status=running (daemon ignores non-queued), bg task fills result
+    import uuid as _uuid
+    from datetime import datetime, timezone as _tz
+    job_id = str(_uuid.uuid4())
+    _post("jobs", {
+        "id":           job_id,
+        "brief":        task[:500],
+        "status":       "running",
+        "submitted_by": "pipeline",
+        "created_at":   datetime.now(_tz.utc).isoformat(),
+        "started_at":   datetime.now(_tz.utc).isoformat(),
+    })
+    background_tasks.add_task(_run_pipeline_job, job_id)
+    return {
+        "status": "queued",
+        "job_id": job_id,
+        "pipeline": req.pipeline,
+        "steps": req.custom_steps or [],
+        "check_status": f"/job/{job_id}",
+    }
 
 
 @app.post("/eval")

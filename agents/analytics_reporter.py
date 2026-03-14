@@ -178,12 +178,6 @@ Deliver a structured analytics report with these sections:
 Be specific with numbers. No fluff. Truth-lock every claim to the data provided."""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -199,8 +193,6 @@ def _generate_report(client: anthropic.Anthropic, prompt: str, metrics: "CallMet
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _generate_report  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -270,9 +262,7 @@ def analytics_reporter_node(state: AnalyticsState) -> AnalyticsState:
         "key_metrics": key_metrics,
         "data_ready": True,
         "trends": trends,
-        "agent": ROLE,
-
-        "error": None,
+        "error": "",
     }
 
 

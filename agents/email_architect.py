@@ -124,12 +124,6 @@ def _count_emails(sequence_text: str) -> int:
 
 
 # ── Phase 2: Sequence writing (Claude call, retried on transient errors only) ────
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
     wait=wait_exponential(multiplier=1, min=RETRY_MIN_S, max=RETRY_MAX_S),
@@ -148,8 +142,6 @@ def _write_sequence(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text.strip()
-_generate = _write_sequence  # spec alias
-
 
 
 def _build_prompt(state: "EmailSequenceState", plan: list, persona: dict) -> str:

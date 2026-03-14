@@ -193,12 +193,6 @@ Rules:
 - Speak directly to the audience's pain or desire"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -214,8 +208,6 @@ def _write_copy(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics"
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _write_copy  # spec alias
-
 
 
 def _parse_variants(raw: str) -> list[dict]:
@@ -303,9 +295,7 @@ def ad_copy_writer_node(state: AdCopyState) -> AdCopyState:
         "variant_count": len(ad_variants),
         "char_limits":   char_limits,
         "copy_angle":    copy_angle,
-        "agent": ROLE,
-
-        "error": None,
+        "error":         "",
     }
 
 

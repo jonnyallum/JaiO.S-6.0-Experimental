@@ -234,12 +234,6 @@ Rules:
 - The ask must include: amount, use of funds (3 lines), timeline to next milestone"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -255,8 +249,6 @@ def _write_pitch(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _write_pitch  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -330,9 +322,7 @@ def investor_pitch_writer_node(state: InvestorPitchState) -> InvestorPitchState:
         **state,
         "pitch_content": pitch_content,
         "stage_focus":   stage_focus,
-        "agent": ROLE,
-
-        "error": None,
+        "error":         "",
     }
 
 

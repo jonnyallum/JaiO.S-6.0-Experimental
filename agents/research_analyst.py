@@ -203,12 +203,6 @@ Confidence score: at the very end, output a single line:
 CONFIDENCE_SCORE: [0-100] — [one sentence justification]"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -224,8 +218,6 @@ def _synthesise(client: anthropic.Anthropic, prompt: str, metrics: "CallMetrics"
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _synthesise  # spec alias
-
 
 
 def _extract_confidence(report: str) -> int:
@@ -297,9 +289,7 @@ def research_analyst_node(state: ResearchState) -> ResearchState:
         "confidence_score": confidence_score,
         "framework":        framework,
         "depth_spec":       depth_spec,
-        "agent": ROLE,
-
-        "error": None,
+        "error":            "",
     }
 
 

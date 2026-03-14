@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Spine Dashboard | Jai.OS</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 30, 0.6);
+            --bg-card-hover: rgba(30, 30, 45, 0.8);
+            --text-main: #f0f0f5;
+            --text-muted: #9ba1b0;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #8a2be2;
+            --accent-pink: #ff007f;
+            --status-active: #00e676;
+            --status-archived: #ffbc00;
+            --status-poisoned: #ff1744;
+            --border-glow: rgba(0, 240, 255, 0.2);
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --blur: blur(12px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--text-main), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .controls button {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: var(--blur);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .controls button:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px var(--border-glow);
+            transform: translateY(-1px);
+        }
+
+        .controls button.action-btn {
+            background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(138,43,226,0.1));
+            border-color: rgba(0,240,255,0.3);
+        }
+
+        /* Top Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.2);
+            background: var(--bg-card-hover);
+        }
+
+        .stat-title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .stat-subtext {
+            margin-top: auto;
+            padding-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Status Colors */
+        .color-active { color: var(--status-active); }
+        .color-archived { color: var(--status-archived); }
+        .color-poisoned { color: var(--status-poisoned); }
+        .color-total { color: var(--accent-cyan); }
+
+        /* Main Content Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            margin-bottom: 1.5rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Agents Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+            cursor: pointer;
+        }
+
+        .agent-id {
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .agent-id i {
+            color: var(--accent-purple);
+            font-size: 0.9em;
+        }
+
+        .health-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .health-good { background-color: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+        .health-warn { background-color: var(--status-archived); box-shadow: 0 0 8px var(--status-archived); }
+        .health-bad { background-color: var(--status-poisoned); box-shadow: 0 0 8px var(--status-poisoned); }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Modal / Detail View Overlay */
+        #detail-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #detail-modal.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #11111a;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        #detail-modal.visible .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .memory-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .memory-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .memory-meta span {
+            background: rgba(255,255,255,0.05);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .memory-content {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: #d0d0df;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: white; }
+
+        /* Loading state */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0,240,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-cyan);
+            animation: spin 1s ease-in-out infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-subtle);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            transform: translateX(120%);
+            animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 3s;
+        }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Memory Spine Hub</h1>
+            <div class="subtitle">Jai.OS 6.0 • Vector Aggregation & Decay Health</div>
+        </div>
+        <div class="controls">
+            <button onclick="fetchData()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            <button class="action-btn" onclick="triggerDecay()"><i class="fa-solid fa-bolt"></i> Run Decay Cycle</button>
+        </div>
+    </header>
+
+    <div class="loader" id="main-loader"></div>
+
+    <div id="content" style="display: none;">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title"><i class="fa-solid fa-brain color-total"></i> Total Memories</div>
+                <div class="stat-value color-total" id="stat-total">0</div>
+                <div class="stat-subtext">Across <span id="stat-agents-count">0</span> agents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title"><i class="fa-solid fa-bolt color-active"></i> Active Context</div>
+                <div class="stat-value color-active" id="stat-active">0</div>
+                <div class="stat-subtext">Searchable embeddings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title"><i class="fa-solid fa-box-archive color-archived"></i> Archived</div>
+                <div class="stat-value color-archived" id="stat-archived">0</div>
+                <div class="stat-subtext">Decayed below importance threshold</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title"><i class="fa-solid fa-skull-crossbones color-poisoned"></i> Poisoned</div>
+                <div class="stat-value color-poisoned" id="stat-poisoned">0</div>
+                <div class="stat-subtext">Ancient non-accessed data</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- Table Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-users-viewfinder color-total"></i> Hive Mind Roster
+                </div>
+                <div class="table-container">
+                    <table id="agents-table">
+                        <thead>
+                            <tr>
+                                <th>Agent ID</th>
+                                <th>Active</th>
+                                <th>Archived</th>
+                                <th>Health</th>
+                                <th>Avg Decay</th>
+                                <th>Avg Access</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chart Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-chart-pie color-purple"></i> Distribution
+                </div>
+                <div class="chart-container">
+                    <canvas id="memoryChart"></canvas>
+                </div>
+                
+                <div class="panel-header" style="margin-top: 2rem;">
+                    <i class="fa-solid fa-share-nodes color-cyan"></i> Quick Share
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <textarea id="share-input" rows="3" placeholder="Broadcast consensus to all agents..." style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.75rem; color: #fff; font-family: inherit; resize: vertical;"></textarea>
+                    <button class="controls" onclick="shareMemory()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: #fff; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: 0.2s;">Broadcast</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="detail-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="font-family: 'Outfit'; font-size: 1.5rem;" id="modal-agent-id">Agent Details</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-memories-container">
+            <div class="loader" id="modal-loader" style="display: block;"></div>
+            <div id="memories-list"></div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const API_BASE = 'http://localhost:8000';
+    let chartInstance = null;
+
+    async function fetchData() {
+        document.getElementById('main-loader').style.display = 'block';
+        document.getElementById('content').style.display = 'none';
+
+        try {
+            const res = await fetch(`${API_BASE}/memory/health`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            
+            if (data.status === 'ok') {
+                updateDashboard(data);
+                showToast('Synchronized with memory spine', 'var(--status-active)');
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to reach API. Ensure Jai.OS API is running on :8000', 'var(--status-poisoned)');
+        } finally {
+            document.getElementById('main-loader').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+    }
+
+    function updateDashboard(data) {
+        // Update top stats
+        let totalActive = 0, totalArchived = 0, totalPoisoned = 0;
+        
+        data.per_agent.forEach(a => {
+            totalActive += a.active;
+            totalArchived += a.archived;
+            totalPoisoned += a.poisoned;
+        });
+
+        const total = totalActive + totalArchived + totalPoisoned;
+        
+        animateValue('stat-total', total);
+        animateValue('stat-active', totalActive);
+        animateValue('stat-archived', totalArchived);
+        animateValue('stat-poisoned', totalPoisoned);
+        document.getElementById('stat-agents-count').textContent = data.agent_count;
+
+        // Update Table
+        const tbody = document.querySelector('#agents-table tbody');
+        tbody.innerHTML = '';
+        
+        data.per_agent.forEach(a => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => openAgentDetails(a.agent_id);
+            
+            // Health indicator logic
+            let healthClass = 'health-good';
+            if (a.avg_decay < 0.3) healthClass = 'health-bad';
+            else if (a.avg_decay < 0.7) healthClass = 'health-warn';
+
+            tr.innerHTML = `
+                <td class="agent-id"><i class="fa-solid fa-robot"></i> ${a.agent_id}</td>
+                <td><span class="color-active" style="font-weight:600;">${a.active}</span></td>
+                <td>${a.archived > 0 ? `<span class="color-archived">${a.archived}</span>` : '0'}</td>
+                <td><span class="health-indicator ${healthClass}"></span> ${(a.avg_decay * 100).toFixed(0)}% freshness</td>
+                <td>${a.avg_decay.toFixed(2)}</td>
+                <td>${a.avg_accesses.toFixed(1)}x</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update Chart
+        updateChart(totalActive, totalArchived, totalPoisoned);
+    }
+
+    function updateChart(active, archived, poisoned) {
+        const ctx = document.getElementById('memoryChart').getContext('2d');
+        
+        if (chartInstance) chartInstance.destroy();
+        
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Archived', 'Poisoned'],
+                datasets: [{
+                    data: [active, archived, poisoned],
+                    backgroundColor: [
+                        getComputedStyle(document.documentElement).getPropertyValue('--status-active').trim(),
+                        getComputedStyle(document.documentElement).getPropertyValue('--status-archived').trim(),
+                        getComputedStyle(document.documentElement).getPropertyValue('--status-poisoned').trim()
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#9ba1b0', font: { family: 'Inter' } }
+                    }
+                }
+            }
+        });
+    }
+
+    async function triggerDecay() {
+        try {
+            const res = await fetch(`${API_BASE}/memory/decay`, { method: 'POST' });
+            const data = await res.json();
+            if (data.status === 'ok') {
+                showToast(`Decay cycle complete! Decayed: ${data.decayed}, Archived: ${data.archived}`, 'var(--accent-purple)');
+                fetchData();
+            } else {
+                throw new Error(data.error); // handle error
+            }
+        } catch (err) {
+            showToast('Decay cycle failed', 'var(--status-poisoned)');
+        }
+    }
+
+    async function shareMemory() {
+        const input = document.getElementById('share-input');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        try {
+            const res = await fetch(`${API_BASE}/memory/share`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: text,
+                    source_agent: 'human_operator',
+                    importance: 0.9,
+                    tags: ['broadcast']
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'ok') {
+                input.value = '';
+                showToast('Memory broadcast to all agents', 'var(--accent-cyan)');
+                fetchData();
+            }
+        } catch(err) {
+            showToast('Failed to broadcast', 'var(--status-poisoned)');
+        }
+    }
+
+    async function openAgentDetails(agentId) {
+        const modal = document.getElementById('detail-modal');
+        const list = document.getElementById('memories-list');
+        document.getElementById('modal-agent-id').textContent = agentId + " Memories";
+        
+        modal.classList.add('visible');
+        list.innerHTML = '';
+        document.getElementById('modal-loader').style.display = 'block';
+
+        try {
+            const res = await fetch(`${API_BASE}/memory/agent/${agentId}?k=20`);
+            const data = await res.json();
+            
+            document.getElementById('modal-loader').style.display = 'none';
+            
+            if (data.status === 'error') throw new Error(data.error);
+
+            if (data.memories.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 2rem;">No memories found.</div>';
+                return;
+            }
+
+            data.memories.forEach(m => {
+                const isDecayed = m.decay_factor < 0.3;
+                list.innerHTML += `
+                    <div class="memory-item" style="border-left: 3px solid ${isDecayed ? 'var(--status-archived)' : 'var(--status-active)'}">
+                        <div class="memory-meta">
+                            <span>TYPE: ${m.memory_type}</span>
+                            <span>DECAY: ${(m.decay_factor * 100).toFixed(0)}%</span>
+                            <span>ACCESS: ${m.access_count}x</span>
+                            <span>IMPT: ${m.importance}</span>
+                        </div>
+                        <div class="memory-content">${escapeHTML(m.content)}</div>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            document.getElementById('modal-loader').style.display = 'none';
+            list.innerHTML = `<div style="color: var(--status-poisoned);">${err.message}</div>`;
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('detail-modal').classList.remove('visible');
+    }
+
+    function showToast(msg, color) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeft = `4px solid ${color}`;
+        toast.innerHTML = `<i class="fa-solid fa-circle-info" style="color: ${color}"></i> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+    }
+
+    function animateValue(id, end) {
+        const obj = document.getElementById(id);
+        const start = parseInt(obj.textContent) || 0;
+        const duration = 1000;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[tag] || tag));
+    }
+
+    // Init
+    window.addEventListener('load', fetchData);
+</script>
+
+</body>
+</html>

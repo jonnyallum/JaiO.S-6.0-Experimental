@@ -211,12 +211,6 @@ Rules:
 - If a testimonial quote is included, mark it clearly as [PLACEHOLDER — replace with real quote]"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -232,8 +226,6 @@ def _write_case_study(client: anthropic.Anthropic, prompt: str, metrics: "CallMe
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _write_case_study  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -302,9 +294,7 @@ def case_study_writer_node(state: CaseStudyState) -> CaseStudyState:
         "case_study": case_study,
         "proof_score": proof_score,
         "format_spec": format_spec,
-        "agent": ROLE,
-
-        "error": None,
+        "error":       "",
     }
 
 

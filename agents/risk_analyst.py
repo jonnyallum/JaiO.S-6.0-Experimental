@@ -44,12 +44,6 @@ class RiskAnalystState(BaseState):
     error: str
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -64,8 +58,6 @@ def _call_claude(client: anthropic.Anthropic, prompt: str, metrics: CallMetrics)
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _call_claude  # spec alias
-
 
 
 def risk_analyst_node(state: RiskAnalystState) -> RiskAnalystState:
@@ -106,7 +98,7 @@ Produce a thorough, actionable response. Be specific, not generic."""
 
     checkpoint("POST", ROLE, thread_id, {"output_chars": len(output)})
 
-    return {**state, "output": output, "agent": ROLE, "error": None}
+    return {**state, "output": output, "error": ""}
 
 
 def build_graph() -> StateGraph:

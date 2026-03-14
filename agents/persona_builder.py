@@ -220,12 +220,6 @@ Rules:
 - If no signals: clearly label as "Hypothesised" at the top of each persona"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -241,8 +235,6 @@ def _synthesise_personas(client: anthropic.Anthropic, prompt: str, metrics: "Cal
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _synthesise_personas  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -315,9 +307,7 @@ def persona_builder_node(state: PersonaState) -> PersonaState:
         "personas":       personas,
         "signal_summary": signal_summary,
         "depth_spec":     depth_spec,
-        "agent": ROLE,
-
-        "error": None,
+        "error":          "",
     }
 
 

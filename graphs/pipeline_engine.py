@@ -65,7 +65,7 @@ def run_pipeline(
     total_start = time.time()
     last_result = ""
 
-    log.info("pipeline.start", pipeline=pipeline_name, steps=len(steps), task=task[:80])
+    log.info(f"pipeline.start pipeline={pipeline_name} steps={len(steps)} task={task[:80]}")
 
     for i, agent_role in enumerate(steps):
         step_start = time.time()
@@ -108,16 +108,13 @@ def run_pipeline(
         step_results.append({
             "step": i + 1,
             "agent": agent_role,
-            "result": agent_result[:500] if agent_result else "",
+            "result": agent_result[:50000] if agent_result else "",
             "result_length": len(agent_result) if agent_result else 0,
             "elapsed": elapsed,
             "error": agent_error,
         })
 
-        log.info("pipeline.step_done",
-                 step=i+1, agent=agent_role, elapsed=elapsed,
-                 chars=len(agent_result) if agent_result else 0,
-                 error=agent_error)
+        log.info(f"pipeline.step_done step={i+1} agent={agent_role} elapsed={elapsed} chars={len(agent_result) if agent_result else 0} error={agent_error}")
 
         if agent_result:
             accumulated_context = agent_result
@@ -134,9 +131,9 @@ def run_pipeline(
         try:
             from graphs.eval_gate import evaluate_output
             eval_result = evaluate_output(task, last_result, steps[-1] if steps else "")
-            log.info("pipeline.eval", score=eval_result.get("score"), passed=eval_result.get("pass"))
+            log.info(f"pipeline.eval score={eval_result.get('score')} passed={eval_result.get('pass')}")
         except Exception as e:
-            log.warning("pipeline.eval_failed", error=str(e))
+            log.warning(f"pipeline.eval_failed error={str(e)}")
             eval_result = {"pass": True, "score": -1, "feedback": f"Eval error: {str(e)[:100]}"}
 
     return {

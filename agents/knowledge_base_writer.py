@@ -230,12 +230,6 @@ Rules:
 - End with a "Last Updated: [DATE]" and "Owner: [OWNER]" footer with placeholder brackets"""
 
 
-def _is_transient(exc: BaseException) -> bool:
-    """TRANSIENT = 429 rate limit or 529 overload — safe to retry."""
-    from anthropic import APIStatusError
-    return isinstance(exc, APIStatusError) and exc.status_code in (429, 529)
-
-
 @retry(
     retry=retry_if_exception_type(APIStatusError),
     stop=stop_after_attempt(MAX_RETRIES),
@@ -251,8 +245,6 @@ def _write_document(client: anthropic.Anthropic, prompt: str, metrics: "CallMetr
     )
     metrics.record(response)
     return response.content[0].text
-_generate = _write_document  # spec alias
-
 
 
 # ── Node ───────────────────────────────────────────────────────────────────────
@@ -316,9 +308,7 @@ def knowledge_base_writer_node(state: KnowledgeBaseState) -> KnowledgeBaseState:
         "document":      document,
         "template":      template,
         "audience_note": audience_note,
-        "agent": ROLE,
-
-        "error": None,
+        "error":         "",
     }
 
 
