@@ -54,7 +54,7 @@ ROLE = "research_analyst"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
 MAX_RETRIES = 3
-MAX_TOKENS  = 2800   # deep research needs full token budget
+MAX_TOKENS  = 8000   # deep research needs full token budget
 
 # ── Validation sets ────────────────────────────────────────────────────────────
 VALID_RESEARCH_TYPES = {

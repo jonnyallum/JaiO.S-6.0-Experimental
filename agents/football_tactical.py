@@ -33,7 +33,7 @@ log = structlog.get_logger()
 
 ROLE = "football_tactical"
 MAX_RETRIES = 3
-MAX_TOKENS = 2000
+MAX_TOKENS = 8000
 
 
 class FootballTacticalState(BaseState):

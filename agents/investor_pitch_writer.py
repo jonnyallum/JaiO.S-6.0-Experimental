@@ -58,7 +58,7 @@ ROLE = "investor_pitch_writer"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
 MAX_RETRIES = 3
-MAX_TOKENS  = 2800
+MAX_TOKENS  = 8000
 
 # ── Validation sets ────────────────────────────────────────────────────────────
 VALID_FUNDING_STAGES = {

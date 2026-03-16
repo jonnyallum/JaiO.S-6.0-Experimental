@@ -33,7 +33,7 @@ log = structlog.get_logger()
 
 ROLE = "risk_analyst"
 MAX_RETRIES = 3
-MAX_TOKENS = 2000
+MAX_TOKENS = 8000
 
 
 class RiskAnalystState(BaseState):

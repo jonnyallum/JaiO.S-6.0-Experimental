@@ -57,7 +57,7 @@ ROLE = "launch_orchestrator"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
 MAX_RETRIES    = 3
-MAX_TOKENS     = 2200
+MAX_TOKENS     = 8000
 DURATION_LIMIT = 90   # max days before launch date we'll plan for
 
 # ── Validation sets ────────────────────────────────────────────────────────────

@@ -12,14 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-import re
 import structlog
-from typing import Optional, TypedDict
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, START, StateGraph
@@ -131,19 +124,19 @@ ROUTING_RULES: dict[str, list[str]] = {
     # ── Technical ─────────────────────────────────────────────────────────────
     "github_intelligence": ["github", "repo", "repository", "git commit", "pull request", "github issue", "git branch", "contributor", "git merge", "git diff", "github actions workflow", "code diff", "open pr", "commits", "branch", "repo audit", "github repo"],
     "security_audit": ["security audit", "security review", "vulnerability", "security check", "pentest", "penetration test", "access control", "permission model", "encrypt", "auth review", "token security", "secret management", "cve", "exposure risk", "security hardening", "owasp", "security scan"],
-    "architecture_review": ["review architecture", "architecture review", "architecture audit", "system design review", "review the stack", "refactor plan", "architectural decision", "design pattern review", "technical_debt_management", "review this architecture", "architecture assessment", "scalability_analysis", "infra review", "architecture bottleneck", "scalability review", "infra design", "review our", "infrastructure_planning", "recommend improvements", "review our infrastructure"],
-    "data_extraction": ["parse", "extract data", "json schema", "csv parse", "convert data", "transform data", "scrape", "extraction pipeline", "schema extract", "api response", "extract structured"],
+    "architecture_review": ["review architecture", "architecture review", "architecture audit", "system design review", "review the stack", "refactor plan", "architectural decision", "design pattern review", "tech debt", "review this architecture", "architecture assessment", "scalability", "infra review", "architecture bottleneck", "scalability review", "infra design", "review our", "infrastructure design", "recommend improvements", "review our infrastructure"],
+    "data_extraction": ["parse", "extract data", "json schema", "csv parse", "convert data", "transform data", "scrape", "data pipeline", "schema extract", "api response", "extract structured"],
     "quality_validation": [
         "quality assurance", "validate output", "qa review", "pass criteria", "fail criteria", "quality score", "qc check",
     ],
-    "code_reviewer": ["review code", "code review", "code quality", "feedback on code", "lint", "smell", "file review", "review pull request", "pr review"],
+    "code_reviewer": ["review code", "code review", "code quality", "feedback on code", "lint", "smell", "file review", "pull request", "pr review"],
     "dependency_audit": [
         "dependency", "dependencies", "package", "requirements", "npm",
         "pip", "outdated", "licence", "license", "lockfile",
     ],
     "fullstack_architect": [
         "fullstack", "full stack", "full-stack", "next.js", "nextjs", "react",
-        "frontend", "backend", "api_specification", "api_architecture", "graphql_implementation", "typescript",
+        "frontend", "backend", "api design", "rest api", "graphql", "typescript",
         "web app", "web application", "spa",
     ],
     "database_architect": [
@@ -156,8 +149,8 @@ ROUTING_RULES: dict[str, list[str]] = {
         "supabase edge", "supabase storage", "supabase auth", "supabase realtime",
         "supabase table", "supabase policy",
     ],
-    "devops_engineer": ["devops", "ci/cd", "github actions", "docker", "container", "kubernetes", "k8s", "devops pipeline", "deploy pipeline", "build pipeline", "infra", "infrastructure", "terraform", "ansible", "bash script", "nginx", "reverse proxy", "ci/cd pipeline", "server config"],
-    "deployment_specialist": ["deploy", "deployment", "gcp deploy", "cloud run", "app engine", "vercel", "netlify", "fly.io", "railway", "server setup", "production deploy", "release", "rollout", "ship to prod", "staging", "deploy to", "ship the", "staging env"],
+    "devops_engineer": ["devops", "ci/cd", "github actions", "docker", "container", "kubernetes", "k8s", "pipeline", "deploy pipeline", "build pipeline", "infra", "infrastructure", "terraform", "ansible", "bash script", "nginx", "reverse proxy", "ci/cd pipeline", "server config"],
+    "deployment_specialist": ["deploy", "deployment", "gcp deploy", "cloud run", "app engine", "vercel", "netlify", "fly.io", "railway", "server setup", "production deploy", "release", "rollout", "ship", "staging", "deploy to", "ship the", "staging env"],
     "performance_auditor": [
         "performance", "slow", "latency", "lighthouse", "core web vitals",
         "page speed", "load time", "bottleneck", "profil", "optimise speed",
@@ -173,7 +166,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "gcp vm", "compute engine", "cloud storage", "gcs",
         "cloud function", "pub/sub", "gcp setup",
     ],
-    "data_parser": ["data parsing", "raw data", "parse data", "structure data", "unstructured data", "clean data", "normalise data", "normalize data", "tabular data", "data_pipeline_design", "etl", "csv", "json payload", "normalize", "parse file", "decode", "parse this", "csv file", "normalize the", "decode this"],
+    "data_parser": ["data parsing", "raw data", "parse data", "structure data", "unstructured data", "clean data", "normalise data", "normalize data", "tabular data", "data pipeline", "etl", "csv", "json payload", "normalize", "parse file", "decode", "parse this", "csv file", "normalize the", "decode this"],
     "agent_builder": [
         "build agent", "create agent", "new agent", "agent spec",
         "agent design", "agent skill", "skill node", "langgraph agent",
@@ -186,7 +179,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "pipeline alert", "pipeline report",
     ],
     "process_auditor": ["process audit", "workflow audit", "sop audit", "process review", "operational review", "efficiency audit", "process improvement", "workflow optimisation", "workflow optimization", "bottleneck audit", "onboarding process", "friction audit", "audit this process", "audit this workflow", "friction points", "manual steps", "audit the process", "friction point", "continuous improvement"],
-    "truth_verifier": ["truth verif", "verify this claim", "verify the claim", "verify claim", "is this true", "truth check", "artifact verification", "13-gate", "gate verification", "output verification", "verify artifact", "cross-reference", "source check", "claim verification", "fact-check verification", "fact check verification", "verify accuracy", "truth verification", "accuracy of", "verify the", "verify the accuracy", "accuracy of this"],
+    "truth_verifier": ["truth verif", "verify this claim", "verify the claim", "verify claim", "is this true", "truth check", "artifact verification", "13-gate", "gate verification", "output verification", "verify artifact", "cross-reference", "source check", "claim verification", "fact-check", "fact check", "verify accuracy", "truth verification", "accuracy of", "verify the", "verify the accuracy", "accuracy of this"],
 
     # ── Content & Creative ────────────────────────────────────────────────────
     "social_post_generator": [
@@ -194,7 +187,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "broadcast", "hashtag", "fb post", "ig post",
     ],
     "content_scaler": [
-        "content variant", "scale content", "content a/b", "content variant headline",
+        "content variant", "scale content", "content a/b", "headline variant",
         "email subject variant", "blog intro", "content repurpose",
         "content batch", "content scale",
     ],
@@ -203,7 +196,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "paid ad", "ppc copy", "ad headline", "ad creative copy",
         "display ad", "sponsored post copy",
     ],
-    "copywriter": ["copy", "write copy", "headline", "headline copy", "specific headline", "website copy", "landing page copy", "homepage copy", "about page", "tagline", "slogan", "brand copy", "product description", "marketing copy", "write headlines", "write ad copy", "conversion copy", "email copy", "write compelling", "draft the", "copy for", "draft the email", "draft email sequence", "product launch campaign"],
+    "copywriter": ["copy", "write copy", "headline", "headline copy", "headline variant", "website copy", "landing page copy", "homepage copy", "about page", "tagline", "slogan", "brand copy", "product description", "marketing copy", "write headlines", "ad copy", "conversion copy", "email copy", "write compelling", "draft the", "copy for", "draft the email", "email sequence", "product launch campaign"],
     "brand_voice_guide": [
         "brand voice", "tone of voice", "brand guidelines", "brand style",
         "writing guidelines", "communication style", "brand language",
@@ -219,7 +212,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "voice over", "voiceover", "audio script", "podcast script",
         "spoken content", "narration script",
     ],
-    "ui_designer": ["ui design", "user interface", "wireframe", "mockup", "figma", "component design", "ux design", "dashboard design", "design a dashboard", "dashboard component", "design a component", "colour scheme", "color scheme", "layout design", "visual design", "design the ui", "design ui", "screen design", "page design", "pixel-perfect", "ui mockup", "design system", "visual hierarchy", "pixel perfect"],
+    "ui_designer": ["ui design", "user interface", "wireframe", "mockup", "figma", "component design", "ux design", "user experience", "dashboard design", "design a dashboard", "dashboard component", "design a component", "colour scheme", "color scheme", "layout design", "visual design", "design the ui", "design ui", "screen design", "page design", "pixel-perfect", "ui mockup", "design system", "visual hierarchy", "pixel perfect"],
     "content_auditor": [
         "content audit", "audit content", "audit this content", "content quality",
         "audit the content", "content gap", "content depth", "content review",
@@ -250,7 +243,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "value-based pricing", "cost-plus", "competitor pricing",
         "price increase", "pricing page", "how much to charge",
     ],
-    "product_strategist": ["product strategy", "product roadmap", "product vision", "feature prioritisation", "feature prioritization", "mvp", "product market fit", "user story", "product brief", "product spec", "innovation sprint", "q3", "q4", "product strat", "define the product", "based on user feedback", "strategy for q"],
+    "product_strategist": ["product strategy", "product roadmap", "product vision", "feature prioritisation", "feature prioritization", "mvp", "product market fit", "user story", "product brief", "product spec", "innovation sprint", "q3", "q4", "product strat", "define the product", "based on user feedback", "strategy for q", "growth strategy", "customer growth", "reduce churn", "monthly growth", "mom growth", "saas growth", "hit 1000", "scale to", "acquire customers", "churn rate", "retention strategy", "paying customers", "b2b saas"],
     "sales_conversion": [
         "prospect", "close", "objection", "deal", "pipeline", "crm",
         "follow up", "pitch", "negotiate", "sales call", "cold",
@@ -265,7 +258,7 @@ ROUTING_RULES: dict[str, list[str]] = {
         "product listing", "basket", "checkout", "cart abandonment",
         "product page", "shop strategy",
     ],
-    "launch_orchestrator": ["launch", "market_entry_planning", "gtm", "launch_coordination", "campaign launch", "release plan", "launch_management", "launch_planning", "ship", "launch_readiness_assessment", "launch timeline", "launch day", "go-to-market", "launch_timeline", "launch orchestrat", "orchestrate", "all channels"],
+    "launch_orchestrator": ["launch", "go to market", "gtm", "product launch", "campaign launch", "release plan", "launch plan", "launch strategy", "ship", "launch checklist", "launch timeline", "launch day", "go-to-market", "launch sequence", "launch orchestrat", "orchestrate", "all channels"],
     "venture_ideator": [
         "startup idea", "business idea", "venture idea", "new business",
         "side project", "opportunity", "market gap", "business concept",
@@ -278,22 +271,28 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
 
     # ── Intelligence & Research ───────────────────────────────────────────────
-    "business_intelligence": ["kpi", "metric", "dashboard", "bi report", "analytics report", "market_forecasting", "trend", "performance report", "revenue report", "data analysis", "business report", "kpi dashboard", "reporting framework", "executive report", "business review", "reporting", "executive", "decision-making", "executive decision", "build a reporting"],
+    "business_intelligence": ["kpi", "metric", "dashboard", "bi report", "analytics report", "forecast", "trend", "performance report", "revenue report", "data analysis", "business report", "kpi dashboard", "reporting framework", "executive report", "business review", "reporting", "executive", "decision-making", "executive decision", "build a reporting"],
     "analytics_reporter": [
         "analytics", "traffic data", "conversion data", "engagement data",
         "retention data", "google analytics", "raw metrics", "metric report",
         "data report", "weekly report", "monthly report",
     ],
-    "research_analyst": ["research", "market research", "competitive analysis", "business_evaluation", "scholarly_review", "trend analysis", "fact finding", "in-depth_analysis", "investigate", "background research", "market trends", "competitive landscape", "deep dive", "market analysis"],
+    "research_analyst": ["research", "market research", "competitive analysis", "due diligence", "academic", "trend analysis", "fact finding", "deep research", "investigate", "background research", "market trends", "competitive landscape", "deep dive", "market analysis"],
     "competitor_monitor": [
         "competitor url", "scrape competitor", "analyze competitor site",
         "monitor competitor", "competitor website", "scrape their site",
         "analyze their pricing page", "competitor landing page",
         "intel on competitor", "investigate competitor",
+        "competitive analysis", "competitor analysis", "analyze competitors",
+        "deep competitive", "compare competitors", "competitive landscape",
+        "market competitors", "top 5", "head to head", "vs comparison",
     ],
     "seo_specialist": [
         "seo", "search engine", "on-page", "meta tag", "schema markup",
         "keyword gap", "keyword rank", "serp", "google ranking", "canonical",
+        "seo audit", "technical seo", "seo fix", "seo review", "bounce rate",
+        "indexed pages", "site audit", "search visibility", "organic traffic",
+        "seo strategy", "local seo", "backlinks", "page speed seo",
     ],
     "supabase_intelligence": [
         "supabase brain", "shared brain", "agent data", "learnings",
@@ -309,10 +308,10 @@ ROUTING_RULES: dict[str, list[str]] = {
     ],
     "email_architect": ["email sequence", "email campaign", "nurture sequence", "drip", "follow-up email", "onboarding email", "re-engagement", "cold email", "email series", "write emails", "email template", "resend", "email notification", "email notif", "email automat", "welcome email", "notifications with n8n", "automated email", "email with"],
     "project_manager": ["project plan", "project timeline", "project milestone", "task breakdown", "project phases", "project scope", "resource plan", "project brief", "sprint planning", "kanban board", "gantt", "delivery plan", "create a project plan", "build a project plan", "project schedule", "milestones", "coordinate", "timeline", "project management"],
-    "customer_success": ["customer success", "client health", "churn", "retention strategy", "onboarding client", "client check-in", "customer_satisfaction_tracking", "client feedback", "customer satisfaction", "account management", "support ticket", "customer support", "billing issue", "client success", "beta users", "customer issue", "feedback loop"],
+    "customer_success": ["customer success", "client health", "churn", "retention strategy", "onboarding client", "client check-in", "nps", "client feedback", "customer satisfaction", "account management", "support ticket", "customer support", "billing issue", "client success", "beta users", "customer issue", "feedback loop"],
     "knowledge_base_writer": [
         "knowledge base", "help doc", "faq", "documentation", "how-to guide",
-        "support article", "user guide", "wiki", "write docs", "documentation_review",
+        "support article", "user guide", "wiki", "write docs", "internal doc",
     ],
     "case_study_writer": [
         "case study", "success story", "client win", "customer story",
@@ -335,9 +334,9 @@ ROUTING_RULES: dict[str, list[str]] = {
         "customer profile", "demographic profile",
     ],
     "financial_analyst": [
-        "financial", "cashflow", "financial_analysis", "p&l", "profit and loss",
-        "balance sheet", "financial_modeling", "revenue projection",
-        "financial_projections", "unit economics", "burn rate",
+        "financial", "cashflow", "cash flow", "p&l", "profit and loss",
+        "balance sheet", "financial model", "revenue projection",
+        "financial forecast", "unit economics", "burn rate",
     ],
     "legal_advisor": [
         "legal", "contract", "terms and conditions", "gdpr", "compliance",
@@ -361,19 +360,19 @@ ROUTING_RULES: dict[str, list[str]] = {
         "user interview", "ux audit", "user experience",
     ],
     "senior_developer": [
-        "senior dev", "code architecture", "tech debt", "refactor", "refactor code",
+        "senior dev", "code architecture", "tech debt", "refactor code",
         "code implementation", "write code", "implement feature", "coding",
         "debug code", "fix bug", "software development",
     ],
     "system_architect": ["system architecture", "infrastructure design", "microservices", "service mesh", "load balancing", "scalability", "system design", "distributed system", "high availability", "fault tolerance", "microservice", "platform design", "distributed", "design a", "real-time", "data pipeline", "best system", "best architecture"],
     "investment_analyst": [
-        "investment analysis", "stock analysis", "portfolio", "market_analysis",
+        "investment analysis", "stock analysis", "portfolio", "market research",
         "financial modeling", "valuation", "equity research", "investment thesis",
         "asset allocation", "risk assessment investment",
     ],
     "recruitment_specialist": [
         "recruitment", "hiring", "talent acquisition", "job description",
-        "interview", "candidate", "employee_onboarding", "headhunt", "staffing",
+        "interview", "candidate", "onboarding", "headhunt", "staffing",
         "job posting", "recruit",
     ],
     "sales_intelligence": [
@@ -382,27 +381,27 @@ ROUTING_RULES: dict[str, list[str]] = {
         "sales enablement", "competitive selling", "account research",
     ],
     "legal_analyst": [
-        "legal analysis", "contract review", "risk_assessment", "compliance review",
-        "regulatory", "legal due diligence", "terms of service", "data_privacy_compliance",
+        "legal analysis", "contract review", "legal risk", "compliance review",
+        "regulatory", "legal due diligence", "terms of service", "privacy policy",
         "legal opinion", "contract clause",
     ],
     "due_diligence_analyst": ["due diligence", "company evaluation", "market validation", "risk scoring", "business assessment", "company research", "acquisition analysis", "dd report", "target evaluation", "acquisition target", "company analysis", "due-diligence", "acquisition", "financial health", "before partnership"],
     "deep_researcher": ["deep research", "literature review", "academic research", "systematic review", "evidence synthesis", "research paper", "meta-analysis", "comprehensive research", "in-depth research", "thorough research", "research report", "scholarly", "academic", "thorough", "quantum", "emerging technology"],
     "product_launch_strategist": ["product launch", "go to market", "gtm strategy", "launch plan", "launch sequence", "product release", "market entry", "launch checklist", "product rollout", "product launch strategy", "launch strategy", "pre-launch", "post-launch", "launch strateg"],
-    "financial_planner": ["financial plan", "financial_planning", "forecast", "cash flow", "financial projection", "expense tracking", "revenue forecast", "financial model", "break even", "profit margin", "financial planning", "financial forecast", "budget plan", "budget allocation", "budget alloc", "12 months"],
+    "financial_planner": ["financial plan", "budget", "forecast", "cash flow", "financial projection", "expense tracking", "revenue forecast", "financial model", "break even", "profit margin", "financial planning", "financial forecast", "budget plan", "budget allocation", "budget alloc", "12 months"],
     "horse_racing": ["horse", "racing", "cheltenham", "ascot", "jockey", "handicap", "form guide", "going"],
-    "football_tactical": ["football", "premier league", "tactical", "match analysis", "xg", "lineup"],
+    "football_tactical": ["football", "premier league", "tactical", "match analysis", "xg", "lineup", "title race", "football betting", "football odds", "football value", "football probability", "match odds", "both teams to score", "btts", "over under football", "football market"],
     "formula1_analyst": ["formula 1", "f1", "grand prix", "pitstop", "qualifying", "grid"],
-    "darts_analyst": ["darts", "pdc", "cart_analysis", "180", "nine darter", "averages"],
+    "darts_analyst": ["darts", "pdc", "checkout", "180", "nine darter", "averages"],
     "motogp_analyst": ["motogp", "moto gp", "telemetry", "rossi", "marquez"],
     "betting_systems": ["betting", "odds", "bookmaker", "accumulator", "value bet", "stake", "multi-market", "betting coordination", "sports market", "betting system"],
     "roulette_math": ["roulette", "casino", "probability", "house edge", "martingale"],
 
     # ── awesome-llm-apps + new capability agents (Loop 2) ──
     "eval_judge": ["evaluate", "judge", "score output", "quality check", "grade", "rating", "rubric", "evaluate quality", "judge output", "quality rubric", "grade response", "judge whether"],
-    "code_executor": ["execute code", "run code", "validate code", "troubleshooting", "code_quality_assurance", "sandbox"],
-    "rag_retriever": ["retrieve", "vector search", "information_curation", "semantic search", "data_validation", "embeddings"],
-    "human_gate": ["approval required", "human review needed", "sign off required", "manual check required", "approval gate", "approval checkpoint"],
+    "code_executor": ["execute code", "run code", "validate code", "debug code", "code review", "sandbox"],
+    "rag_retriever": ["retrieve", "vector search", "knowledge base", "semantic search", "rag", "embeddings"],
+    "human_gate": ["approval", "human review", "sign off", "manual check", "gate", "checkpoint"],
     "workflow_planner": ["plan workflow", "decompose task", "task planning", "step by step plan", "workflow design", "workflow plan", "task sequence", "workflow map", "process flow", "map out", "production pipeline"],
     "summariser": ["summarise", "summarize", "summary", "tldr", "condense", "digest", "recap", "key findings", "summarize the", "summarise the"],
     "translator": ["translate", "translation", "language", "multilingual", "localise", "localize", "spanish", "french", "german", "translate this", "into spanish", "into french", "into german", "convert our product"],
@@ -413,7 +412,7 @@ ROUTING_RULES: dict[str, list[str]] = {
     "feedback_collector": ["feedback", "nps", "csat", "survey", "user feedback", "satisfaction"],
     "cost_tracker": ["cost tracking", "token usage", "api costs", "budget", "spend", "cost optimisation"],
     "error_recovery_agent": ["error recovery", "diagnose error", "stack trace", "error handling", "debug failure", "incident", "postmortem", "production error", "recover error", "diagnose this"],
-    "document_qa": ["document qa", "rag", "document analysis", "search documents", "answer from docs", "knowledge base query", "document question", "file analysis", "pdf analysis", "text search", "answer from document", "internal documentation", "query document", "from our", "document search", "internal doc", "search our knowledge", "answer this question from", "from our internal", "do you remember", "what did i say", "what was the", "recall what", "i forgot", "i mentioned", "what did we discuss", "what is the name", "what is the code name", "remember when"],
+    "document_qa": ["document qa", "rag", "document analysis", "search documents", "answer from docs", "knowledge base query", "document question", "file analysis", "pdf analysis", "text search", "answer from document", "internal documentation", "query document", "from our", "document search", "internal doc", "search our knowledge", "answer this question from", "from our internal"],
     "vision_analyst": ["image analysis", "vision", "screenshot analysis", "visual audit", "image qa", "describe image", "extract text from image", "ocr", "ui audit", "visual review", "image", "screenshot"],
 }
 
@@ -503,21 +502,8 @@ def _classify_task_keywords(task: str) -> tuple[str, int]:
     scores = {role: 0 for role in ROUTING_RULES}
     for role, keywords in ROUTING_RULES.items():
         for kw in keywords:
-            # Use regex for word boundaries to avoid matching inside other words (e.g. 'ip' in 'scripts')
-            if re.search(r'\b' + re.escape(kw.lower()) + r'\b', task_lower):
+            if kw in task_lower:
                 scores[role] += 1
-
-    # ── Recall-intent boost ──────────────────────────────────────
-    # If the query looks like a memory recall request, boost document_qa
-    # to outweigh incidental domain keyword matches (e.g. "deployment")
-    _RECALL_SIGNALS = [
-        "do you remember", "i forgot", "what did i say", "what did we",
-        "recall what", "remember when", "what was the name",
-        "what is the code name", "what is the name",
-    ]
-    if any(sig in task_lower for sig in _RECALL_SIGNALS):
-        scores["document_qa"] += 2
-
     best = max(scores, key=lambda r: scores[r])
     return (best, scores[best]) if scores[best] > 0 else ("general_assistant", 0)
 
@@ -613,64 +599,7 @@ def route_node(state: SupervisorState) -> dict:
     return {"selected_role": selected, "pipeline": None}
 
 
-def execute_single_agent(state: SupervisorState) -> dict:
-    """Memory-aware wrapper for executing an agent."""
-    from memory.agent_mixin import AgentMemory
-    
-    role = state.get("selected_role", "general_assistant")
-    original_task = state.get("task", "")
-    mem = AgentMemory(agent_id=role)
-    
-    # 1. Recall past context (own memories + shared knowledge from other agents)
-    try:
-        past = mem.recall_with_shared(original_task, k=3, threshold=0.45)
-        if past:
-            ctx_parts = []
-            for m in past:
-                sim_pct = f"{m.similarity * 100:.0f}%" if m.similarity else "?"
-                # Take first 400 chars of past content to keep context lean
-                snippet = m.content[:400] + ("..." if len(m.content) > 400 else "")
-                ctx_parts.append(
-                    f"- **[{m.memory_type.upper()}] (relevance: {sim_pct})**\n  {snippet}"
-                )
-            ctx = "\n".join(ctx_parts)
-            state["task"] = (
-                f"## RELEVANT PAST KNOWLEDGE (Memory Spine)\n"
-                f"{ctx}\n\n---\n\n"
-                f"## CURRENT REQUIREMENT\n{original_task}"
-            )
-            log.info("supervisor.memory.recalled", role=role, memories=len(past))
-    except Exception as e:
-        log.warning("supervisor.memory.recall_failed", error=str(e), role=role)
-        
-    # 2. Execute
-    result = _dispatch_single_agent(state)
-    
-    # 3. Remember outcome (richer content, dedup handled by store)
-    try:
-        final_output = result.get("result", "")
-        if not result.get("error") and final_output and len(final_output) > 50:
-            # Store meaningful context — enough to be useful on recall
-            task_summary = original_task[:500]
-            output_summary = final_output[:1000]
-            memory_point = (
-                f"## Task (agent: {role})\n{task_summary}\n\n"
-                f"## Output\n{output_summary}"
-            )
-            mem.remember(
-                content=memory_point,
-                memory_type="episodic",
-                importance=0.6,
-                tags=[role, "supervisor_output"],
-            )
-            log.info("supervisor.memory.saved", role=role)
-    except Exception as e:
-        log.warning("supervisor.memory.save_failed", error=str(e), role=role)
-        
-    return result
-
-
-def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
+def execute_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     """Dispatch to the selected skill node."""
     role        = state["selected_role"]
     workflow_id = state.get("workflow_id") or str(uuid.uuid4())
@@ -1006,15 +935,9 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
     elif role == "proposal_writer":
         r = proposal_writer_node({
             **base, "agent": role,
-            "client_name": repo_owner or "Client",
-            "client_problem": task,
-            "proposed_solution": task,
-            "budget_range": "TBC",
-            "timeline_weeks": 8,
-            "proposal_type": "general",
-            "our_credentials": "",
-            "thread_id": workflow_id,
-            "proposal": "", "proposal_sections": [], "sections": [],
+            "client_name": repo_owner, "service_context": task,
+            "budget_hint": "", "timeline_hint": "",
+            "proposal": "",
         })
         return {"result": r.get("proposal", ""), "error": r.get("error")}
 
@@ -1120,7 +1043,7 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "launch_plan":   "",
             "thread_id":     workflow_id,
         })
-        return {"result": r.get("launch_plan", ""), "error": r.get("error")}
+        return {"result": r.get("launch_output", r.get("launch_plan", "")), "error": r.get("error")}
 
     elif role == "venture_ideator":
         r = venture_ideator_node({
@@ -1184,12 +1107,27 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
         return {"result": r.get("research_report", ""), "error": r.get("error")}
 
     elif role == "competitor_monitor":
-        r = competitor_monitor_node({
-            **base, "agent": role,
-            "competitor_url": task.split()[0] if task.startswith("http") else "https://example.com",
-            "our_context": task, "focus": "general", "intel_report": "",
-        })
-        return {"result": r.get("intel_report", ""), "error": r.get("error")}
+        # If no URL provided, fall back to research_analyst for text-based competitive analysis
+        import re as _re
+        _url_match = _re.search(r'https?://[^\s]+', task)
+        if _url_match:
+            r = competitor_monitor_node({
+                **base, "agent": role,
+                "competitor_url": _url_match.group(0),
+                "our_context": task, "focus": "general", "intel_report": "",
+            })
+            return {"result": r.get("intel_report", ""), "error": r.get("error")}
+        else:
+            # No URL — do deep text-based competitive research via research_analyst
+            from agents.research_analyst import research_analyst_node
+            r = research_analyst_node({
+                **base, "agent": "research_analyst",
+                "question": task,
+                "research_type": "competitive_analysis",
+                "depth": "deep_dive",
+                "sources": "", "domain": "", "research_report": "",
+            })
+            return {"result": r.get("research_report", ""), "error": r.get("error")}
 
     elif role == "seo_specialist":
         r = seo_specialist_node({
@@ -1373,7 +1311,7 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "language": "python",
             "code_output": "",
         })
-        return {"result": r.get("dev_output", ""), "error": r.get("error")}
+        return {"result": r.get("code_output", ""), "error": r.get("error")}
 
     elif role == "system_architect":
         r = system_architect_node({
@@ -1381,7 +1319,7 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "scope": "general",
             "architecture_report": "",
         })
-        return {"result": r.get("architecture_output", ""), "error": r.get("error")}
+        return {"result": r.get("architecture_report", ""), "error": r.get("error")}
 
     elif role == "investment_analyst":
         r = investment_analyst_node({
@@ -1429,7 +1367,7 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "research_scope": "comprehensive",
             "research_report": "",
         })
-        return {"result": r.get("research_output", ""), "error": r.get("error")}
+        return {"result": r.get("research_report", ""), "error": r.get("error")}
 
     elif role == "product_launch_strategist":
         r = product_launch_strategist_node({
@@ -1437,7 +1375,7 @@ def _dispatch_single_agent(state: SupervisorState) -> dict:  # noqa: C901
             "task": task, "launch_phase": "planning",
             "launch_plan": "",
         })
-        return {"result": r.get("launch_plan", ""), "error": r.get("error")}
+        return {"result": r.get("launch_output", r.get("launch_plan", "")), "error": r.get("error")}
 
     elif role == "financial_planner":
         r = financial_planner_node({
@@ -1632,18 +1570,14 @@ def execute_pipeline(state: SupervisorState) -> dict:
     return {"result": combined, "error": final_error}
 
 
-_checkpointer_cm = None
-
 def build_supervisor():
     """Build and compile the supervisor graph."""
-    global _checkpointer_cm
     graph = StateGraph(SupervisorState)
     graph.add_node("route",   route_node)
     graph.add_node("execute", execute_pipeline, retry_policy=RetryPolicy(max_attempts=3, initial_interval=1.0))
     graph.add_edge(START,     "route")
     graph.add_edge("route",   "execute")
     graph.add_edge("execute",  END)
-
     # Try PostgresSaver (persistent), fallback to MemorySaver (RAM)
     db_url = os.environ.get("BRAIN_CONNECTION_STRING", "")
     if db_url:
@@ -1652,22 +1586,12 @@ def build_supervisor():
             session_url = db_url.replace(":6543/", ":5432/")
             if "sslmode" not in session_url:
                 session_url += "?sslmode=require"
-            
-            # langgraph-checkpoint-postgres 2.0+ uses a context manager
-            _checkpointer_cm = PostgresSaver.from_conn_string(session_url)
-            checkpointer = _checkpointer_cm.__enter__()
+            checkpointer = PostgresSaver.from_conn_string(session_url)
             checkpointer.setup()
             log.info("supervisor.checkpointer", type="PostgresSaver", db="supabase")
             return graph.compile(checkpointer=checkpointer)
         except Exception as e:
             log.warning("supervisor.postgres_fallback", error=str(e))
-            if _checkpointer_cm:
-                try:
-                    _checkpointer_cm.__exit__(None, None, None)
-                except:
-                    pass
-                _checkpointer_cm = None
-
     log.info("supervisor.checkpointer", type="MemorySaver", reason="no_db_url_or_error")
     return graph.compile(checkpointer=MemorySaver())
 

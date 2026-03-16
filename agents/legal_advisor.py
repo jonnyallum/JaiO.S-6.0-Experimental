@@ -46,7 +46,7 @@ log = structlog.get_logger()
 
 ROLE        = "legal_advisor"
 MAX_RETRIES = 3
-MAX_TOKENS  = 2400
+MAX_TOKENS  = 8000
 
 VALID_OUTPUT_TYPES = {
     "gdpr_review", "contract_review", "ip_assessment", "compliance_checklist",
@@ -162,7 +162,7 @@ def _build_legal_prompt(state: LegalAdvisorState, legal_data: dict) -> str:
     task         = state["task"]
     legal_ctx    = state.get("legal_context", "")
     out_type     = state.get("output_type", "general")
-    jurisdiction = state.get("jurisdiction", "general")
+    jurisdiction = state.get("jurisdiction", "general").lower().strip()
     juris_note   = _JURISDICTION_NOTES.get(jurisdiction, _JURISDICTION_NOTES["general"])
 
     flags_text = "\n".join(f"  ⚡ {f}" for f in legal_data["flags"]) or "  None detected"
@@ -246,7 +246,7 @@ def legal_advisor_node(state: LegalAdvisorState) -> LegalAdvisorState:
     thread_id    = state.get("workflow_id", "local")
     task         = state.get("task", "").strip()
     out_type     = state.get("output_type", "general")
-    jurisdiction = state.get("jurisdiction", "general")
+    jurisdiction = state.get("jurisdiction", "general").lower().strip()
 
     if not task:
         raise ValueError("PERMANENT: task is required.")

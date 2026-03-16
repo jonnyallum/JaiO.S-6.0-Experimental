@@ -54,7 +54,7 @@ ROLE = "product_strategist"
 
 # ── Budget constants ───────────────────────────────────────────────────────────
 MAX_RETRIES = 3
-MAX_TOKENS  = 2400
+MAX_TOKENS  = 8000
 
 # ── Validation sets ────────────────────────────────────────────────────────────
 VALID_STAGES      = {"idea", "pre_launch", "mvp", "growth", "scale", "mature", "pivot"}
